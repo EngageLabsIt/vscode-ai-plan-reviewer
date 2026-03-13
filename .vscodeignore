@@ -1,0 +1,35 @@
+# Source (già bundlato in dist/ da esbuild)
+src/
+esbuild.mjs
+tsconfig.json
+tsconfig.webview.json
+vitest.config.ts
+playwright.config.ts
+
+# Test artifacts
+test-fixtures/
+playwright-report/
+test-results/
+
+# Dev config
+.claude/
+.vscode/
+.eslintrc*
+.prettierrc*
+.editorconfig
+.gitignore
+*.log
+
+# Source maps (non necessari per distribuzione)
+dist/**/*.map
+
+# Docs non necessari
+docs/
+CHANGELOG.md
+
+# Node modules
+node_modules/
+
+# Temporanei
+**/.DS_Store
+**/Thumbs.db

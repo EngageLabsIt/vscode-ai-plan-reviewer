@@ -38,7 +38,6 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
   const newSessionBtnRef = useRef<HTMLButtonElement>(null);
   const copyBtnRef = useRef<HTMLButtonElement>(null);
   const closeBtnBottomRef = useRef<HTMLButtonElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isOldPlan = useMemo(
     () => Date.now() - Date.parse(planCreatedAt) > OLD_PLAN_MS,
@@ -82,7 +81,6 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
         closeBtnRef.current,
         sameSessionBtnRef.current,
         newSessionBtnRef.current,
-        textareaRef.current,
         copyBtnRef.current,
         closeBtnBottomRef.current,
       ].filter((el): el is HTMLElement => el !== null);
@@ -161,12 +159,12 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
         </div>
 
         {showWarning && (
-          <div className="prompt-preview__warning" role="alert">
+          <div className="prompt-preview__old-plan-warning" role="alert">
             This plan was created {ageHours} hours ago. Copilot might not remember it. Use &lsquo;Full context&rsquo; mode?
           </div>
         )}
 
-        <div className="prompt-preview__mode-toggle" role="group" aria-label="Prompt mode">
+        <div className="prompt-preview__mode-bar" role="group" aria-label="Prompt mode">
           <button
             ref={sameSessionBtnRef}
             className={
@@ -193,34 +191,30 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
           </button>
         </div>
 
-        <textarea
-          ref={textareaRef}
-          className="prompt-preview__textarea"
-          value={prompt}
-          readOnly
-          aria-label="Generated review prompt"
-        />
+        <div className="prompt-preview__body">
+          <div className="prompt-preview__content" aria-label="Generated review prompt">
+            {prompt}
+          </div>
+        </div>
 
-        <div className="prompt-preview__actions">
-          <span className="prompt-preview__feedback">
+        <div className="prompt-preview__footer">
+          <span className="prompt-preview__footer-feedback">
             {copied ? '✓ Copied to clipboard! Paste in Copilot Chat.' : ''}
           </span>
-          <div className="prompt-preview__btns">
-            <button
-              ref={copyBtnRef}
-              className="prompt-preview__btn prompt-preview__btn--primary"
-              onClick={handleCopy}
-            >
-              Copy to Clipboard
-            </button>
-            <button
-              ref={closeBtnBottomRef}
-              className="prompt-preview__btn prompt-preview__btn--secondary"
-              onClick={onClose}
-            >
-              Close
-            </button>
-          </div>
+          <button
+            ref={copyBtnRef}
+            className="prompt-preview__btn prompt-preview__btn--primary"
+            onClick={handleCopy}
+          >
+            Copy to Clipboard
+          </button>
+          <button
+            ref={closeBtnBottomRef}
+            className="prompt-preview__btn prompt-preview__btn--secondary"
+            onClick={onClose}
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

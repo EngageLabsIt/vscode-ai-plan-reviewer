@@ -1,6 +1,7 @@
 {
   "name": "plan-reviewer",
   "displayName": "Plan Reviewer",
+  "publisher": "michele-gatti",
   "description": "Review AI-generated plans with inline comments, like a GitHub PR",
   "version": "0.0.1",
   "engines": {
@@ -139,11 +140,14 @@
     "compile": "tsc -p tsconfig.json --noEmit",
     "build": "node esbuild.mjs",
     "dev": "node esbuild.mjs --watch",
-    "package": "vsce package",
+    "package": "npm run build && vsce package --no-dependencies",
     "lint": "eslint src",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@vscode/vsce": "^3.0.0",
     "@types/diff": "^7.0.2",
     "@types/node": "^20.0.0",
     "@types/react": "^19.2.14",

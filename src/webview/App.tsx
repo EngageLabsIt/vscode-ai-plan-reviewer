@@ -1,14 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVsCodeApi } from './hooks/useVsCodeApi';
 import { PlanViewer } from './components/PlanViewer';
-import { DiffViewer } from './components/DiffViewer';
 import { ReviewToolbar } from './components/ReviewToolbar';
-import { PlanTimeline } from './components/PlanTimeline';
 import { CommentNavigator } from './components/CommentNavigator';
 import { CommentForm } from './components/CommentForm';
 import { PromptPreview } from './components/PromptPreview';
 import type { HostMessage } from '../../shared/messages';
-import type { Comment, DiffLine, MappedComment, Plan, Section, Version } from '../../shared/models';
+import type { Comment, Plan, Section, Version } from '../../shared/models';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,17 +22,10 @@ interface LoadedPlan {
   comments: Comment[];
 }
 
-interface CommentFormSection {
-  sectionId: string;
-  heading: string;
-}
-
-interface DiffState {
-  diffLines: DiffLine[];
-  mappedComments: MappedComment[];
-  oldVersionNumber: number;
-  newVersionNumber: number;
-}
+type CommentFormState =
+  | { type: 'section'; sectionId: string; heading: string }
+  | { type: 'line';    lineNumber: number }
+  | { type: 'range';   startLine: number; endLine: number };
 
 // ---------------------------------------------------------------------------
 // App
@@ -45,13 +36,9 @@ export const App: React.FC = () => {
   const [loadedPlan, setLoadedPlan] = useState<LoadedPlan | null>(null);
   const loadedPlanRef = useRef<LoadedPlan | null>(null);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
-  const [commentFormSection, setCommentFormSection] = useState<CommentFormSection | null>(null);
+  const [commentFormState, setCommentFormState] = useState<CommentFormState | null>(null);
+  const [activeCommentLine, setActiveCommentLine] = useState<number | null>(null);
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
-  const [diffActive, setDiffActive] = useState(false);
-  const [diffState, setDiffState] = useState<DiffState | null>(null);
-  const [diffPair, setDiffPair] = useState<{ oldVN: number; newVN: number } | null>(null);
-  const [diffViewMode, setDiffViewMode] = useState<'inline' | 'side-by-side'>('inline');
-  const [timelineCollapsed, setTimelineCollapsed] = useState(false);
 
   // Signal readiness to the extension host
   useEffect(() => {
@@ -126,11 +113,6 @@ export const App: React.FC = () => {
         return;
       }
 
-      if (message.type === 'diffLoaded') {
-        const { diffLines, mappedComments, oldVersionNumber, newVersionNumber } = message.payload;
-        setDiffState({ diffLines, mappedComments, oldVersionNumber, newVersionNumber });
-        return;
-      }
     };
 
     window.addEventListener('message', handleMessage);
@@ -154,83 +136,13 @@ export const App: React.FC = () => {
     setPromptPreviewOpen(false);
   }, []);
 
-  // ── Diff toggle ────────────────────────────────────────────────────────────
-  const handleToggleDiff = useCallback((): void => {
-    setDiffActive((active) => {
-      if (active) {
-        // Turning off — clear diff state
-        setDiffState(null);
-        setDiffPair(null);
-        return false;
-      }
+  // ── Approve ────────────────────────────────────────────────────────────────
+  const handleApprove = useCallback((): void => {
+    if (loadedPlan === null) return;
+    vscode.postMessage({ type: 'approvePlan', payload: { planId: loadedPlan.plan.id } });
+  }, [loadedPlan, vscode]);
 
-      // Turning on — request diff for current version vs previous
-      const current = loadedPlanRef.current;
-      if (current === null || current.versionNumber <= 1) {
-        // No previous version to compare against
-        return false;
-      }
-
-      const oldVN = current.versionNumber - 1;
-      const newVN = current.versionNumber;
-      setDiffPair({ oldVN, newVN });
-
-      vscode.postMessage({
-        type: 'requestDiff',
-        payload: {
-          planId: current.plan.id,
-          versionNumberOld: oldVN,
-          versionNumberNew: newVN,
-        },
-      });
-
-      return true;
-    });
-  }, [vscode]);
-
-  // ── Diff pair navigation ───────────────────────────────────────────────────
-  const handleDiffPrev = useCallback((): void => {
-    const current = loadedPlanRef.current;
-    if (current === null || diffPair === null) return;
-    if (diffPair.oldVN <= 1) return;
-    const newPair = { oldVN: diffPair.oldVN - 1, newVN: diffPair.newVN - 1 };
-    setDiffPair(newPair);
-    vscode.postMessage({
-      type: 'requestDiff',
-      payload: {
-        planId: current.plan.id,
-        versionNumberOld: newPair.oldVN,
-        versionNumberNew: newPair.newVN,
-      },
-    });
-  }, [vscode, diffPair]);
-
-  const handleDiffNext = useCallback((): void => {
-    const current = loadedPlanRef.current;
-    if (current === null || diffPair === null) return;
-    if (diffPair.newVN >= current.versions.length) return;
-    const newPair = { oldVN: diffPair.oldVN + 1, newVN: diffPair.newVN + 1 };
-    setDiffPair(newPair);
-    vscode.postMessage({
-      type: 'requestDiff',
-      payload: {
-        planId: current.plan.id,
-        versionNumberOld: newPair.oldVN,
-        versionNumberNew: newPair.newVN,
-      },
-    });
-  }, [vscode, diffPair]);
-
-  // ── Diff view mode toggle ─────────────────────────────────────────────────
-  const handleToggleDiffViewMode = useCallback((): void => {
-    setDiffViewMode((mode) => (mode === 'inline' ? 'side-by-side' : 'inline'));
-  }, []);
-
-  // ── Timeline ──────────────────────────────────────────────────────────────
-  const handleTimelineToggle = useCallback((): void => {
-    setTimelineCollapsed((c) => !c);
-  }, []);
-
+  // ── Select version ─────────────────────────────────────────────────────────
   const handleSelectVersion = useCallback((versionNumber: number): void => {
     const current = loadedPlanRef.current;
     if (current === null) return;
@@ -262,38 +174,60 @@ export const App: React.FC = () => {
     if (current === null) return;
     const section = current.sections.find((s) => s.id === sectionId);
     if (section === undefined) return;
-    setCommentFormSection({ sectionId, heading: section.heading });
+    setCommentFormState({ type: 'section', sectionId, heading: section.heading });
   }, []);
 
-  const handleCommentFormSubmit = useCallback((
-    body: string,
-    category: Comment['category'],
-  ): void => {
-    if (commentFormSection === null || loadedPlan === null) return;
+  const handleAddLineComment = useCallback((lineNumber: number): void => {
+    if (activeCommentLine === lineNumber) {
+      setActiveCommentLine(null);
+      setCommentFormState(null);
+      return;
+    }
+    setActiveCommentLine(lineNumber);
+    setCommentFormState({ type: 'line', lineNumber });
+  }, [activeCommentLine]);
 
-    const section = loadedPlan.sections.find((s) => s.id === commentFormSection.sectionId);
-    if (section === undefined) return;
-
-    vscode.postMessage({
-      type: 'addComment',
-      payload: {
-        versionId: loadedPlan.versionId,
-        type: 'section',
-        sectionId: section.id,
-        targetStart: section.startLine,
-        targetEnd: section.endLine,
-        body,
-        category,
-        resolved: false,
-        carriedFromId: null,
-      },
+  const handleLineShiftClick = useCallback((lineNumber: number): void => {
+    if (activeCommentLine === null) return;
+    setCommentFormState({
+      type: 'range',
+      startLine: Math.min(activeCommentLine, lineNumber),
+      endLine: Math.max(activeCommentLine, lineNumber),
     });
+  }, [activeCommentLine]);
 
-    setCommentFormSection(null);
-  }, [commentFormSection, loadedPlan, vscode]);
+  const handleEditComment = useCallback((id: string, body: string, category: Comment['category']): void => {
+    vscode.postMessage({ type: 'updateComment', payload: { id, body, category } });
+  }, [vscode]);
+
+  const handleDeleteComment = useCallback((id: string): void => {
+    vscode.postMessage({ type: 'deleteComment', payload: { id } });
+  }, [vscode]);
+
+  const handleResolveComment = useCallback((id: string): void => {
+    vscode.postMessage({ type: 'resolveComment', payload: { id } });
+  }, [vscode]);
+
+  const handleCommentFormSubmit = useCallback((body: string, category: Comment['category']): void => {
+    if (commentFormState === null || loadedPlan === null) return;
+
+    if (commentFormState.type === 'section') {
+      const section = loadedPlan.sections.find((s) => s.id === commentFormState.sectionId);
+      if (section === undefined) return;
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'section', sectionId: section.id, targetStart: section.startLine, targetEnd: section.endLine, body, category, resolved: false, carriedFromId: null } });
+    } else if (commentFormState.type === 'line') {
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'line', sectionId: null, targetStart: commentFormState.lineNumber, targetEnd: commentFormState.lineNumber, body, category, resolved: false, carriedFromId: null } });
+    } else {
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'range', sectionId: null, targetStart: commentFormState.startLine, targetEnd: commentFormState.endLine, body, category, resolved: false, carriedFromId: null } });
+    }
+
+    setCommentFormState(null);
+    setActiveCommentLine(null);
+  }, [commentFormState, loadedPlan, vscode]);
 
   const handleCommentFormCancel = useCallback((): void => {
-    setCommentFormSection(null);
+    setCommentFormState(null);
+    setActiveCommentLine(null);
   }, []);
 
   // ── Derived: section-scoped comments only ─────────────────────────────────
@@ -315,51 +249,57 @@ export const App: React.FC = () => {
             onToggleNavigator={handleToggleNavigator}
             navigatorOpen={navigatorOpen}
             onGeneratePrompt={handleGeneratePrompt}
-            onToggleDiff={handleToggleDiff}
-            diffActive={diffActive}
-            diffPair={diffPair}
-            onDiffPrev={handleDiffPrev}
-            onDiffNext={handleDiffNext}
-            diffViewMode={diffViewMode}
-            onToggleDiffViewMode={handleToggleDiffViewMode}
+            onApprove={handleApprove}
+            onSelectVersion={handleSelectVersion}
           />
-          <PlanTimeline
+          {/* <PlanTimeline
             versions={loadedPlan.versions}
             currentVersionNumber={loadedPlan.versionNumber}
             planStatus={loadedPlan.plan.status}
             onSelectVersion={handleSelectVersion}
             collapsed={timelineCollapsed}
             onToggleCollapse={handleTimelineToggle}
-          />
+          /> */}
           <div className="plan-content-area">
-            {diffActive && diffState !== null ? (
-              <DiffViewer
-                diffLines={diffState.diffLines}
-                mappedComments={diffState.mappedComments}
-                oldVersionNumber={diffState.oldVersionNumber}
-                newVersionNumber={diffState.newVersionNumber}
-                viewMode={diffViewMode}
-              />
-            ) : (
-              <PlanViewer
-                content={loadedPlan.content}
-                sections={loadedPlan.sections}
-                versionNumber={loadedPlan.versionNumber}
-                sectionComments={sectionComments}
-                onCommentSection={handleCommentSection}
-              />
-            )}
+            <PlanViewer
+              content={loadedPlan.content}
+              sections={loadedPlan.sections}
+              versionNumber={loadedPlan.versionNumber}
+              sectionComments={sectionComments}
+              allComments={loadedPlan.comments}
+              onCommentSection={handleCommentSection}
+              onAddLineComment={handleAddLineComment}
+              onLineShiftClick={handleLineShiftClick}
+              activeCommentLine={activeCommentLine}
+              commentRange={
+                commentFormState?.type === 'range'
+                  ? { start: commentFormState.startLine, end: commentFormState.endLine }
+                  : null
+              }
+              onEdit={handleEditComment}
+              onDelete={handleDeleteComment}
+              onResolve={handleResolveComment}
+            />
             <CommentNavigator
               comments={loadedPlan.comments}
               sections={loadedPlan.sections}
               isOpen={navigatorOpen}
+              onEdit={handleEditComment}
+              onDelete={handleDeleteComment}
+              onResolve={handleResolveComment}
             />
           </div>
 
-          {/* CommentForm modal — rendered when a section is selected */}
-          {commentFormSection !== null && (
+          {/* CommentForm modal — rendered when a target is selected */}
+          {commentFormState !== null && (
             <CommentForm
-              sectionHeading={commentFormSection.heading}
+              target={
+                commentFormState.type === 'section'
+                  ? { type: 'section', heading: commentFormState.heading }
+                  : commentFormState.type === 'line'
+                    ? { type: 'line', lineNumber: commentFormState.lineNumber }
+                    : { type: 'range', startLine: commentFormState.startLine, endLine: commentFormState.endLine }
+              }
               onSubmit={handleCommentFormSubmit}
               onCancel={handleCommentFormCancel}
             />

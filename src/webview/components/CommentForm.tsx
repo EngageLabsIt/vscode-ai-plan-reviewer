@@ -8,8 +8,19 @@ import '../styles/planViewer.css';
 
 type Category = Comment['category'];
 
+export type CommentTarget =
+  | { type: 'line';    lineNumber: number }
+  | { type: 'range';   startLine: number; endLine: number }
+  | { type: 'section'; heading: string };
+
+function targetLabel(t: CommentTarget): string {
+  if (t.type === 'line')   return `Line ${t.lineNumber}`;
+  if (t.type === 'range')  return `Lines ${t.startLine}–${t.endLine}`;
+  return `Section: ${t.heading}`;
+}
+
 interface CommentFormProps {
-  sectionHeading: string;
+  target: CommentTarget;
   onSubmit: (body: string, category: Category) => void;
   onCancel: () => void;
 }
@@ -36,7 +47,7 @@ const CATEGORY_OPTIONS: CategoryOption[] = [
 // ---------------------------------------------------------------------------
 
 export const CommentForm: React.FC<CommentFormProps> = ({
-  sectionHeading,
+  target,
   onSubmit,
   onCancel,
 }) => {
@@ -104,7 +115,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
         className="comment-form"
       >
         <h2 id="comment-form-heading" className="comment-form__header">
-          Comment on: <span className="comment-form__section-name">{sectionHeading}</span>
+          Comment on: <span className="comment-form__section-name">{targetLabel(target)}</span>
         </h2>
 
         <form onSubmit={handleSubmit} noValidate>

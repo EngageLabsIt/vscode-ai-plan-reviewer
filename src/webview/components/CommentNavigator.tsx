@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Comment, Section } from '../../shared/models';
+import { CommentCard } from './CommentCard';
 import '../styles/planViewer.css';
 
 // ---------------------------------------------------------------------------
@@ -10,6 +11,9 @@ interface CommentNavigatorProps {
   comments: Comment[];
   sections: Section[];
   isOpen: boolean;
+  onEdit?:    (id: string, body: string, category: Comment['category']) => void;
+  onDelete?:  (id: string) => void;
+  onResolve?: (id: string) => void;
 }
 
 type Category = Comment['category'];
@@ -123,9 +127,12 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, icon }) => {
 interface CategoryGroupProps {
   meta: CategoryMeta;
   comments: Comment[];
+  onEdit?:    (id: string, body: string, category: Comment['category']) => void;
+  onDelete?:  (id: string) => void;
+  onResolve?: (id: string) => void;
 }
 
-const CategoryGroup: React.FC<CategoryGroupProps> = ({ meta, comments }) => {
+const CategoryGroup: React.FC<CategoryGroupProps> = ({ meta, comments, onEdit, onDelete, onResolve }) => {
   if (comments.length === 0) return null;
 
   return (
@@ -138,7 +145,12 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({ meta, comments }) => {
       <ul className="comment-navigator__group-list" role="list">
         {comments.map((c) => (
           <li key={c.id} role="listitem">
-            <CommentItem comment={c} icon={meta.icon} />
+            <CommentCard
+              comment={c}
+              onEdit={onEdit ?? (() => {})}
+              onDelete={onDelete ?? (() => {})}
+              onResolve={onResolve ?? (() => {})}
+            />
           </li>
         ))}
       </ul>
@@ -212,6 +224,9 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
   comments,
   sections,
   isOpen,
+  onEdit,
+  onDelete,
+  onResolve,
 }) => {
   // ── Tab state ──────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<TabId>('comments');
@@ -415,6 +430,7 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
                   ? 'comment-navigator__filter-btn--active'
                   : 'comment-navigator__filter-btn--inactive',
               ].join(' ')}
+              data-category={meta.key}
               onClick={() => { handleToggleCategory(meta.key); }}
               aria-pressed={activeCategories.has(meta.key)}
               title={`Toggle ${meta.label}`}
@@ -451,6 +467,9 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
                 key={meta.key}
                 meta={meta}
                 comments={groupedComments[meta.key]}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onResolve={onResolve}
               />
             ))
           )}

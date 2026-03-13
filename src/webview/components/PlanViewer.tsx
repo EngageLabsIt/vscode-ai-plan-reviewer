@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import type { Comment, Section } from '../../shared/models';
 import { LineGutter } from './LineGutter';
+import { CommentCard } from './CommentCard';
 import '../styles/planViewer.css';
 
 // ---------------------------------------------------------------------------
@@ -16,7 +17,15 @@ interface PlanViewerProps {
   sections: Section[];
   versionNumber: number;
   sectionComments?: Comment[];
+  allComments?: Comment[];
   onCommentSection?: (sectionId: string) => void;
+  onAddLineComment?: (lineNumber: number) => void;
+  onLineShiftClick?: (lineNumber: number) => void;
+  activeCommentLine?: number | null;
+  commentRange?: { start: number; end: number } | null;
+  onEdit?: (id: string, body: string, category: Comment['category']) => void;
+  onDelete?: (id: string) => void;
+  onResolve?: (id: string) => void;
 }
 
 type TextLine = { kind: 'text'; lineNumber: number; text: string };
@@ -111,6 +120,19 @@ const textLineComponents: Components = {
 };
 
 // ---------------------------------------------------------------------------
+// isLineVisible helper
+// ---------------------------------------------------------------------------
+
+function isLineVisible(lineNumber: number, sections: Section[], collapsed: Set<number>): boolean {
+  for (const sec of sections) {
+    if (collapsed.has(sec.startLine) && lineNumber > sec.startLine && lineNumber <= sec.endLine) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// ---------------------------------------------------------------------------
 // PlanViewer
 // ---------------------------------------------------------------------------
 
@@ -119,8 +141,18 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
   sections,
   versionNumber,
   sectionComments = [],
+  allComments,
   onCommentSection,
+  onAddLineComment,
+  onLineShiftClick,
+  activeCommentLine,
+  commentRange,
+  onEdit,
+  onDelete,
+  onResolve,
 }) => {
+  const [collapsedSections, setCollapsedSections] = useState<Set<number>>(new Set());
+
   // Group section comments by sectionId for O(1) lookup
   const commentsBySection = useMemo<Map<string, Comment[]>>(() => {
     const map = new Map<string, Comment[]>();
@@ -133,6 +165,19 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
     }
     return map;
   }, [sectionComments]);
+
+  // Group inline (line/range) comments by their end line
+  const commentsByEndLine = useMemo<Map<number, Comment[]>>(() => {
+    const map = new Map<number, Comment[]>();
+    for (const c of (allComments ?? [])) {
+      if (c.type === 'line' || c.type === 'range') {
+        const bucket = map.get(c.targetEnd) ?? [];
+        bucket.push(c);
+        map.set(c.targetEnd, bucket);
+      }
+    }
+    return map;
+  }, [allComments]);
 
   // Parse content into per-line entries
   const entries = useMemo(() => parseLines(content), [content]);
@@ -147,7 +192,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
             <div className="line-row code-block-row" key={`cb-${startLine}`}>
               <div className="code-block-gutter">
                 {lines.map((_, idx) => (
-                  <LineGutter key={idx} lineNumber={startLine + idx} />
+                  <LineGutter key={idx} lineNumber={startLine + idx} onAddComment={onAddLineComment} />
                 ))}
               </div>
               <div className="line-content">
@@ -161,16 +206,53 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
 
         // TextLine
         const { lineNumber, text } = entry;
+
+        if (!isLineVisible(lineNumber, sections, collapsedSections)) return null;
+
         const matchedSection = sections.find((s) => s.startLine === lineNumber);
         const comments = matchedSection ? (commentsBySection.get(matchedSection.id) ?? []) : [];
+        const inlineComments = commentsByEndLine.get(lineNumber) ?? [];
 
         return (
-          <div className="line-row" key={lineNumber}>
-            <LineGutter lineNumber={lineNumber} />
+          <div
+            className={[
+              'line-row',
+              lineNumber === activeCommentLine ? 'line-row--active-anchor' : '',
+              commentRange !== null && commentRange !== undefined && lineNumber >= commentRange.start && lineNumber <= commentRange.end
+                ? 'line-row--range-selected' : '',
+            ].filter(Boolean).join(' ')}
+            id={`line-${lineNumber}`}
+            key={lineNumber}
+            onClick={(e: React.MouseEvent) => {
+              if (e.shiftKey && onLineShiftClick !== undefined) {
+                onLineShiftClick(lineNumber);
+              }
+            }}
+          >
+            <LineGutter lineNumber={lineNumber} onAddComment={onAddLineComment} />
+            <div className="line-divider" aria-hidden="true" />
             <div className="line-content">
               {text.trim() ? (
                 matchedSection !== undefined && onCommentSection !== undefined ? (
                   <div className="line-heading-wrapper">
+                    <button
+                      className="section-collapse-toggle"
+                      aria-label={collapsedSections.has(lineNumber) ? 'Expand section' : 'Collapse section'}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCollapsedSections((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(lineNumber)) {
+                            next.delete(lineNumber);
+                          } else {
+                            next.add(lineNumber);
+                          }
+                          return next;
+                        });
+                      }}
+                    >
+                      {collapsedSections.has(lineNumber) ? '▶' : '▼'}
+                    </button>
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={textLineComponents}
@@ -197,6 +279,15 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
               ) : null}
               {comments.map((c) => (
                 <SectionCommentBadge key={c.id} comment={c} />
+              ))}
+              {inlineComments.map((c) => (
+                <CommentCard
+                  key={c.id}
+                  comment={c}
+                  onEdit={onEdit ?? (() => {})}
+                  onDelete={onDelete ?? (() => {})}
+                  onResolve={onResolve ?? (() => {})}
+                />
               ))}
             </div>
           </div>
