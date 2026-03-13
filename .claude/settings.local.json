@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --version && npm --version)",
+      "Bash(cd \"C:/_/Repos/Sandbox/Plan Reviewer\" && npm install 2>&1)",
+      "Bash(cd \"C:/_/Repos/Sandbox/Plan Reviewer\" && npm run compile 2>&1)",
+      "Bash(cd \"C:/_/Repos/Sandbox/Plan Reviewer\" && npm install --save-dev esbuild @types/react @types/react-dom && npm install react react-dom sql.js uuid && npm install --save-dev @types/uuid 2>&1)",
+      "Bash(cd \"C:/_/Repos/Sandbox/Plan Reviewer\" && npm run build 2>&1)",
+      "Bash(node -e \"const p = require\\('C:/_/Repos/Sandbox/Plan Reviewer/node_modules/highlight.js/package.json'\\); console.log\\(JSON.stringify\\(Object.keys\\(p.exports || {}\\), null, 2\\)\\)\" 2>&1 | head -30)",
+      "Bash(cd \"C:/_/Repos/Sandbox/Plan Reviewer\" && npm install react-markdown remark-gfm rehype-highlight && npm uninstall marked marked-highlight && npm uninstall --save-dev @types/marked 2>&1)",
+      "Bash(cd \"C:/_/Repos/Sandbox/Plan Reviewer/src/extension\" && npm run build 2>&1)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npx tsc --noEmit 2>&1)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run compile 2>&1)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run build 2>&1)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm install diff && npm install --save-dev @types/diff 2>&1)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npx tsc --noEmit 2>&1 | grep -E \"DiffEngine|CommentMapper|models\")",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm test 2>&1)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npx vitest run 2>&1)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm install 2>&1 | tail -5)"
+    ]
+  }
+}

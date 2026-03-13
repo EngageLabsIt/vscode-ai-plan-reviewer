@@ -1,0 +1,97 @@
+import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import { Database } from './db/database';
+import { runMigrations } from './db/migrations';
+import { PlanReviewPanel } from './webview/PlanReviewPanel';
+import { PlanExplorerProvider } from './views/PlanExplorerProvider';
+import { registerNewReviewCommand } from './commands/newReview';
+import { registerLoadTestPlanCommand } from './commands/loadTestPlan';
+import { registerExportPlanCommand } from './commands/exportPlan';
+import { registerImportPlanCommand } from './commands/importPlan';
+
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
+  console.log('Plan Reviewer is now active!');
+
+  // Ensure the global storage directory exists
+  const storageDir = context.globalStorageUri.fsPath;
+  fs.mkdirSync(storageDir, { recursive: true });
+
+  // Init DB and run migrations before any command can use it
+  const dbPath = path.join(storageDir, 'plan-reviewer.db');
+  try {
+    await Database.getInstance().init(dbPath);
+    runMigrations(Database.getInstance().getDb());
+  } catch (err) {
+    await vscode.window.showErrorMessage(
+      `Plan Reviewer: database initialization failed — ${String(err)}`,
+    );
+    return;
+  }
+
+  // ── Plan Explorer (sidebar TreeView) ──────────────────────────────────────
+
+  const planExplorer = new PlanExplorerProvider();
+  const treeView = vscode.window.createTreeView('planReviewer.explorer', {
+    treeDataProvider: planExplorer,
+    showCollapseAll: true,
+  });
+
+  // ── Commands ──────────────────────────────────────────────────────────────
+
+  const helloWorldCommand = vscode.commands.registerCommand(
+    'planReviewer.helloWorld',
+    () => {
+      vscode.window.showInformationMessage('Hello World from Plan Reviewer!');
+    }
+  );
+
+  const openPanelCommand = vscode.commands.registerCommand(
+    'planReviewer.openPanel',
+    () => {
+      PlanReviewPanel.createOrShow(context.extensionUri);
+    }
+  );
+
+  // Explorer context-menu commands
+  const explorerOpenCommand = vscode.commands.registerCommand(
+    'planReviewer.explorer.openPlan',
+    (item) => planExplorer.handleOpen(item, context),
+  );
+  const explorerArchiveCommand = vscode.commands.registerCommand(
+    'planReviewer.explorer.archivePlan',
+    (item) => planExplorer.handleArchive(item),
+  );
+  const explorerDeleteCommand = vscode.commands.registerCommand(
+    'planReviewer.explorer.deletePlan',
+    (item) => planExplorer.handleDelete(item),
+  );
+  const explorerRenameCommand = vscode.commands.registerCommand(
+    'planReviewer.explorer.renamePlan',
+    (item) => planExplorer.handleRename(item),
+  );
+  const explorerSearchCommand = vscode.commands.registerCommand(
+    'planReviewer.explorer.search',
+    () => planExplorer.handleSearch(),
+  );
+
+  context.subscriptions.push(
+    treeView,
+    helloWorldCommand,
+    openPanelCommand,
+    explorerOpenCommand,
+    explorerArchiveCommand,
+    explorerDeleteCommand,
+    explorerRenameCommand,
+    explorerSearchCommand,
+    registerNewReviewCommand(context),
+    registerLoadTestPlanCommand(context),
+    registerExportPlanCommand(context),
+    registerImportPlanCommand(context),
+    { dispose: () => { void Database.getInstance().close(); } }
+  );
+}
+
+export function deactivate(): void {
+  // cleanup if needed
+}

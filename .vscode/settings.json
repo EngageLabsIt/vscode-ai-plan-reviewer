@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "database": "sql-wasm.wasm",
+            "name": "preview_review"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

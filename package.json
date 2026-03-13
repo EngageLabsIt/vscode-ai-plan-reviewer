@@ -1,0 +1,169 @@
+{
+  "name": "plan-reviewer",
+  "displayName": "Plan Reviewer",
+  "description": "Review AI-generated plans with inline comments, like a GitHub PR",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "planReviewer",
+          "title": "Plan Reviewer",
+          "icon": "$(notebook)"
+        }
+      ]
+    },
+    "views": {
+      "planReviewer": [
+        {
+          "id": "planReviewer.explorer",
+          "name": "Plans",
+          "icon": "$(notebook)",
+          "contextualTitle": "Plan Reviewer"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "planReviewer.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "planReviewer.openPanel",
+        "title": "Plan Reviewer: Open Panel",
+        "category": "Plan Reviewer"
+      },
+      {
+        "command": "planReviewer.newReview",
+        "title": "New Review",
+        "category": "Plan Reviewer"
+      },
+      {
+        "command": "planReviewer.loadTestPlan",
+        "title": "Load Test Plan (Dev)",
+        "category": "Plan Reviewer"
+      },
+      {
+        "command": "planReviewer.exportPlan",
+        "title": "Export Plan",
+        "category": "Plan Reviewer"
+      },
+      {
+        "command": "planReviewer.importPlan",
+        "title": "Import Plan",
+        "category": "Plan Reviewer"
+      },
+      {
+        "command": "planReviewer.explorer.search",
+        "title": "Search Plans",
+        "category": "Plan Reviewer",
+        "icon": "$(search)"
+      },
+      {
+        "command": "planReviewer.explorer.openPlan",
+        "title": "Open",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "planReviewer.explorer.archivePlan",
+        "title": "Archive"
+      },
+      {
+        "command": "planReviewer.explorer.deletePlan",
+        "title": "Delete"
+      },
+      {
+        "command": "planReviewer.explorer.renamePlan",
+        "title": "Rename"
+      }
+    ],
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "planReviewer.explorer.openPlan",
+          "when": "viewItem == plan",
+          "group": "inline"
+        },
+        {
+          "command": "planReviewer.explorer.archivePlan",
+          "when": "viewItem == plan",
+          "group": "1_actions"
+        },
+        {
+          "command": "planReviewer.explorer.renamePlan",
+          "when": "viewItem == plan",
+          "group": "1_actions"
+        },
+        {
+          "command": "planReviewer.explorer.deletePlan",
+          "when": "viewItem == plan",
+          "group": "2_destructive"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "planReviewer.explorer.search",
+          "when": "view == planReviewer.explorer",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "planReviewer.generatePrompt",
+        "key": "ctrl+shift+g",
+        "mac": "cmd+shift+g",
+        "when": "planReviewer.panelVisible"
+      }
+    ],
+    "configuration": {
+      "title": "Plan Reviewer",
+      "properties": {
+        "planReviewer.promptOldPlanHours": {
+          "type": "number",
+          "default": 4,
+          "description": "Hours after which a plan is considered old, prompting the 'Full context' mode suggestion."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p tsconfig.json --noEmit",
+    "build": "node esbuild.mjs",
+    "dev": "node esbuild.mjs --watch",
+    "package": "vsce package",
+    "lint": "eslint src",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/diff": "^7.0.2",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/uuid": "^10.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "esbuild": "^0.27.3",
+    "typescript": "^5.3.0",
+    "vitest": "^2.1.0"
+  },
+  "dependencies": {
+    "diff": "^8.0.3",
+    "highlight.js": "^11.11.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
+    "sql.js": "^1.14.1",
+    "uuid": "^13.0.0"
+  }
+}
