@@ -8,6 +8,7 @@ import { CommentRepository } from '../db/repositories/CommentRepository';
 import { DiffEngine } from '../services/DiffEngine';
 import { CommentMapper } from '../services/CommentMapper';
 import { PlanReviewPanel } from '../webview/PlanReviewPanel';
+import { PlanExplorerProvider } from '../views/PlanExplorerProvider';
 import type { Plan, Version, Section, Comment } from '../../shared/models';
 
 // ---------------------------------------------------------------------------
@@ -202,7 +203,8 @@ export function registerNewReviewCommand(
         }
       }
 
-      // Step 8 — open/reveal WebView
+      // Step 8 — refresh tree view and open/reveal WebView
+      PlanExplorerProvider.instance?.refresh();
       const panel = PlanReviewPanel.createOrShow(context.extensionUri);
 
       // Step 9 — retrieve the full Plan object and send planLoaded

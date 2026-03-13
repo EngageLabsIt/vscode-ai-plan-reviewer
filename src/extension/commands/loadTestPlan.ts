@@ -7,6 +7,7 @@ import { Database } from '../db/database';
 import { PlanRepository } from '../db/repositories/PlanRepository';
 import { SectionRepository } from '../db/repositories/SectionRepository';
 import { PlanReviewPanel } from '../webview/PlanReviewPanel';
+import { PlanExplorerProvider } from '../views/PlanExplorerProvider';
 import type { Plan, Version, Section } from '../../shared/models';
 
 export function registerLoadTestPlanCommand(
@@ -75,6 +76,7 @@ export function registerLoadTestPlanCommand(
         sectionRepo.insertMany(sections);
       }
 
+      PlanExplorerProvider.instance?.refresh();
       const panel = PlanReviewPanel.createOrShow(context.extensionUri);
 
       const allVersions = planRepo.findVersionsByPlanId(plan.id);

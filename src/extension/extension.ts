@@ -39,13 +39,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   // ── Commands ──────────────────────────────────────────────────────────────
 
-  const helloWorldCommand = vscode.commands.registerCommand(
-    'planReviewer.helloWorld',
-    () => {
-      vscode.window.showInformationMessage('Hello World from Plan Reviewer!');
-    }
-  );
-
   const openPanelCommand = vscode.commands.registerCommand(
     'planReviewer.openPanel',
     () => {
@@ -74,16 +67,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     'planReviewer.explorer.search',
     () => planExplorer.handleSearch(),
   );
+  const explorerRefreshCommand = vscode.commands.registerCommand(
+    'planReviewer.explorer.refresh',
+    () => planExplorer.refresh(),
+  );
 
   context.subscriptions.push(
     treeView,
-    helloWorldCommand,
     openPanelCommand,
     explorerOpenCommand,
     explorerArchiveCommand,
     explorerDeleteCommand,
     explorerRenameCommand,
     explorerSearchCommand,
+    explorerRefreshCommand,
     registerNewReviewCommand(context),
     registerLoadTestPlanCommand(context),
     registerExportPlanCommand(context),

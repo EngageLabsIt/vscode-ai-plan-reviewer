@@ -69,6 +69,12 @@
         "icon": "$(search)"
       },
       {
+        "command": "planReviewer.explorer.refresh",
+        "title": "Refresh Plans",
+        "category": "Plan Reviewer",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "planReviewer.explorer.openPlan",
         "title": "Open",
         "icon": "$(go-to-file)"
@@ -112,6 +118,11 @@
       "view/title": [
         {
           "command": "planReviewer.explorer.search",
+          "when": "view == planReviewer.explorer",
+          "group": "navigation"
+        },
+        {
+          "command": "planReviewer.explorer.refresh",
           "when": "view == planReviewer.explorer",
           "group": "navigation"
         }

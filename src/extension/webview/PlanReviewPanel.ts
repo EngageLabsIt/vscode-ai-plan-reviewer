@@ -8,6 +8,7 @@ import { CommentRepository } from '../db/repositories/CommentRepository';
 import { DiffEngine } from '../services/DiffEngine';
 import { CommentMapper } from '../services/CommentMapper';
 import type { Comment, Plan } from '../../shared/models';
+import { PlanExplorerProvider } from '../views/PlanExplorerProvider';
 
 export class PlanReviewPanel {
   public static readonly viewType = 'planReviewer.reviewPanel';
@@ -156,6 +157,8 @@ export class PlanReviewPanel {
       status: payload.status,
       updatedAt: new Date().toISOString(),
     });
+
+    PlanExplorerProvider.instance?.refresh();
 
     this.postMessage({
       type: 'planStatusUpdated',
