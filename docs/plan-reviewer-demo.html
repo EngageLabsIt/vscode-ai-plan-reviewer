@@ -55,7 +55,7 @@
     background: #0d1117; border: 1px solid #30363d; color: #c9d1d9;
     border-radius: 6px; padding: 3px 8px; font-size: 12px; font-family: 'Plus Jakarta Sans', sans-serif;
   }
-  .comment-counts { display: flex; gap: 8px; font-size: 11px; color: #7d8590; margin-left: 8px; }
+  .comment-counts { display: none; }
   .toolbar-actions { display: flex; gap: 6px; margin-left: auto; }
 
   .btn {
@@ -84,6 +84,32 @@
   .line-row:hover { background: rgba(136,198,255,0.04); }
   .line-row:hover .add-btn { opacity: 1 !important; }
   .line-row.range-selected { background: rgba(99,102,241,0.08); }
+  .line-row--search-match { background: rgba(255, 213, 0, 0.08); }
+  .line-row--search-current { background: rgba(255, 213, 0, 0.22); outline: 1px solid rgba(255, 213, 0, 0.5); }
+
+  /* Search bar */
+  .search-bar {
+    display: flex; align-items: center; gap: 4px;
+    background: #1c2128; border-bottom: 1px solid #21262d;
+    padding: 4px 12px; flex-shrink: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    animation: fadeIn 0.2s ease;
+  }
+  .search-bar__input {
+    background: transparent; border: none; outline: none; color: #c9d1d9;
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px;
+    width: 200px; padding: 2px 4px;
+  }
+  .search-bar__input::placeholder { color: #484f58; }
+  .search-bar__count {
+    font-size: 11px; color: #8b949e; white-space: nowrap; min-width: 40px; text-align: center;
+  }
+  .search-bar__btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer; color: #8b949e;
+    padding: 2px; border-radius: 4px; transition: background 0.1s;
+  }
+  .search-bar__btn:hover { background: rgba(136,198,255,0.1); color: #c9d1d9; }
 
   .gutter {
     width: 60px; min-width: 60px; display: flex; align-items: center;
@@ -114,7 +140,7 @@
   }
   .section-toggle {
     cursor: pointer; color: #484f58; font-size: 10px; margin-right: 4px;
-    display: inline-block; transition: transform 0.15s;
+    display: none !important; transition: transform 0.15s;
   }
   .section-toggle.collapsed { transform: rotate(-90deg); }
 
@@ -143,6 +169,40 @@
   .comment-form .hint { font-size: 10px; color: #484f58; }
   .comment-form .range-label { font-size: 11px; color: #7d8590; margin-bottom: 6px; }
 
+  /* Inline comment form */
+  .comment-form-inline {
+    margin: 4px 0 4px 0; padding-left: 8px;
+    border-left: 2px solid #6366f1; animation: fadeIn 0.2s ease;
+  }
+  .comment-form-inline__textarea {
+    width: 100%; min-height: 28px; background: #0d1117; color: #c9d1d9;
+    border: 1px solid #30363d; border-radius: 4px; padding: 4px 6px;
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px;
+    resize: none; overflow: hidden; outline: none; box-sizing: border-box;
+  }
+  .comment-form-inline__textarea:focus { border-color: #6366f1; }
+  .comment-form-inline__actions { display: flex; gap: 6px; margin-top: 4px; }
+  .comment-form-inline__btn {
+    padding: 2px 10px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .comment-form-inline__btn--submit {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 2px 6px; min-width: 28px; background: #6366f1; color: #fff;
+  }
+  .comment-form-inline__btn--cancel { background: #1c2128; color: #8b949e; }
+
+  /* Selection highlighting */
+  .line-row--selecting { background: rgba(130, 200, 255, 0.18); }
+
+  /* Floating selection comment button */
+  .selection-comment-btn {
+    position: fixed; z-index: 1000; display: inline-flex; align-items: center;
+    justify-content: center; padding: 4px 8px; min-width: 32px;
+    background: #6366f1; color: #fff; border: none; border-radius: 4px;
+    cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.4); font-size: 12px;
+  }
+
   /* COMMENT CARD */
   .comment-card-wrap {
     margin: 4px 60px 8px 68px; animation: fadeIn 0.2s ease;
@@ -156,7 +216,7 @@
   .comment-card-header {
     display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
   }
-  .comment-category { font-size: 12px; font-weight: 600; }
+  .comment-category { display: none; }
   .comment-ref { font-size: 11px; color: #484f58; }
   .comment-actions { margin-left: auto; display: flex; gap: 2px; }
   .comment-actions button {
@@ -256,6 +316,7 @@
 
   /* STATUS BAR */
   .statusbar {
+    display: none !important;
     height: 24px; background: #1f6feb; display: flex; align-items: center;
     padding: 0 12px; font-size: 11px; color: #fff;
     font-family: 'Plus Jakarta Sans', sans-serif; flex-shrink: 0; gap: 12px;
@@ -271,24 +332,14 @@
 </head>
 <body>
 <div id="app">
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-logo">📋</div>
-    <span class="header-title">Plan Reviewer</span>
-    <span class="header-badge">DEMO</span>
-    <span class="header-right">VS Code Extension · TypeScript + React + SQLite</span>
-  </div>
 
   <!-- TOOLBAR -->
   <div class="toolbar">
     <span class="toolbar-title">User Authentication API</span>
-    <span id="statusBadge" class="status-badge in_review">In Review</span>
     <select class="version-select"><option>v1</option></select>
-    <div class="comment-counts" id="commentCounts"></div>
     <div class="toolbar-actions">
       <button class="btn" id="btnNav" onclick="toggleNav()">💬 <span id="navCount">4</span></button>
       <button class="btn" id="btnPrompt" onclick="showPromptModal()">🚀 Generate Prompt</button>
-      <button class="btn primary" id="btnApprove" onclick="toggleApprove()">✓ Approve</button>
     </div>
   </div>
 
@@ -380,18 +431,13 @@ Write integration tests for all auth flows using Jest and Supertest.
 Mock the database layer for unit tests.
 Include edge cases: expired tokens, invalid credentials, concurrent sessions.`;
 
-const CAT = {
-  issue:      { label:'Issue',      icon:'⛔', color:'#f87171', bg:'rgba(248,113,113,0.08)', border:'#dc2626' },
-  suggestion: { label:'Suggestion', icon:'💡', color:'#60a5fa', bg:'rgba(96,165,250,0.08)',  border:'#2563eb' },
-  question:   { label:'Question',   icon:'❓', color:'#fbbf24', bg:'rgba(251,191,36,0.08)',  border:'#d97706' },
-  approval:   { label:'Approval',   icon:'✅', color:'#34d399', bg:'rgba(52,211,153,0.08)',  border:'#059669' },
-};
+const SUGGESTION = { label:'Suggestion', icon:'💡', color:'#60a5fa', bg:'rgba(96,165,250,0.08)', border:'#2563eb' };
 
 let comments = [
-  { id:'c1', line:4,  endLine:4,  type:'line',  category:'issue',      body:'The database setup doesn\'t handle rollback on error. Add a transaction wrapper with try/catch and proper rollback mechanism.' },
-  { id:'c2', line:25, endLine:28, type:'range',  category:'suggestion', body:'Consider using CQRS pattern instead of pure REST for write operations. This would separate command and query responsibilities.' },
-  { id:'c3', line:31, endLine:31, type:'line',  category:'question',   body:'Why RS256 instead of HS256? RS256 adds complexity with key rotation. Is this justified for the scale of this project?' },
-  { id:'c4', line:1,  endLine:1,  type:'line',  category:'approval',   body:'Good overall structure. The plan covers all the essential aspects of auth implementation.' },
+  { id:'c1', line:4,  endLine:4,  type:'line',  category:'suggestion', body:'The database setup doesn\'t handle rollback on error. Add a transaction wrapper with try/catch and proper rollback mechanism.' },
+  { id:'c2', line:25, endLine:28, type:'range', category:'suggestion', body:'Consider using CQRS pattern instead of pure REST for write operations. This would separate command and query responsibilities.' },
+  { id:'c3', line:31, endLine:31, type:'line',  category:'suggestion', body:'Why RS256 instead of HS256? RS256 adds complexity with key rotation. Is this justified for the scale of this project?' },
+  { id:'c4', line:1,  endLine:1,  type:'line',  category:'suggestion', body:'Good overall structure. The plan covers all the essential aspects of auth implementation.' },
 ];
 
 let activeForm = null;
@@ -399,7 +445,7 @@ let selectedRange = null;
 let editingId = null;
 let collapsedSections = new Set();
 let navOpen = false;
-let navFilter = new Set(['issue','suggestion','question','approval']);
+// category filter removed — single category mode
 let status = 'in_review';
 let promptMode = 'same';
 
@@ -457,14 +503,9 @@ function renderPlan() {
     const hasComment = commentedLines.has(line.num);
     const isInRange = selectedRange && line.num >= selectedRange.start && line.num <= selectedRange.end;
 
-    // Get worst category for dot color
     let dotColor = '';
     if (hasComment) {
-      const lc = comments.filter(c => line.num >= c.line && line.num <= c.endLine);
-      if (lc.some(c => c.category === 'issue')) dotColor = CAT.issue.color;
-      else if (lc.some(c => c.category === 'question')) dotColor = CAT.question.color;
-      else if (lc.some(c => c.category === 'suggestion')) dotColor = CAT.suggestion.color;
-      else dotColor = CAT.approval.color;
+      dotColor = SUGGESTION.color;
     }
 
     html += `<div class="line-row${isInRange ? ' range-selected' : ''}" id="line-${line.num}" data-line="${line.num}">`;
@@ -497,38 +538,25 @@ function renderPlan() {
 }
 
 function renderCommentForm(lineNum) {
-  const rangeLabel = selectedRange
-    ? `<div class="range-label">Commenting on lines ${selectedRange.start}–${selectedRange.end}</div>`
-    : '';
   return `
-    <div class="comment-form-wrap">
-      <div class="comment-form">
-        ${rangeLabel}
-        <textarea id="formTextarea" placeholder="Write your review comment..." onkeydown="handleFormKey(event)"></textarea>
-        <div class="comment-form-actions">
-          <select id="formCategory">
-            ${Object.entries(CAT).map(([k,v]) => `<option value="${k}">${v.icon} ${v.label}</option>`).join('')}
-          </select>
-          <span style="flex:1"></span>
-          <span class="hint">Ctrl+Enter to submit</span>
-          <button class="btn" onclick="closeForm()">Cancel</button>
-          <button class="btn primary" onclick="addComment()">Add Comment</button>
-        </div>
+    <div class="comment-form-inline">
+      <textarea class="comment-form-inline__textarea" id="formTextarea" placeholder="Add a comment… (Ctrl+Enter to submit)" rows="1" onkeydown="handleFormKey(event)"></textarea>
+      <div class="comment-form-inline__actions">
+        <button class="comment-form-inline__btn comment-form-inline__btn--cancel" onclick="closeForm()">Cancel</button>
+        <button class="comment-form-inline__btn comment-form-inline__btn--submit" onclick="addComment()">Send</button>
       </div>
     </div>`;
 }
 
 function renderCommentCard(c) {
-  const cat = CAT[c.category];
   const ref = c.type === 'range' ? `Lines ${c.line}–${c.endLine}` : `Line ${c.line}`;
 
   if (editingId === c.id) {
     return `
-      <div class="comment-card-wrap" style="border-left:2px solid ${cat.border};border-radius:0 8px 8px 0">
-        <div class="comment-card" style="background:${cat.bg};border:1px solid ${cat.border}22;border-left:none">
+      <div class="comment-card-wrap" style="border-left:2px solid ${SUGGESTION.border};border-radius:0 8px 8px 0">
+        <div class="comment-card" style="background:${SUGGESTION.bg};border:1px solid ${SUGGESTION.border}22;border-left:none">
           <div class="comment-card-header">
-            <span class="comment-category" style="color:${cat.color}">${cat.icon} ${cat.label}</span>
-            <span class="comment-ref">— ${ref}</span>
+            <span class="comment-ref">${ref}</span>
           </div>
           <textarea class="edit-area" id="editArea">${esc(c.body)}</textarea>
           <div class="edit-actions">
@@ -540,11 +568,10 @@ function renderCommentCard(c) {
   }
 
   return `
-    <div class="comment-card-wrap" style="border-left:2px solid ${cat.border};border-radius:0 8px 8px 0">
-      <div class="comment-card" style="background:${cat.bg};border:1px solid ${cat.border}22;border-left:none">
+    <div class="comment-card-wrap" style="border-left:2px solid ${SUGGESTION.border};border-radius:0 8px 8px 0">
+      <div class="comment-card" style="background:${SUGGESTION.bg};border:1px solid ${SUGGESTION.border}22;border-left:none">
         <div class="comment-card-header">
-          <span class="comment-category" style="color:${cat.color}">${cat.icon} ${cat.label}</span>
-          <span class="comment-ref">— ${ref}</span>
+          <span class="comment-ref">${ref}</span>
           <div class="comment-actions">
             <button class="edit-btn" onclick="startEdit('${c.id}')">Edit</button>
             <button class="delete-btn" onclick="deleteComment('${c.id}')">Delete</button>
@@ -556,14 +583,6 @@ function renderCommentCard(c) {
 }
 
 function renderCounts() {
-  const counts = { issue:0, suggestion:0, question:0, approval:0 };
-  comments.forEach(c => counts[c.category]++);
-  let html = '';
-  if (counts.issue) html += `<span style="color:${CAT.issue.color}">⛔ ${counts.issue}</span>`;
-  if (counts.suggestion) html += `<span style="color:${CAT.suggestion.color}">💡 ${counts.suggestion}</span>`;
-  if (counts.question) html += `<span style="color:${CAT.question.color}">❓ ${counts.question}</span>`;
-  if (counts.approval) html += `<span style="color:${CAT.approval.color}">✅ ${counts.approval}</span>`;
-  document.getElementById('commentCounts').innerHTML = html;
   document.getElementById('navCount').textContent = comments.length;
 }
 
@@ -573,47 +592,19 @@ function renderStatusBar() {
 
 function renderNavigator() {
   const nav = document.getElementById('navigator');
-  const counts = { issue:0, suggestion:0, question:0, approval:0 };
-  comments.forEach(c => counts[c.category]++);
-  const filtered = comments.filter(c => navFilter.has(c.category));
 
   let html = `<div class="nav-header">`;
-  html += `<div class="nav-title">Comments (${filtered.length}/${comments.length})</div>`;
-  html += `<div class="nav-filters">`;
-  Object.entries(CAT).forEach(([k,v]) => {
-    const active = navFilter.has(k);
-    html += `<div class="filter-chip" onclick="toggleFilter('${k}')" style="
-      background:${active ? v.bg : 'transparent'};
-      border:1px solid ${active ? v.border+'44' : '#30363d'};
-      color:${active ? v.color : '#484f58'};
-    ">${v.icon} ${v.label} (${counts[k]})</div>`;
-  });
-  html += `</div></div>`;
+  html += `<div class="nav-title">Comments (${comments.length})</div>`;
+  html += `</div>`;
 
   html += `<div class="nav-list">`;
-  const order = ['issue','question','suggestion','approval'];
-  filtered.sort((a,b) => order.indexOf(a.category) - order.indexOf(b.category));
-  filtered.forEach(c => {
-    const cat = CAT[c.category];
+  comments.forEach(c => {
     const ref = c.type === 'range' ? `Lines ${c.line}–${c.endLine}` : `Line ${c.line}`;
-    html += `<div class="nav-item" style="border-left:2px solid ${cat.border}" onclick="scrollToLine(${c.line})">
+    html += `<div class="nav-item" style="border-left:2px solid ${SUGGESTION.border}" onclick="scrollToLine(${c.line})">
       <div class="nav-item-header">
-        <span class="nav-item-cat" style="color:${cat.color}">${cat.icon} ${cat.label}</span>
         <span class="nav-item-ref">${ref}</span>
       </div>
       <div class="nav-item-body">${esc(c.body)}</div>
-    </div>`;
-  });
-  html += `</div>`;
-
-  html += `<div class="nav-sections"><div class="nav-sections-title">Sections</div>`;
-  sections.filter(s => s.level <= 2).forEach(s => {
-    const nextSec = sections.find(ns => ns.line > s.line && ns.level <= s.level);
-    const end = nextSec ? nextSec.line : lines.length;
-    const count = comments.filter(c => c.line >= s.line && c.line <= end).length;
-    html += `<div class="section-item" onclick="scrollToLine(${s.line})" style="padding-left:${s.level > 1 ? 16 : 8}px">
-      <span class="sec-title">${esc(s.title)}</span>
-      ${count > 0 ? `<span class="sec-count">${count}</span>` : ''}
     </div>`;
   });
   html += `</div>`;
@@ -668,7 +659,6 @@ function handleFormKey(e) {
 
 function addComment() {
   const ta = document.getElementById('formTextarea');
-  const sel = document.getElementById('formCategory');
   if (!ta || !ta.value.trim()) return;
   const target = selectedRange || { start: activeForm, end: activeForm };
   comments.push({
@@ -676,7 +666,7 @@ function addComment() {
     line: target.start,
     endLine: target.end,
     type: target.start === target.end ? 'line' : 'range',
-    category: sel.value,
+    category: 'suggestion',
     body: ta.value.trim(),
   });
   activeForm = null;
@@ -726,10 +716,8 @@ function toggleNav() {
   if (navOpen) renderNavigator();
 }
 
-function toggleFilter(cat) {
-  if (navFilter.has(cat)) navFilter.delete(cat);
-  else navFilter.add(cat);
-  renderNavigator();
+function toggleFilter() {
+  // No-op: single category mode
 }
 
 function toggleApprove() {
@@ -743,34 +731,16 @@ function toggleApprove() {
 
 // ─── PROMPT MODAL ───────────────────────────────────────
 function generatePrompt() {
-  const grouped = { issue:[], suggestion:[], question:[], approval:[] };
-  comments.forEach(c => grouped[c.category].push(c));
   let p = `## Plan Review — Iteration 1\n\nThe plan has been reviewed. Apply the following feedback:\n\n`;
-  if (grouped.issue.length) {
-    p += `### Issues (must fix)\n`;
-    grouped.issue.forEach(c => {
+  if (comments.length) {
+    p += `### Suggestions\n`;
+    comments.forEach(c => {
       const ref = c.type === 'range' ? `Lines ${c.line}-${c.endLine}` : `Line ${c.line}`;
       p += `- **[${ref}]** ${c.body}\n`;
     });
     p += '\n';
   }
-  if (grouped.suggestion.length) {
-    p += `### Suggestions (recommended)\n`;
-    grouped.suggestion.forEach(c => {
-      const ref = c.type === 'range' ? `Lines ${c.line}-${c.endLine}` : `Line ${c.line}`;
-      p += `- **[${ref}]** ${c.body}\n`;
-    });
-    p += '\n';
-  }
-  if (grouped.question.length) {
-    p += `### Questions (clarification needed)\n`;
-    grouped.question.forEach(c => {
-      const ref = c.type === 'range' ? `Lines ${c.line}-${c.endLine}` : `Line ${c.line}`;
-      p += `- **[${ref}]** ${c.body}\n`;
-    });
-    p += '\n';
-  }
-  p += `Please generate an updated plan that resolves all issues, integrates suggestions, and answers questions.`;
+  p += `Please generate an updated plan that integrates the suggestions.`;
   if (promptMode === 'full') {
     p = `## Original Plan\n\n${PLAN}\n\n---\n\n${p}`;
   }
@@ -822,6 +792,164 @@ document.addEventListener('click', function(e) {
     if (ta) ta.focus();
   }
 });
+
+// ─── TEXT SELECTION & FLOATING BUTTON ────────────────────
+let selectionBtn = null;
+
+document.getElementById('planViewer').addEventListener('mouseup', function(e) {
+  if (selectionBtn) { selectionBtn.remove(); selectionBtn = null; }
+  document.querySelectorAll('.line-row--selecting').forEach(el => el.classList.remove('line-row--selecting'));
+
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
+
+  const range = sel.getRangeAt(0);
+  const startEl = range.startContainer.nodeType === Node.TEXT_NODE ? range.startContainer.parentElement : range.startContainer;
+  const endEl = range.endContainer.nodeType === Node.TEXT_NODE ? range.endContainer.parentElement : range.endContainer;
+  const startRow = startEl?.closest('.line-row');
+  const endRow = endEl?.closest('.line-row');
+  if (!startRow || !endRow) return;
+
+  const startLine = parseInt(startRow.dataset.line);
+  const endLine = parseInt(endRow.dataset.line);
+  if (isNaN(startLine) || isNaN(endLine)) return;
+
+  const minLine = Math.min(startLine, endLine);
+  const maxLine = Math.max(startLine, endLine);
+
+  for (let i = minLine; i <= maxLine; i++) {
+    const row = document.getElementById('line-' + i);
+    if (row) row.classList.add('line-row--selecting');
+  }
+
+  selectionBtn = document.createElement('button');
+  selectionBtn.className = 'selection-comment-btn';
+  selectionBtn.setAttribute('aria-label', 'Add comment on selection');
+  selectionBtn.innerHTML = '+';
+  selectionBtn.style.left = e.clientX + 'px';
+  selectionBtn.style.top = (e.clientY - 36) + 'px';
+  selectionBtn.onclick = function() {
+    activeForm = minLine;
+    selectedRange = { start: minLine, end: maxLine };
+    sel.removeAllRanges();
+    selectionBtn.remove();
+    selectionBtn = null;
+    render();
+    const ta = document.getElementById('formTextarea');
+    if (ta) ta.focus();
+  };
+  document.body.appendChild(selectionBtn);
+});
+
+// ─── SEARCH (CTRL+F) ────────────────────────────────────
+let searchOpen = false;
+let searchQuery = '';
+let searchMatchLines = [];
+let searchIdx = 0;
+
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+    e.preventDefault();
+    if (!searchOpen) {
+      searchOpen = true;
+      renderSearchBar();
+    } else {
+      const input = document.querySelector('.search-bar__input');
+      if (input) input.focus();
+    }
+  }
+});
+
+function renderSearchBar() {
+  let bar = document.querySelector('.search-bar');
+  if (bar) bar.remove();
+  if (!searchOpen) return;
+
+  bar = document.createElement('div');
+  bar.className = 'search-bar';
+  bar.innerHTML = `
+    <input class="search-bar__input" type="text" placeholder="Search..." value="${esc(searchQuery)}">
+    <span class="search-bar__count">${searchMatchLines.length > 0 ? searchIdx + ' / ' + searchMatchLines.length : '0 / 0'}</span>
+    <button class="search-bar__btn" aria-label="Previous match" title="Previous match" onclick="searchPrev()">&#x25B2;</button>
+    <button class="search-bar__btn" aria-label="Next match" title="Next match" onclick="searchNext()">&#x25BC;</button>
+    <button class="search-bar__btn" aria-label="Close search" title="Close search" onclick="closeSearch()">&#x2715;</button>
+  `;
+
+  const main = document.querySelector('.main');
+  main.parentNode.insertBefore(bar, main);
+
+  const input = bar.querySelector('.search-bar__input');
+  input.focus();
+  input.addEventListener('input', function() {
+    searchQuery = this.value;
+    updateSearchMatches();
+    updateSearchBarCount();
+    applySearchHighlights();
+  });
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { e.preventDefault(); closeSearch(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (e.shiftKey) searchPrev(); else searchNext(); }
+  });
+}
+
+function updateSearchBarCount() {
+  const countEl = document.querySelector('.search-bar__count');
+  if (countEl) {
+    countEl.textContent = searchMatchLines.length > 0 ? searchIdx + ' / ' + searchMatchLines.length : '0 / 0';
+  }
+}
+
+function updateSearchMatches() {
+  searchMatchLines = [];
+  if (!searchQuery) { searchIdx = 0; return; }
+  const q = searchQuery.toLowerCase();
+  lines.forEach(l => { if (l.raw.toLowerCase().includes(q)) searchMatchLines.push(l.num); });
+  searchIdx = searchMatchLines.length > 0 ? 1 : 0;
+}
+
+function applySearchHighlights() {
+  document.querySelectorAll('.line-row--search-match, .line-row--search-current').forEach(el => {
+    el.classList.remove('line-row--search-match', 'line-row--search-current');
+  });
+  searchMatchLines.forEach(num => {
+    const row = document.getElementById('line-' + num);
+    if (row) row.classList.add('line-row--search-match');
+  });
+  if (searchIdx > 0 && searchMatchLines.length > 0) {
+    const currentLine = searchMatchLines[searchIdx - 1];
+    const row = document.getElementById('line-' + currentLine);
+    if (row) {
+      row.classList.add('line-row--search-current');
+      row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }
+}
+
+function searchNext() {
+  if (searchMatchLines.length === 0) return;
+  searchIdx = searchIdx >= searchMatchLines.length ? 1 : searchIdx + 1;
+  updateSearchBarCount();
+  applySearchHighlights();
+}
+
+function searchPrev() {
+  if (searchMatchLines.length === 0) return;
+  searchIdx = searchIdx <= 1 ? searchMatchLines.length : searchIdx - 1;
+  updateSearchBarCount();
+  applySearchHighlights();
+}
+
+function closeSearch() {
+  searchOpen = false;
+  searchQuery = '';
+  searchMatchLines = [];
+  searchIdx = 0;
+  const bar = document.querySelector('.search-bar');
+  if (bar) bar.remove();
+  document.querySelectorAll('.line-row--search-match, .line-row--search-current').forEach(el => {
+    el.classList.remove('line-row--search-match', 'line-row--search-current');
+  });
+}
 
 // ─── INIT ───────────────────────────────────────────────
 render();

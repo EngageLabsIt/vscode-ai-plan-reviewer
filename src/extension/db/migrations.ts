@@ -58,6 +58,13 @@ const SCHEMA_V2 = `
 ALTER TABLE comments ADD COLUMN carried_from_id TEXT REFERENCES comments(id);
 `;
 
+
+function getColumnNames(db: Database, table: string): string[] {
+  const results = db.exec(`PRAGMA table_info(${table})`);
+  if (results.length === 0) return [];
+  return results[0].values.map((row) => String(row[1]));
+}
+
 function getCurrentVersion(db: Database): number {
   // schema_version table might not exist yet; guard with exec
   try {
@@ -94,5 +101,49 @@ export function runMigrations(db: Database): void {
     const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
     stmt.run([2]);
     stmt.free();
+  }
+
+  if (currentVersion < 3) {
+    const cols = getColumnNames(db, 'comments');
+    if (!cols.includes('target_start_char')) {
+      db.exec('ALTER TABLE comments ADD COLUMN target_start_char INTEGER DEFAULT NULL');
+    }
+    if (!cols.includes('target_end_char')) {
+      db.exec('ALTER TABLE comments ADD COLUMN target_end_char INTEGER DEFAULT NULL');
+    }
+    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    stmt.run([3]);
+    stmt.free();
+  }
+
+  if (currentVersion < 4) {
+    // Normalize all existing comments to 'suggestion' category
+    db.exec("UPDATE comments SET category = 'suggestion' WHERE category != 'suggestion'");
+    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    stmt.run([4]);
+    stmt.free();
+  }
+
+  if (currentVersion < 5) {
+    const cols = getColumnNames(db, 'comments');
+    if (!cols.includes('selected_text')) {
+      db.exec('ALTER TABLE comments ADD COLUMN selected_text TEXT DEFAULT NULL');
+    }
+    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    stmt.run([5]);
+    stmt.free();
+  }
+
+  // Repair: fix databases where V3 migration ran but columns are missing
+  // (caused by the old try/catch swallowing ALTER TABLE errors)
+  const repairCols = getColumnNames(db, 'comments');
+  if (!repairCols.includes('target_start_char')) {
+    db.exec('ALTER TABLE comments ADD COLUMN target_start_char INTEGER DEFAULT NULL');
+  }
+  if (!repairCols.includes('target_end_char')) {
+    db.exec('ALTER TABLE comments ADD COLUMN target_end_char INTEGER DEFAULT NULL');
+  }
+  if (!repairCols.includes('selected_text')) {
+    db.exec('ALTER TABLE comments ADD COLUMN selected_text TEXT DEFAULT NULL');
   }
 }

@@ -31,6 +31,9 @@ function rowToComment(row: Row): Comment {
     createdAt: String(row['created_at'] ?? ''),
     carriedFromId:
       typeof row['carried_from_id'] === 'string' ? row['carried_from_id'] : null,
+    targetStartChar: typeof row['target_start_char'] === 'number' ? row['target_start_char'] : null,
+    targetEndChar:   typeof row['target_end_char']   === 'number' ? row['target_end_char']   : null,
+    selectedText:    typeof row['selected_text']      === 'string' ? row['selected_text']      : null,
   };
 }
 
@@ -44,8 +47,8 @@ export class CommentRepository {
   insert(comment: Comment): void {
     const stmt = this.db.prepare(
       `INSERT INTO comments
-         (id, version_id, type, target_start, target_end, section_id, body, category, resolved, created_at, carried_from_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         (id, version_id, type, target_start, target_end, section_id, body, category, resolved, created_at, carried_from_id, target_start_char, target_end_char, selected_text)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
     stmt.run([
       comment.id,
@@ -59,6 +62,9 @@ export class CommentRepository {
       comment.resolved ? 1 : 0,
       comment.createdAt,
       comment.carriedFromId,
+      comment.targetStartChar ?? null,
+      comment.targetEndChar ?? null,
+      comment.selectedText ?? null,
     ]);
     stmt.free();
   }

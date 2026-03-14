@@ -34,7 +34,28 @@
       "mcp__claude_ai_Gamma__get_generation_status",
       "WebSearch",
       "WebFetch(domain:code.visualstudio.com)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run test 2>&1)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run compile 2>&1 | grep -i \"unused\\\\|not used\" | head -20)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npx tsc --noEmit 2>&1 | grep -A 2 \"error\" | head -50)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run lint 2>&1 | head -100)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run build 2>&1 | tail -40)",
+      "Bash(for class:*)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && cat > /tmp/quality_check.sh << 'EOF'\n#!/bin/bash\n\necho \"=== CODE QUALITY ANALYSIS ===\"\necho \"\"\n\nfiles=\\(\n  \"src/webview/components/CommentForm.tsx\"\n  \"src/webview/components/CommentCard.tsx\"\n  \"src/webview/components/CommentNavigator.tsx\"\n  \"src/webview/App.tsx\"\n  \"src/webview/components/PlanViewer.tsx\"\n  \"src/shared/PromptGenerator.ts\"\n\\)\n\nfor file in \"${files[@]}\"; do\n  echo \"File: $file\"\n  \n  # Check for unused imports\n  unused=$\\(grep \"^import\" \"$file\" | wc -l\\)\n  used=0\n  while IFS= read -r import_line; do\n    name=$\\(echo \"$import_line\" | sed 's/.*import[^}]*{\\\\\\([^}]*\\\\\\)}.*/\\\\1/' | sed 's/ //g' | sed 's/as.*//' | head -c 50\\)\n    if [ ! -z \"$name\" ] && grep -q \"$name\" \"$file\" | head -1; then\n      \\(\\(used++\\)\\)\n    fi\n  done < <\\(grep \"^import\" \"$file\"\\)\n  \n  # Check for dead code patterns\n  console_logs=$\\(grep -c \"console\\\\.\" \"$file\" 2>/dev/null || true\\)\n  comments=$\\(grep -c \"^[[:space:]]*//.*TODO\\\\|FIXME\\\\|XXX\\\\|HACK\" \"$file\" 2>/dev/null || true\\)\n  \n  if [ $console_logs -gt 0 ]; then\n    echo \"  ⚠ Warning: Contains $console_logs console.* calls \\(may be debug\\)\"\n  fi\n  \n  if [ $comments -gt 0 ]; then\n    echo \"  ⚠ Warning: Contains $comments TODO/FIXME comments\"\n  fi\n  \n  echo \"  ✓ Imports: $\\(grep '^import' \"$file\" | wc -l\\) lines\"\n  echo \"  ✓ Size: $\\(wc -l < \"$file\"\\) lines\"\n  echo \"\"\ndone\n\nEOF\nchmod +x /tmp/quality_check.sh\nbash /tmp/quality_check.sh)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run test 2>&1 | tail -20)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npx tsc -p tsconfig.webview.json --noEmit 2>&1)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run compile 2>&1 | head -50)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run test -- src/test/PromptGenerator.test.ts --reporter=verbose 2>&1 | head -100)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run test 2>&1 | head -100)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run lint 2>&1)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && grep -n \"import.*Category\" src/webview/components/*.tsx)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run build 2>&1 | head -50)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && grep -n \"class=\\\\\".*-btn\\\\|className=\\\\\".*-btn\" src/webview/components/*.tsx | wc -l)",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run compile 2>&1 && echo \"✓ TypeScript compile passed\")",
+      "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && grep -n \"export.*Gutter\\\\|export.*Form\\\\|export.*Card\\\\|export.*Navigator\\\\|export.*Viewer\" src/webview/components/*.tsx)",
+      "Bash(find '/c/_/Repos/Sandbox/Plan Reviewer/dist' -name *.css)",
+      "Bash(cd:*)"
     ]
-  }
+  },
+  "bypassPermissions": true
 }

@@ -3,7 +3,7 @@ import { useVsCodeApi } from './hooks/useVsCodeApi';
 import { PlanViewer } from './components/PlanViewer';
 import { ReviewToolbar } from './components/ReviewToolbar';
 import { CommentNavigator } from './components/CommentNavigator';
-import { CommentForm } from './components/CommentForm';
+import { SearchBar } from './components/SearchBar';
 import { PromptPreview } from './components/PromptPreview';
 import type { HostMessage } from '../../shared/messages';
 import type { Comment, Plan, Section, Version } from '../../shared/models';
@@ -24,8 +24,8 @@ interface LoadedPlan {
 
 type CommentFormState =
   | { type: 'section'; sectionId: string; heading: string }
-  | { type: 'line';    lineNumber: number }
-  | { type: 'range';   startLine: number; endLine: number };
+  | { type: 'line';    lineNumber: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null }
+  | { type: 'range';   startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null };
 
 // ---------------------------------------------------------------------------
 // App
@@ -39,6 +39,10 @@ export const App: React.FC = () => {
   const [commentFormState, setCommentFormState] = useState<CommentFormState | null>(null);
   const [activeCommentLine, setActiveCommentLine] = useState<number | null>(null);
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchMatches, setSearchMatches] = useState<number[]>([]);
+  const [searchIndex, setSearchIndex] = useState(0);
 
   // Signal readiness to the extension host
   useEffect(() => {
@@ -154,6 +158,10 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'G') {
         e.preventDefault();
         if (loadedPlanRef.current !== null) {
@@ -184,7 +192,7 @@ export const App: React.FC = () => {
       return;
     }
     setActiveCommentLine(lineNumber);
-    setCommentFormState({ type: 'line', lineNumber });
+    setCommentFormState({ type: 'line', lineNumber, startCharOffset: null, endCharOffset: null, selectedText: null });
   }, [activeCommentLine]);
 
   const handleLineShiftClick = useCallback((lineNumber: number): void => {
@@ -193,11 +201,14 @@ export const App: React.FC = () => {
       type: 'range',
       startLine: Math.min(activeCommentLine, lineNumber),
       endLine: Math.max(activeCommentLine, lineNumber),
+      startCharOffset: null,
+      endCharOffset: null,
+      selectedText: null,
     });
   }, [activeCommentLine]);
 
-  const handleEditComment = useCallback((id: string, body: string, category: Comment['category']): void => {
-    vscode.postMessage({ type: 'updateComment', payload: { id, body, category } });
+  const handleEditComment = useCallback((id: string, body: string): void => {
+    vscode.postMessage({ type: 'updateComment', payload: { id, body } });
   }, [vscode]);
 
   const handleDeleteComment = useCallback((id: string): void => {
@@ -208,27 +219,90 @@ export const App: React.FC = () => {
     vscode.postMessage({ type: 'resolveComment', payload: { id } });
   }, [vscode]);
 
-  const handleCommentFormSubmit = useCallback((body: string, category: Comment['category']): void => {
+  const handleCommentFormSubmit = useCallback((body: string): void => {
     if (commentFormState === null || loadedPlan === null) return;
+    const category: Comment['category'] = 'suggestion';
 
     if (commentFormState.type === 'section') {
       const section = loadedPlan.sections.find((s) => s.id === commentFormState.sectionId);
       if (section === undefined) return;
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'section', sectionId: section.id, targetStart: section.startLine, targetEnd: section.endLine, body, category, resolved: false, carriedFromId: null } });
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'section', sectionId: section.id, targetStart: section.startLine, targetEnd: section.endLine, body, category, resolved: false, carriedFromId: null, targetStartChar: null, targetEndChar: null, selectedText: null } });
     } else if (commentFormState.type === 'line') {
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'line', sectionId: null, targetStart: commentFormState.lineNumber, targetEnd: commentFormState.lineNumber, body, category, resolved: false, carriedFromId: null } });
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'line', sectionId: null, targetStart: commentFormState.lineNumber, targetEnd: commentFormState.lineNumber, body, category, resolved: false, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
     } else {
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'range', sectionId: null, targetStart: commentFormState.startLine, targetEnd: commentFormState.endLine, body, category, resolved: false, carriedFromId: null } });
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'range', sectionId: null, targetStart: commentFormState.startLine, targetEnd: commentFormState.endLine, body, category, resolved: false, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
     }
 
     setCommentFormState(null);
     setActiveCommentLine(null);
   }, [commentFormState, loadedPlan, vscode]);
 
+  const handleSelectionComment = useCallback((startLine: number, endLine: number, startChar: number | null, endChar: number | null, selectedText: string): void => {
+    if (startLine === endLine) {
+      setActiveCommentLine(startLine);
+      setCommentFormState({ type: 'line', lineNumber: startLine, startCharOffset: startChar, endCharOffset: endChar, selectedText });
+    } else {
+      setActiveCommentLine(startLine);
+      setCommentFormState({ type: 'range', startLine, endLine, startCharOffset: startChar, endCharOffset: endChar, selectedText });
+    }
+  }, []);
+
   const handleCommentFormCancel = useCallback((): void => {
     setCommentFormState(null);
     setActiveCommentLine(null);
   }, []);
+
+  // ── Search ──────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (searchQuery.length === 0 || loadedPlan === null) {
+      setSearchMatches([]);
+      setSearchIndex(0);
+      return;
+    }
+    const q = searchQuery.toLowerCase();
+    const lines = loadedPlan.content.split('\n');
+    const matches: number[] = [];
+    lines.forEach((line, i) => {
+      if (line.toLowerCase().includes(q)) {
+        matches.push(i + 1);
+      }
+    });
+    setSearchMatches(matches);
+    setSearchIndex(matches.length > 0 ? 1 : 0);
+  }, [searchQuery, loadedPlan]);
+
+  const handleToggleSearch = useCallback((): void => {
+    setSearchOpen((open) => {
+      if (open) {
+        setSearchQuery('');
+        setSearchMatches([]);
+        setSearchIndex(0);
+      }
+      return !open;
+    });
+  }, []);
+
+  const handleSearchNext = useCallback((): void => {
+    if (searchMatches.length === 0) return;
+    setSearchIndex((prev) => (prev >= searchMatches.length ? 1 : prev + 1));
+  }, [searchMatches.length]);
+
+  const handleSearchPrev = useCallback((): void => {
+    if (searchMatches.length === 0) return;
+    setSearchIndex((prev) => (prev <= 1 ? searchMatches.length : prev - 1));
+  }, [searchMatches.length]);
+
+  const handleSearchClose = useCallback((): void => {
+    setSearchOpen(false);
+    setSearchQuery('');
+    setSearchMatches([]);
+    setSearchIndex(0);
+  }, []);
+
+  const searchCurrentLine = searchMatches.length > 0 && searchIndex > 0
+    ? searchMatches[searchIndex - 1]
+    : null;
 
   // ── Derived: section-scoped comments only ─────────────────────────────────
   const sectionComments = useMemo<Comment[]>(() => {
@@ -248,6 +322,8 @@ export const App: React.FC = () => {
             comments={loadedPlan.comments}
             onToggleNavigator={handleToggleNavigator}
             navigatorOpen={navigatorOpen}
+            onToggleSearch={handleToggleSearch}
+            searchOpen={searchOpen}
             onGeneratePrompt={handleGeneratePrompt}
             onApprove={handleApprove}
             onSelectVersion={handleSelectVersion}
@@ -261,6 +337,17 @@ export const App: React.FC = () => {
             onToggleCollapse={handleTimelineToggle}
           /> */}
           <div className="plan-content-area">
+            {searchOpen && (
+              <SearchBar
+                query={searchQuery}
+                onQueryChange={setSearchQuery}
+                currentIndex={searchIndex}
+                totalMatches={searchMatches.length}
+                onNext={handleSearchNext}
+                onPrev={handleSearchPrev}
+                onClose={handleSearchClose}
+              />
+            )}
             <PlanViewer
               content={loadedPlan.content}
               sections={loadedPlan.sections}
@@ -279,6 +366,12 @@ export const App: React.FC = () => {
               onEdit={handleEditComment}
               onDelete={handleDeleteComment}
               onResolve={handleResolveComment}
+              searchMatches={searchMatches}
+              searchCurrentLine={searchCurrentLine}
+              commentFormState={commentFormState}
+              onCommentSubmit={handleCommentFormSubmit}
+              onCommentCancel={handleCommentFormCancel}
+              onSelectionComment={handleSelectionComment}
             />
             <CommentNavigator
               comments={loadedPlan.comments}
@@ -289,21 +382,6 @@ export const App: React.FC = () => {
               onResolve={handleResolveComment}
             />
           </div>
-
-          {/* CommentForm modal — rendered when a target is selected */}
-          {commentFormState !== null && (
-            <CommentForm
-              target={
-                commentFormState.type === 'section'
-                  ? { type: 'section', heading: commentFormState.heading }
-                  : commentFormState.type === 'line'
-                    ? { type: 'line', lineNumber: commentFormState.lineNumber }
-                    : { type: 'range', startLine: commentFormState.startLine, endLine: commentFormState.endLine }
-              }
-              onSubmit={handleCommentFormSubmit}
-              onCancel={handleCommentFormCancel}
-            />
-          )}
 
           {promptPreviewOpen && (
             <PromptPreview

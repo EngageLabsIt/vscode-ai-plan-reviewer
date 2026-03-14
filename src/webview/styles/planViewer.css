@@ -7,49 +7,40 @@
 /* ── Design Tokens ─────────────────────────────────────────── */
 
 :root {
-  /* Surfaces (dark) */
-  --md-surface-0:     #0f1117;
-  --md-surface-1:     #161b22;
-  --md-surface-2:     #1c2128;
-  --md-surface-3:     #21262d;
-  --md-border:        #21262d;
-  --md-border-subtle: #30363d;
+  /* Surfaces — mapped to VS Code theme */
+  --md-surface-0:     var(--vscode-editor-background, #0f1117);
+  --md-surface-1:     var(--vscode-sideBar-background, #161b22);
+  --md-surface-2:     var(--vscode-input-background, #1c2128);
+  --md-surface-3:     var(--vscode-editorWidget-background, #21262d);
+  --md-border:        var(--vscode-panel-border, #21262d);
+  --md-border-subtle: var(--vscode-widget-border, #30363d);
 
-  /* Text */
-  --md-on-surface:         #e6edf3;
-  --md-on-surface-medium:  #c9d1d9;
-  --md-on-surface-dim:     #8b949e;
-  --md-on-surface-muted:   #7d8590;
-  --md-on-surface-faint:   #484f58;
+  /* Text — mapped to VS Code theme */
+  --md-on-surface:         var(--vscode-foreground, #e6edf3);
+  --md-on-surface-medium:  var(--vscode-foreground, #c9d1d9);
+  --md-on-surface-dim:     var(--vscode-descriptionForeground, #8b949e);
+  --md-on-surface-muted:   var(--vscode-descriptionForeground, #7d8590);
+  --md-on-surface-faint:   var(--vscode-disabledForeground, #484f58);
 
-  /* Primary (indigo) */
-  --md-primary:        #6366f1;
+  /* Primary — mapped to VS Code button */
+  --md-primary:        var(--vscode-button-background, #6366f1);
   --md-primary-dim:    rgba(99,102,241,0.15);
   --md-primary-hover:  rgba(99,102,241,0.08);
-  --md-primary-active: #1f6feb;
+  --md-primary-active: var(--vscode-focusBorder, #1f6feb);
 
-  /* Category colors */
-  --md-issue-text:   #f87171;
-  --md-issue-bg:     rgba(248,113,113,0.08);
-  --md-issue-border: #dc2626;
-  --md-sug-text:     #60a5fa;
+  /* Suggestion color — mapped to VS Code diagnostics */
+  --md-sug-text:     var(--vscode-editorInfo-foreground, #60a5fa);
   --md-sug-bg:       rgba(96,165,250,0.08);
-  --md-sug-border:   #2563eb;
-  --md-quest-text:   #fbbf24;
-  --md-quest-bg:     rgba(251,191,36,0.08);
-  --md-quest-border: #d97706;
-  --md-appr-text:    #34d399;
-  --md-appr-bg:      rgba(52,211,153,0.08);
-  --md-appr-border:  #059669;
+  --md-sug-border:   var(--vscode-editorInfo-foreground, #2563eb);
 
-  /* Elevation shadows */
-  --md-elevation-1: 0 1px 2px rgba(0,0,0,0.4), 0 1px 3px 1px rgba(0,0,0,0.2);
-  --md-elevation-2: 0 1px 2px rgba(0,0,0,0.4), 0 2px 6px 2px rgba(0,0,0,0.2);
-  --md-elevation-3: 0 4px 8px 3px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.4);
+  /* Elevation shadows — use VS Code shadow */
+  --md-elevation-1: 0 1px 3px var(--vscode-widget-shadow, rgba(0,0,0,0.4));
+  --md-elevation-2: 0 2px 6px var(--vscode-widget-shadow, rgba(0,0,0,0.4));
+  --md-elevation-3: 0 4px 12px var(--vscode-widget-shadow, rgba(0,0,0,0.4));
 
-  /* Typography */
-  --md-font-ui:   'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
-  --md-font-code: 'JetBrains Mono', 'Cascadia Code', var(--vscode-editor-font-family, monospace);
+  /* Typography — mapped to VS Code fonts */
+  --md-font-ui:   var(--vscode-font-family, 'Segoe UI', system-ui, sans-serif);
+  --md-font-code: var(--vscode-editor-font-family, monospace);
 
   /* Radius */
   --md-radius-sm:   4px;
@@ -77,13 +68,13 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  background: var(--md-surface-0);
+  background: var(--vscode-editor-background, var(--md-surface-0));
 }
 
 body {
-  font-family: var(--md-font-ui);
-  font-size: 13px;
-  color: var(--md-on-surface-medium);
+  font-family: var(--vscode-font-family, var(--md-font-ui));
+  font-size: var(--vscode-font-size, 13px);
+  color: var(--vscode-foreground, var(--md-on-surface-medium));
 }
 
 /* Custom scrollbar */
@@ -106,6 +97,16 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
+}
+
+.plan-viewer-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ── Status Bar ───────────────────────────────────────────── */
@@ -117,7 +118,7 @@ body {
   height: 24px;
   padding: 0 12px;
   background: var(--md-primary-active);
-  color: #fff;
+  color: var(--vscode-button-foreground, #fff);
   font-family: var(--md-font-ui);
   font-size: 11px;
   letter-spacing: 0.3px;
@@ -281,11 +282,6 @@ body {
 
 .review-toolbar__count-chip .material-symbols-outlined { font-size: 15px; }
 
-.review-toolbar__count-chip--issue      { color: var(--md-issue-text); }
-.review-toolbar__count-chip--suggestion { color: var(--md-quest-text); }
-.review-toolbar__count-chip--question   { color: var(--md-on-surface-dim); }
-.review-toolbar__count-chip--approval   { color: var(--md-appr-text); }
-
 /* Base button */
 .review-toolbar__btn {
   display: inline-flex;
@@ -314,7 +310,7 @@ body {
 /* Comments count button (blue pill) */
 .review-toolbar__btn--comments {
   background: var(--md-primary);
-  color: #fff;
+  color: var(--vscode-button-foreground, #fff);
   border: none;
   border-radius: var(--md-radius-xl);
   padding: 4px 12px;
@@ -335,8 +331,8 @@ body {
 
 /* Filled — primary (Approve) */
 .review-toolbar__btn--primary {
-  background: #238636;
-  color: #fff;
+  background: var(--vscode-testing-iconPassed, #238636);
+  color: var(--vscode-button-foreground, #fff);
   border-color: transparent;
   border-radius: var(--md-radius-xl);
   font-weight: 600;
@@ -346,14 +342,14 @@ body {
 /* Tonal — ghost (Generate Prompt) */
 .review-toolbar__btn--ghost {
   background: var(--md-primary-dim);
-  color: #c4b5fd;
+  color: var(--vscode-button-secondaryForeground, #c4b5fd);
   border-color: transparent;
   border-radius: var(--md-radius-xl);
 }
 .review-toolbar__btn--ghost:hover:not(:disabled) { background: rgba(99,102,241,0.22); }
 .review-toolbar__btn--ghost.active {
   background: var(--md-primary-active);
-  color: #fff;
+  color: var(--vscode-button-foreground, #fff);
 }
 
 /* Status badges */
@@ -378,7 +374,7 @@ body {
 }
 .review-toolbar__badge--needs-revision {
   background: rgba(248,113,113,0.12);
-  color: var(--md-issue-text);
+  color: var(--vscode-editorError-foreground, #f87171);
   border: 1px solid rgba(248,113,113,0.3);
 }
 .review-toolbar__badge--archived {
@@ -436,13 +432,13 @@ body {
 .plan-timeline__node--current .plan-timeline__circle {
   background: var(--md-primary);
   border-color: var(--md-primary);
-  color: #fff;
+  color: var(--vscode-button-foreground, #fff);
   box-shadow: 0 0 0 4px var(--md-primary-dim), var(--md-elevation-2);
 }
 
 .plan-timeline__node--approved .plan-timeline__circle {
-  border-color: var(--md-appr-border);
-  color: var(--md-appr-text);
+  border-color: var(--vscode-testing-iconPassed, #059669);
+  color: var(--vscode-testing-iconPassed, #34d399);
 }
 
 .plan-timeline__label {
@@ -480,11 +476,11 @@ body {
 /* ── Plan Viewer ──────────────────────────────────────────── */
 
 .plan-viewer {
-  background: var(--md-surface-0);
-  font-family: var(--md-font-code);
-  font-size: var(--vscode-font-size, 13px);
+  background: var(--vscode-editor-background);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--vscode-editor-font-size, 14px);
   line-height: 1.6;
-  color: var(--md-on-surface-medium);
+  color: var(--vscode-foreground);
   padding: 0 0 32px;
   margin: 0;
   width: 100%;
@@ -496,32 +492,32 @@ body {
 
 .plan-viewer h1,
 .plan-viewer h2 {
-  font-family: var(--md-font-ui);
+  font-family: var(--vscode-font-family, sans-serif);
   font-weight: 600;
-  color: #c4b5fd;
+  color: var(--vscode-foreground);
   padding-bottom: 0.3em;
-  border-bottom: 1px solid var(--md-border-subtle);
-  margin-top: 1.2em;
-  margin-bottom: 0.6em;
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.35));
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
 }
 
 .plan-viewer h1 { font-size: 2em; }
 .plan-viewer h2 { font-size: 1.5em; }
 
 .plan-viewer h3 {
-  font-family: var(--md-font-ui);
+  font-family: var(--vscode-font-family, sans-serif);
   font-size: 1.25em;
   font-weight: 600;
-  color: var(--md-on-surface);
+  color: var(--vscode-foreground);
   margin: 1em 0 0.4em;
 }
 
 .plan-viewer h4,
 .plan-viewer h5,
 .plan-viewer h6 {
-  font-family: var(--md-font-ui);
+  font-family: var(--vscode-font-family, sans-serif);
   font-weight: 600;
-  color: var(--md-on-surface);
+  color: var(--vscode-foreground);
   margin: 0.8em 0 0.3em;
 }
 
@@ -529,12 +525,24 @@ body {
 
 .plan-viewer p { margin: 0 0 0.8em; }
 
+/* ── Links ────────────────────────────────────────────────── */
+
+.plan-viewer a {
+  color: var(--vscode-textLink-foreground, #3794ff);
+  text-decoration: none;
+}
+
+.plan-viewer a:hover {
+  color: var(--vscode-textLink-activeForeground, #3794ff);
+  text-decoration: underline;
+}
+
 /* ── Blockquote ───────────────────────────────────────────── */
 
 .plan-viewer blockquote {
-  border-left: 4px solid var(--md-border-subtle);
+  border-left: 4px solid var(--vscode-textBlockQuote-border, rgba(128,128,128,0.35));
   padding: 0 12px;
-  color: var(--md-on-surface-dim);
+  color: var(--vscode-textBlockQuote-foreground, var(--vscode-foreground));
   margin: 0 0 0.8em;
 }
 
@@ -542,7 +550,7 @@ body {
 
 .plan-viewer hr {
   border: none;
-  border-top: 1px solid var(--md-border-subtle);
+  border-top: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.35));
   margin: 1.2em 0;
 }
 
@@ -550,11 +558,11 @@ body {
 
 .plan-viewer ul,
 .plan-viewer ol {
-  padding-left: 1.8em;
+  padding-left: 2em;
   margin: 0 0 0.8em;
 }
 
-.plan-viewer li { margin: 0.2em 0; }
+.plan-viewer li { margin: 0.25em 0; }
 
 /* ── Tables ───────────────────────────────────────────────── */
 
@@ -565,41 +573,38 @@ body {
 
 .plan-viewer th,
 .plan-viewer td {
-  border: 1px solid var(--md-border-subtle);
-  padding: 6px 12px;
+  border: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.35));
+  padding: 6px 13px;
 }
 
 .plan-viewer th {
   font-weight: 600;
-  background: var(--md-surface-2);
-  color: var(--md-on-surface);
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  color: var(--vscode-foreground);
 }
 
 /* ── Code ─────────────────────────────────────────────────── */
 
 .plan-viewer code {
-  font-family: var(--md-font-code);
+  font-family: var(--vscode-editor-font-family, monospace);
   font-size: 0.9em;
-  background: var(--md-surface-2);
-  border: 1px solid var(--md-border-subtle);
-  border-radius: var(--md-radius-sm);
-  padding: 1px 5px;
+  background: var(--vscode-textCodeBlock-background, rgba(128,128,128,0.1));
+  border-radius: 3px;
+  padding: 1px 4px;
 }
 
 .plan-viewer pre {
-  background: var(--md-surface-2);
-  border: 1px solid var(--md-border-subtle);
-  border-radius: var(--md-radius-md);
-  padding: 12px 16px;
+  background: var(--vscode-textCodeBlock-background, rgba(128,128,128,0.1));
+  border-radius: 3px;
+  padding: 16px;
   overflow-x: auto;
   margin-bottom: 0.8em;
 }
 
 .plan-viewer pre code {
   background: none;
-  border: none;
   padding: 0;
-  font-size: 0.85em;
+  font-size: 0.9em;
 }
 
 /* ── Line Rows ────────────────────────────────────────────── */
@@ -612,9 +617,9 @@ body {
   transition: background var(--md-duration-short) var(--md-easing-standard);
 }
 
-.line-row:hover { background: rgba(136,198,255,0.04); }
-.line-row--active-anchor  { background: rgba(99,102,241,0.12); }
-.line-row--range-selected { background: rgba(99,102,241,0.07); }
+.line-row:hover { background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.04)); }
+.line-row--active-anchor  { background: var(--vscode-editor-selectionBackground, rgba(99,102,241,0.12)); }
+.line-row--range-selected { background: var(--vscode-editor-selectionBackground, rgba(99,102,241,0.07)); }
 
 .line-row.line-highlighted {
   animation: md-line-flash 1s var(--md-easing-standard) forwards;
@@ -670,7 +675,7 @@ body {
 .line-number {
   min-width: 2em;
   text-align: right;
-  color: var(--md-on-surface-faint);
+  color: var(--vscode-editorLineNumber-foreground, var(--md-on-surface-faint));
   font-size: 12px;
   font-family: var(--md-font-code);
 }
@@ -682,11 +687,6 @@ body {
   border-radius: 50%;
   flex-shrink: 0;
 }
-.line-gutter__dot--issue      { background: var(--md-issue-border); }
-.line-gutter__dot--suggestion { background: var(--md-sug-border); }
-.line-gutter__dot--question   { background: var(--md-quest-border); }
-.line-gutter__dot--approval   { background: var(--md-appr-border); }
-
 /* ── Section Collapse ─────────────────────────────────────── */
 
 .section-collapse-toggle {
@@ -718,10 +718,34 @@ body {
   min-width: 0;
 }
 
+/* ── Code block container ─────────────────────────────────── */
+
+.code-block-container {
+  background: var(--vscode-textCodeBlock-background, #1e1e1e);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 4px 0;
+}
+
+/* Code block line rows: monospace font, transparent bg (container owns it) */
+.code-block-container .line-row {
+  background: transparent;
+  font-family: var(--vscode-editor-font-family, var(--md-font-code, monospace));
+  font-size: var(--vscode-editor-font-size, 13px);
+}
+
+/* Inline code content: preserve whitespace, allow horizontal scroll */
+.code-line-content {
+  white-space: pre;
+  overflow-x: auto;
+  tab-size: 2;
+}
+
+
 /* ── Comment Cards (in-line) ──────────────────────────────── */
 
 .comment-card-wrap {
-  margin: 3px 0 8px 60px;
+  margin: 3px 0 8px 20px;
   border-left: 3px solid transparent;
   border-radius: 0 var(--md-radius-md) var(--md-radius-md) 0;
   box-shadow: var(--md-elevation-1);
@@ -734,10 +758,10 @@ body {
   box-shadow: var(--md-elevation-2);
 }
 
-.comment-card--issue      { border-color: var(--md-issue-border);  background: var(--md-issue-bg); }
-.comment-card--suggestion { border-color: var(--md-sug-border);    background: var(--md-sug-bg); }
-.comment-card--question   { border-color: var(--md-quest-border);  background: var(--md-quest-bg); }
-.comment-card--approval   { border-color: var(--md-appr-border);   background: var(--md-appr-bg); }
+.comment-card-wrap {
+  border-color: var(--md-sug-border);
+  background: var(--md-sug-bg);
+}
 
 .comment-card {
   padding: 10px 12px;
@@ -751,15 +775,6 @@ body {
   margin-bottom: 6px;
 }
 
-.comment-card-category {
-  font-size: 12px;
-  font-weight: 600;
-}
-.comment-card--issue      .comment-card-category { color: var(--md-issue-text); }
-.comment-card--suggestion .comment-card-category { color: var(--md-sug-text); }
-.comment-card--question   .comment-card-category { color: var(--md-quest-text); }
-.comment-card--approval   .comment-card-category { color: var(--md-appr-text); }
-
 .comment-card-ref {
   font-size: 11px;
   color: var(--md-on-surface-faint);
@@ -767,7 +782,7 @@ body {
 
 .comment-card-resolved-badge {
   font-size: 11px;
-  color: var(--md-appr-text);
+  color: var(--vscode-testing-iconPassed, #34d399);
   font-weight: 600;
   margin-left: auto;
 }
@@ -789,12 +804,12 @@ body {
   transition: background var(--md-duration-short);
 }
 .comment-card-actions button:hover {
-  background: rgba(136,198,255,0.1);
+  background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.1));
   color: var(--md-on-surface);
 }
-.comment-card-actions .delete-btn { color: var(--md-issue-text); }
+.comment-card-actions .delete-btn { color: var(--vscode-editorError-foreground, #f87171); }
 .comment-card-actions .delete-btn:hover { background: rgba(248,113,113,0.1); }
-.comment-card-actions .resolve-btn { color: var(--md-appr-text); }
+.comment-card-actions .resolve-btn { color: var(--vscode-testing-iconPassed, #34d399); }
 .comment-card-actions .resolve-btn:hover { background: rgba(52,211,153,0.1); }
 
 .comment-card-body {
@@ -826,39 +841,99 @@ body {
   margin-top: 6px;
 }
 
-/* ── Comment Form (inline dialog) ─────────────────────────── */
+/* ── Comment Form (inline) ────────────────────────────────── */
 
-.comment-form__backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(4px);
-  z-index: 100;
-}
-
-.comment-form {
-  background: var(--md-surface-2);
-  border: 1px solid var(--md-border-subtle);
-  border-radius: var(--md-radius-lg);
-  box-shadow: var(--md-elevation-3);
-  font-family: var(--md-font-ui);
+.comment-form-inline {
+  margin: 4px 0 4px 0;
+  padding-left: 8px;
+  border-left: 2px solid var(--md-primary);
   animation: md-fade-in var(--md-duration-medium) var(--md-easing-decelerate);
-  padding: 16px;
 }
 
-.comment-form--inline {
-  margin: 4px 0 8px 60px;
-  position: relative;
+.comment-form-inline__textarea {
+  width: 100%;
+  min-height: 28px;
+  background: var(--md-surface-0);
+  color: var(--md-on-surface-medium);
+  border: 1px solid var(--md-border-subtle);
+  border-radius: var(--md-radius-sm);
+  padding: 4px 6px;
+  font-family: var(--md-font-ui);
+  font-size: 13px;
+  resize: none;
+  overflow: hidden;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--md-duration-short);
 }
 
-.comment-form--modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(480px, 90vw);
-  z-index: 101;
+.comment-form-inline__textarea:focus { border-color: var(--md-primary); }
+
+.comment-form-inline__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
 }
+
+.comment-form-inline__btn {
+  padding: 2px 10px;
+  font-size: 12px;
+  border: none;
+  border-radius: var(--md-radius-sm);
+  cursor: pointer;
+  font-family: var(--md-font-ui);
+}
+
+.comment-form-inline__btn--submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  min-width: 28px;
+  background: var(--md-primary);
+  color: var(--vscode-button-foreground, #fff);
+}
+
+.comment-form-inline__btn--submit:hover { filter: brightness(1.1); }
+
+.comment-form-inline__btn--submit .material-symbols-outlined { font-size: 14px; }
+
+.comment-form-inline__btn--cancel {
+  background: var(--md-surface-2);
+  color: var(--md-on-surface-dim);
+}
+
+/* Floating selection comment button */
+.selection-comment-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  min-width: 32px;
+  font-size: 12px;
+  background: var(--md-primary);
+  color: var(--vscode-button-foreground, #fff);
+  border: none;
+  border-radius: var(--md-radius-sm);
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: var(--md-elevation-2);
+}
+
+.selection-comment-btn:hover { filter: brightness(1.1); }
+
+.selection-comment-btn .material-symbols-outlined { font-size: 16px; }
+
+/* Selection highlighting */
+.line-row--selecting { background: var(--vscode-editor-selectionBackground, rgba(130, 200, 255, 0.18)); }
+
+/* CSS Custom Highlight API — saved comment char-level ranges */
+::highlight(comment-selection) {
+  background-color: var(--vscode-editor-selectionBackground, rgba(99, 102, 241, 0.25));
+  color: inherit;
+}
+
+/* Legacy modal form classes (kept for reference) */
 
 .comment-form__title {
   font-size: 13px;
@@ -917,7 +992,7 @@ body {
 /* Submit — filled */
 .comment-form__btn--submit {
   background: var(--md-primary);
-  color: #fff;
+  color: var(--vscode-button-foreground, #fff);
   border-radius: var(--md-radius-xl);
   font-weight: 600;
   border: 1px solid transparent;
@@ -941,7 +1016,7 @@ body {
   cursor: pointer;
   transition: background var(--md-duration-short);
 }
-.comment-form__btn--cancel:hover { background: rgba(136,198,255,0.06); }
+.comment-form__btn--cancel:hover { background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.06)); }
 
 /* ── Comment Navigator ────────────────────────────────────── */
 
@@ -1041,12 +1116,6 @@ body {
   transition: all var(--md-duration-short) var(--md-easing-standard);
 }
 
-/* Active — tonal per category */
-.comment-navigator__filter-btn--active[data-category="issue"]      { background: var(--md-issue-bg);  color: var(--md-issue-text);  border-color: rgba(220,38,38,0.3); }
-.comment-navigator__filter-btn--active[data-category="suggestion"] { background: var(--md-sug-bg);    color: var(--md-sug-text);    border-color: rgba(37,99,235,0.3); }
-.comment-navigator__filter-btn--active[data-category="question"]   { background: var(--md-quest-bg);  color: var(--md-quest-text);  border-color: rgba(217,119,6,0.3); }
-.comment-navigator__filter-btn--active[data-category="approval"]   { background: var(--md-appr-bg);   color: var(--md-appr-text);   border-color: rgba(5,150,105,0.3); }
-
 /* Inactive */
 .comment-navigator__filter-btn--inactive {
   background: transparent;
@@ -1054,7 +1123,7 @@ body {
   color: var(--md-on-surface-faint);
 }
 .comment-navigator__filter-btn--inactive:hover {
-  background: rgba(136,198,255,0.05);
+  background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.05));
   color: var(--md-on-surface-dim);
 }
 
@@ -1131,7 +1200,7 @@ body {
   font-family: var(--md-font-ui);
   transition: background var(--md-duration-short) var(--md-easing-standard);
 }
-.comment-navigator__item:hover { background: rgba(136,198,255,0.06); }
+.comment-navigator__item:hover { background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.06)); }
 
 .comment-navigator__item-icon { flex-shrink: 0; font-size: 12px; }
 
@@ -1163,7 +1232,7 @@ body {
 
 .comment-navigator__item-resolved {
   font-size: 11px;
-  color: var(--md-appr-text);
+  color: var(--vscode-testing-iconPassed, #34d399);
   flex-shrink: 0;
 }
 
@@ -1188,7 +1257,7 @@ body {
   color: var(--md-on-surface-medium);
   transition: background var(--md-duration-short) var(--md-easing-standard);
 }
-.comment-navigator__section-row:hover { background: rgba(136,198,255,0.06); }
+.comment-navigator__section-row:hover { background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.06)); }
 
 .comment-navigator__section-heading {
   overflow: hidden;
@@ -1231,7 +1300,7 @@ body {
   transition: background var(--md-duration-short);
 }
 .comment-navigator__section-comment-item:hover {
-  background: rgba(136,198,255,0.05);
+  background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.05));
   color: var(--md-on-surface-dim);
 }
 
@@ -1298,7 +1367,7 @@ body {
   border-radius: var(--md-radius-full);
   transition: background var(--md-duration-short);
 }
-.prompt-preview__close:hover { background: rgba(136,198,255,0.1); }
+.prompt-preview__close:hover { background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.1)); }
 
 .prompt-preview__mode-bar {
   display: flex;
@@ -1319,10 +1388,10 @@ body {
   cursor: pointer;
   transition: all var(--md-duration-short);
 }
-.prompt-preview__mode-btn:hover { background: rgba(136,198,255,0.06); }
+.prompt-preview__mode-btn:hover { background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.06)); }
 .prompt-preview__mode-btn--active {
   background: var(--md-primary-active);
-  color: #fff;
+  color: var(--vscode-button-foreground, #fff);
   border-color: var(--md-primary-active);
 }
 
@@ -1330,13 +1399,13 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  background: var(--md-quest-bg);
+  background: rgba(251,191,36,0.08);
   border: 1px solid rgba(217,119,6,0.3);
   border-radius: var(--md-radius-md);
   padding: 8px 12px;
   margin: 12px 24px 0;
   font-size: 12px;
-  color: var(--md-quest-text);
+  color: var(--vscode-editorWarning-foreground, #fbbf24);
   flex-shrink: 0;
 }
 
@@ -1372,7 +1441,7 @@ body {
 
 .prompt-preview__btn--primary {
   background: var(--md-primary);
-  color: #fff;
+  color: var(--vscode-button-foreground, #fff);
   border-radius: var(--md-radius-xl);
   font-weight: 600;
   border: 1px solid transparent;
@@ -1395,12 +1464,109 @@ body {
   cursor: pointer;
   transition: background var(--md-duration-short);
 }
-.prompt-preview__btn--secondary:hover { background: rgba(136,198,255,0.06); }
+.prompt-preview__btn--secondary:hover { background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.06)); }
 
 .prompt-preview__footer-feedback {
   margin-right: auto;
   font-size: 12px;
   color: var(--md-primary);
+}
+
+/* ── Search Bar ──────────────────────────────────────────── */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--md-surface-2);
+  border: 1px solid var(--md-border);
+  border-radius: var(--md-radius-md);
+  padding: 4px 8px;
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  animation: md-fade-in var(--md-duration-medium) var(--md-easing-decelerate);
+}
+
+.search-bar__icon {
+  font-size: 16px;
+  color: var(--md-on-surface-faint);
+}
+
+.search-bar__input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--md-on-surface-medium);
+  font-family: var(--md-font-ui);
+  font-size: 13px;
+  width: 200px;
+  padding: 2px 4px;
+}
+
+.search-bar__input::placeholder {
+  color: var(--md-on-surface-faint);
+}
+
+.search-bar__count {
+  font-size: 11px;
+  color: var(--md-on-surface-dim);
+  font-family: var(--md-font-ui);
+  white-space: nowrap;
+  min-width: 40px;
+  text-align: center;
+}
+
+.search-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--md-on-surface-dim);
+  padding: 2px;
+  border-radius: var(--md-radius-sm);
+  transition: background var(--md-duration-short);
+}
+
+.search-bar__btn:hover {
+  background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.1));
+  color: var(--md-on-surface);
+}
+
+.search-bar__btn .material-symbols-outlined { font-size: 16px; }
+
+/* Search match highlighting */
+.line-row--search-match { background: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 213, 0, 0.08)); }
+.line-row--search-current { background: var(--vscode-editor-findMatchBackground, rgba(255, 213, 0, 0.22)); outline: 1px solid var(--vscode-editor-findMatchBorder, rgba(255, 213, 0, 0.5)); }
+
+/* Search scrollbar overlay markers */
+.search-scrollbar-overlay {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 6px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.search-scrollbar-marker {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 213, 0, 0.7));
+  transform: translateY(-50%);
+  border-radius: 1px;
+}
+
+.search-scrollbar-marker--current {
+  background: var(--vscode-editor-findMatchBackground, rgba(255, 213, 0, 1));
+  height: 3px;
 }
 
 /* ── Diff Viewer ──────────────────────────────────────────── */
@@ -1420,8 +1586,8 @@ body {
   line-height: 1.5;
 }
 
-.diff-line--added   { background: rgba(52,211,153,0.07); }
-.diff-line--removed { background: rgba(248,113,113,0.07); }
+.diff-line--added   { background: var(--vscode-diffEditor-insertedTextBackground, rgba(52,211,153,0.07)); }
+.diff-line--removed { background: var(--vscode-diffEditor-removedTextBackground, rgba(248,113,113,0.07)); }
 .diff-line--empty   {
   background: repeating-linear-gradient(
     135deg,
@@ -1445,8 +1611,8 @@ body {
   flex-shrink: 0;
   font-weight: 700;
 }
-.diff-line--added   .diff-line__sign { color: var(--md-appr-text); }
-.diff-line--removed .diff-line__sign { color: var(--md-issue-text); }
+.diff-line--added   .diff-line__sign { color: var(--vscode-testing-iconPassed, #34d399); }
+.diff-line--removed .diff-line__sign { color: var(--vscode-editorError-foreground, #f87171); }
 
 .diff-line__content {
   flex: 1;
