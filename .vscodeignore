@@ -25,6 +25,7 @@ dist/**/*.map
 
 # Docs non necessari
 docs/
+README.md
 CHANGELOG.md
 
 # Node modules

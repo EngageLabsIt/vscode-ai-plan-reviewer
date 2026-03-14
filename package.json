@@ -4,6 +4,10 @@
   "publisher": "michele-gatti",
   "description": "Review AI-generated plans with inline comments, like a GitHub PR",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EngageLabsIt/vscode-ai-plan-reviewer.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
