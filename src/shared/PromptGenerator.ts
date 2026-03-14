@@ -11,6 +11,15 @@ export interface GenerateOptions {
   mode: PromptMode;
 }
 
+function extractLines(content: string, start: number, end: number, maxLines = 8): string {
+  const lines = content.split('\n');
+  const slice = lines.slice(start - 1, end); // 1-based → 0-based
+  const truncated = slice.length > maxLines;
+  const visible = truncated ? slice.slice(0, maxLines) : slice;
+  const quoted = visible.map((l) => `> ${l}`).join('\n');
+  return truncated ? `${quoted}\n> ...` : quoted;
+}
+
 export class PromptGenerator {
   generate(opts: GenerateOptions): string {
     const { planTitle, versionNumber, versionContent, comments, sections, mode } = opts;
@@ -28,8 +37,39 @@ export class PromptGenerator {
       return `[Lines ${comment.targetStart}–${comment.targetEnd}]`;
     };
 
+    const formatEntry = (comment: Comment): string => {
+      const ref = formatRef(comment);
+      const lines = versionContent.split('\n');
+      const lineCount = lines.length;
+
+      let start = comment.targetStart;
+      let end = comment.targetEnd;
+
+      if (comment.sectionId !== null) {
+        const section = sections.find((s) => s.id === comment.sectionId);
+        if (section) {
+          start = section.startLine;
+          end = section.endLine;
+        }
+      }
+
+      const citation = (() => {
+        if (comment.selectedText !== null && comment.selectedText.length > 0) {
+          return `> ${comment.selectedText}`;
+        }
+        return start >= 1 && start <= lineCount
+          ? extractLines(versionContent, start, Math.min(end, lineCount))
+          : '';
+      })();
+
+      const parts = [`**${ref}**`];
+      if (citation) parts.push(citation);
+      parts.push(comment.body);
+      return parts.join('\n');
+    };
+
     const feedbackBody = comments.length > 0
-      ? `### Suggestions\n\n${comments.map((c) => `- ${formatRef(c)}: ${c.body}`).join('\n')}`
+      ? `### Suggestions\n\n${comments.map(formatEntry).join('\n\n')}`
       : '';
 
     const closingInstructions = [

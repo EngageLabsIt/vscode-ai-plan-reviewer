@@ -41,6 +41,7 @@ export interface Comment {
   carriedFromId: string | null;
   targetStartChar: number | null;
   targetEndChar: number | null;
+  selectedText: string | null;
 }
 
 // ── Diff types ────────────────────────────────────────────────────────────

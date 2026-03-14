@@ -194,6 +194,7 @@ export function registerNewReviewCommand(
                   carriedFromId: mc.comment.id,
                   targetStartChar: null,
                   targetEndChar: null,
+                  selectedText: null,
                 };
                 commentRepo.insert(carriedComment);
               } else if (mc.status === 'probably_resolved') {

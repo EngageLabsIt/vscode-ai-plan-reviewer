@@ -124,6 +124,16 @@ export function runMigrations(db: Database): void {
     stmt.free();
   }
 
+  if (currentVersion < 5) {
+    const cols = getColumnNames(db, 'comments');
+    if (!cols.includes('selected_text')) {
+      db.exec('ALTER TABLE comments ADD COLUMN selected_text TEXT DEFAULT NULL');
+    }
+    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    stmt.run([5]);
+    stmt.free();
+  }
+
   // Repair: fix databases where V3 migration ran but columns are missing
   // (caused by the old try/catch swallowing ALTER TABLE errors)
   const repairCols = getColumnNames(db, 'comments');
@@ -132,5 +142,8 @@ export function runMigrations(db: Database): void {
   }
   if (!repairCols.includes('target_end_char')) {
     db.exec('ALTER TABLE comments ADD COLUMN target_end_char INTEGER DEFAULT NULL');
+  }
+  if (!repairCols.includes('selected_text')) {
+    db.exec('ALTER TABLE comments ADD COLUMN selected_text TEXT DEFAULT NULL');
   }
 }

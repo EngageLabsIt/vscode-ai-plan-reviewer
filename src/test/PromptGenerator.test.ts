@@ -19,6 +19,7 @@ function makeComment(overrides: Partial<Comment> = {}): Comment {
     carriedFromId: null,
     targetStartChar: null,
     targetEndChar: null,
+    selectedText: null,
     ...overrides,
   };
 }
@@ -43,6 +44,20 @@ const baseOpts = {
   comments: [],
   sections: [],
 };
+
+// Multi-line content for citation tests (lines 1-10)
+const multiLineContent = [
+  '# Architecture',          // line 1
+  '',                         // line 2
+  'Layer one details here.',  // line 3
+  'Layer two details here.',  // line 4
+  'Consider refactoring.',    // line 5
+  'Line six content.',        // line 6
+  'Line seven content.',      // line 7
+  'Line eight content.',      // line 8
+  'Line nine content.',       // line 9
+  'Line ten content.',        // line 10
+].join('\n');
 
 describe('PromptGenerator', () => {
   describe('same_session mode', () => {
@@ -141,6 +156,139 @@ describe('PromptGenerator', () => {
 
       expect(result).toContain('[Line 4]');
       expect(result).not.toContain('[Section');
+    });
+  });
+
+  describe('citation — blockquote of plan text', () => {
+    it('reference appears in bold on its own line', () => {
+      const comment = makeComment({ sectionId: null, targetStart: 5, targetEnd: 5 });
+      const result = generator.generate({
+        ...baseOpts,
+        versionContent: multiLineContent,
+        comments: [comment],
+        mode: 'same_session',
+      });
+
+      expect(result).toContain('**[Line 5]**');
+    });
+
+    it('line comment cites the exact line as blockquote', () => {
+      const comment = makeComment({ sectionId: null, targetStart: 5, targetEnd: 5 });
+      const result = generator.generate({
+        ...baseOpts,
+        versionContent: multiLineContent,
+        comments: [comment],
+        mode: 'same_session',
+      });
+
+      expect(result).toContain('> Consider refactoring.');
+    });
+
+    it('range comment cites all lines in range as blockquote', () => {
+      const comment = makeComment({ type: 'range', sectionId: null, targetStart: 3, targetEnd: 5 });
+      const result = generator.generate({
+        ...baseOpts,
+        versionContent: multiLineContent,
+        comments: [comment],
+        mode: 'same_session',
+      });
+
+      expect(result).toContain('> Layer one details here.');
+      expect(result).toContain('> Layer two details here.');
+      expect(result).toContain('> Consider refactoring.');
+    });
+
+    it('section comment cites section startLine..endLine', () => {
+      const section = makeSection({ id: 's1', heading: 'Architecture', startLine: 1, endLine: 3 });
+      const comment = makeComment({ sectionId: 's1', targetStart: 1, targetEnd: 1 });
+      const result = generator.generate({
+        ...baseOpts,
+        versionContent: multiLineContent,
+        comments: [comment],
+        sections: [section],
+        mode: 'same_session',
+      });
+
+      expect(result).toContain('> # Architecture');
+      expect(result).toContain('> ');
+      expect(result).toContain('> Layer one details here.');
+    });
+
+    it('range exceeding 8 lines is truncated with > ...', () => {
+      const longContent = Array.from({ length: 12 }, (_, i) => `Line ${i + 1}`).join('\n');
+      const comment = makeComment({ type: 'range', sectionId: null, targetStart: 1, targetEnd: 12 });
+      const result = generator.generate({
+        ...baseOpts,
+        versionContent: longContent,
+        comments: [comment],
+        mode: 'same_session',
+      });
+
+      expect(result).toContain('> Line 8');
+      expect(result).not.toContain('> Line 9');
+      expect(result).toContain('> ...');
+    });
+
+    it('comment on out-of-range line has no citation', () => {
+      const comment = makeComment({ sectionId: null, targetStart: 99, targetEnd: 99, body: 'out of range' });
+      const result = generator.generate({
+        ...baseOpts,
+        versionContent: multiLineContent,
+        comments: [comment],
+        mode: 'same_session',
+      });
+
+      expect(result).toContain('**[Line 99]**');
+      expect(result).toContain('out of range');
+      // No blockquote lines should appear right before the body
+      const entryIdx = result.indexOf('**[Line 99]**');
+      const bodyIdx = result.indexOf('out of range', entryIdx);
+      const between = result.slice(entryIdx + '**[Line 99]**'.length, bodyIdx);
+      expect(between).not.toContain('>');
+    });
+
+    it('multiple comments are separated by blank lines', () => {
+      const c1 = makeComment({ id: 'c1', targetStart: 3, targetEnd: 3, body: 'First comment' });
+      const c2 = makeComment({ id: 'c2', targetStart: 5, targetEnd: 5, body: 'Second comment' });
+      const result = generator.generate({
+        ...baseOpts,
+        versionContent: multiLineContent,
+        comments: [c1, c2],
+        mode: 'same_session',
+      });
+
+      const firstIdx = result.indexOf('First comment');
+      const secondIdx = result.indexOf('Second comment');
+      const between = result.slice(firstIdx + 'First comment'.length, secondIdx);
+      expect(between).toContain('\n\n');
+    });
+
+    it('uses selectedText for citation when present', () => {
+      const comment = makeComment({
+        targetStart: 3, targetEnd: 5,
+        selectedText: 'frammento selezionato',
+      });
+      const result = generator.generate({ ...baseOpts, versionContent: multiLineContent, comments: [comment], mode: 'same_session' });
+      expect(result).toContain('> frammento selezionato');
+      expect(result).not.toContain('> Layer one details here.');
+    });
+
+    it('falls back to full line when selectedText is null', () => {
+      const comment = makeComment({ targetStart: 3, targetEnd: 3, selectedText: null });
+      const result = generator.generate({ ...baseOpts, versionContent: multiLineContent, comments: [comment], mode: 'same_session' });
+      expect(result).toContain('> Layer one details here.');
+    });
+
+    it('no category label appears in output', () => {
+      const comment = makeComment({ category: 'suggestion', targetStart: 3, targetEnd: 3, body: 'Some feedback' });
+      const result = generator.generate({
+        ...baseOpts,
+        versionContent: multiLineContent,
+        comments: [comment],
+        mode: 'same_session',
+      });
+
+      expect(result).not.toContain('suggestion');
     });
   });
 });

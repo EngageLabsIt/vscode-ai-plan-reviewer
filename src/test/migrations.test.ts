@@ -40,6 +40,7 @@ describe('runMigrations', () => {
     expect(cols).toContain('carried_from_id');   // V2
     expect(cols).toContain('target_start_char'); // V3
     expect(cols).toContain('target_end_char');   // V3
+    expect(cols).toContain('selected_text');     // V5
 
     db.close();
   });
@@ -47,7 +48,7 @@ describe('runMigrations', () => {
   it('schema version tracking: versione corrente dopo migrazione fresh', () => {
     const db = new SQL.Database();
     runMigrations(db);
-    expect(getSchemaVersion(db)).toBe(4);
+    expect(getSchemaVersion(db)).toBe(5);
     db.close();
   });
 
@@ -96,7 +97,8 @@ describe('runMigrations', () => {
     const colsAfter = getColumns(db, 'comments');
     expect(colsAfter).toContain('target_start_char');
     expect(colsAfter).toContain('target_end_char');
-    expect(getSchemaVersion(db)).toBe(4);
+    expect(colsAfter).toContain('selected_text');
+    expect(getSchemaVersion(db)).toBe(5);
 
     db.close();
   });
@@ -147,6 +149,54 @@ describe('runMigrations', () => {
     const colsAfter = getColumns(db, 'comments');
     expect(colsAfter).toContain('target_start_char');
     expect(colsAfter).toContain('target_end_char');
+
+    db.close();
+  });
+
+  it('V5: aggiunge colonna selected_text su DB già a versione 4', () => {
+    const db = new SQL.Database();
+
+    // Build a V4 fixture manually
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS plans (
+        id TEXT PRIMARY KEY, title TEXT NOT NULL, source TEXT NOT NULL DEFAULT 'manual',
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'in_review', tags TEXT DEFAULT '[]'
+      );
+      CREATE TABLE IF NOT EXISTS versions (
+        id TEXT PRIMARY KEY, plan_id TEXT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+        version_number INTEGER NOT NULL, content TEXT NOT NULL,
+        review_prompt TEXT, created_at TEXT NOT NULL,
+        UNIQUE(plan_id, version_number)
+      );
+      CREATE TABLE IF NOT EXISTS sections (
+        id TEXT PRIMARY KEY, version_id TEXT NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
+        heading TEXT NOT NULL, start_line INTEGER NOT NULL, end_line INTEGER NOT NULL,
+        level INTEGER NOT NULL, order_index INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS comments (
+        id TEXT PRIMARY KEY, version_id TEXT NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
+        type TEXT NOT NULL CHECK(type IN ('line','range','section')),
+        target_start INTEGER NOT NULL, target_end INTEGER NOT NULL,
+        section_id TEXT REFERENCES sections(id), body TEXT NOT NULL,
+        category TEXT NOT NULL,
+        resolved INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
+      );
+    `);
+    db.exec('ALTER TABLE comments ADD COLUMN carried_from_id TEXT REFERENCES comments(id)');
+    db.exec('ALTER TABLE comments ADD COLUMN target_start_char INTEGER DEFAULT NULL');
+    db.exec('ALTER TABLE comments ADD COLUMN target_end_char INTEGER DEFAULT NULL');
+    db.exec('INSERT OR REPLACE INTO schema_version (version) VALUES (4)');
+
+    const colsBefore = getColumns(db, 'comments');
+    expect(colsBefore).not.toContain('selected_text');
+
+    runMigrations(db);
+
+    const colsAfter = getColumns(db, 'comments');
+    expect(colsAfter).toContain('selected_text');
+    expect(getSchemaVersion(db)).toBe(5);
 
     db.close();
   });

@@ -93,6 +93,7 @@ function makeDemoComment(overrides: Partial<Comment>): Comment {
     carriedFromId: null,
     targetStartChar: null,
     targetEndChar: null,
+    selectedText: null,
     ...overrides,
   };
 }

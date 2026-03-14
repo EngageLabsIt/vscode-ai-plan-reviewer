@@ -24,8 +24,8 @@ interface LoadedPlan {
 
 type CommentFormState =
   | { type: 'section'; sectionId: string; heading: string }
-  | { type: 'line';    lineNumber: number; startCharOffset: number | null; endCharOffset: number | null }
-  | { type: 'range';   startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null };
+  | { type: 'line';    lineNumber: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null }
+  | { type: 'range';   startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null };
 
 // ---------------------------------------------------------------------------
 // App
@@ -192,7 +192,7 @@ export const App: React.FC = () => {
       return;
     }
     setActiveCommentLine(lineNumber);
-    setCommentFormState({ type: 'line', lineNumber, startCharOffset: null, endCharOffset: null });
+    setCommentFormState({ type: 'line', lineNumber, startCharOffset: null, endCharOffset: null, selectedText: null });
   }, [activeCommentLine]);
 
   const handleLineShiftClick = useCallback((lineNumber: number): void => {
@@ -203,6 +203,7 @@ export const App: React.FC = () => {
       endLine: Math.max(activeCommentLine, lineNumber),
       startCharOffset: null,
       endCharOffset: null,
+      selectedText: null,
     });
   }, [activeCommentLine]);
 
@@ -225,24 +226,24 @@ export const App: React.FC = () => {
     if (commentFormState.type === 'section') {
       const section = loadedPlan.sections.find((s) => s.id === commentFormState.sectionId);
       if (section === undefined) return;
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'section', sectionId: section.id, targetStart: section.startLine, targetEnd: section.endLine, body, category, resolved: false, carriedFromId: null, targetStartChar: null, targetEndChar: null } });
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'section', sectionId: section.id, targetStart: section.startLine, targetEnd: section.endLine, body, category, resolved: false, carriedFromId: null, targetStartChar: null, targetEndChar: null, selectedText: null } });
     } else if (commentFormState.type === 'line') {
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'line', sectionId: null, targetStart: commentFormState.lineNumber, targetEnd: commentFormState.lineNumber, body, category, resolved: false, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null } });
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'line', sectionId: null, targetStart: commentFormState.lineNumber, targetEnd: commentFormState.lineNumber, body, category, resolved: false, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
     } else {
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'range', sectionId: null, targetStart: commentFormState.startLine, targetEnd: commentFormState.endLine, body, category, resolved: false, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null } });
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'range', sectionId: null, targetStart: commentFormState.startLine, targetEnd: commentFormState.endLine, body, category, resolved: false, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
     }
 
     setCommentFormState(null);
     setActiveCommentLine(null);
   }, [commentFormState, loadedPlan, vscode]);
 
-  const handleSelectionComment = useCallback((startLine: number, endLine: number, startChar: number | null, endChar: number | null): void => {
+  const handleSelectionComment = useCallback((startLine: number, endLine: number, startChar: number | null, endChar: number | null, selectedText: string): void => {
     if (startLine === endLine) {
       setActiveCommentLine(startLine);
-      setCommentFormState({ type: 'line', lineNumber: startLine, startCharOffset: startChar, endCharOffset: endChar });
+      setCommentFormState({ type: 'line', lineNumber: startLine, startCharOffset: startChar, endCharOffset: endChar, selectedText });
     } else {
       setActiveCommentLine(startLine);
-      setCommentFormState({ type: 'range', startLine, endLine, startCharOffset: startChar, endCharOffset: endChar });
+      setCommentFormState({ type: 'range', startLine, endLine, startCharOffset: startChar, endCharOffset: endChar, selectedText });
     }
   }, []);
 

@@ -32,7 +32,7 @@ interface PlanViewerProps {
   commentFormState?: { type: 'line'; lineNumber: number } | { type: 'range'; startLine: number; endLine: number } | { type: 'section'; sectionId: string } | null;
   onCommentSubmit?: (body: string) => void;
   onCommentCancel?: () => void;
-  onSelectionComment?: (startLine: number, endLine: number, startChar: number | null, endChar: number | null) => void;
+  onSelectionComment?: (startLine: number, endLine: number, startChar: number | null, endChar: number | null, selectedText: string) => void;
 }
 
 type TextLine = { kind: 'text'; lineNumber: number; text: string };
@@ -178,7 +178,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
   onSelectionComment,
 }) => {
   const [collapsedSections, setCollapsedSections] = useState<Set<number>>(new Set());
-  const [selectionState, setSelectionState] = useState<{ startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null; x: number; y: number } | null>(null);
+  const [selectionState, setSelectionState] = useState<{ startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string; x: number; y: number } | null>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
 
   // Scroll to current search match
@@ -244,16 +244,16 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
       ? range.endContainer.parentElement
       : range.endContainer as Element;
 
-    const startRow = startEl?.closest<HTMLElement>('[id^="line-"]');
-    const endRow = endEl?.closest<HTMLElement>('[id^="line-"]');
+    const startRow = startEl?.closest<HTMLElement>('[data-line]');
+    const endRow = endEl?.closest<HTMLElement>('[data-line]');
 
     if (startRow === null || startRow === undefined || endRow === null || endRow === undefined) {
       setSelectionState(null);
       return;
     }
 
-    const startLine = parseInt(startRow.id.replace('line-', ''), 10);
-    const endLine = parseInt(endRow.id.replace('line-', ''), 10);
+    const startLine = parseInt(startRow.getAttribute('data-line') ?? '', 10);
+    const endLine = parseInt(endRow.getAttribute('data-line') ?? '', 10);
 
     if (isNaN(startLine) || isNaN(endLine)) {
       setSelectionState(null);
@@ -274,6 +274,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
       endLine: Math.max(startLine, endLine),
       startCharOffset,
       endCharOffset,
+      selectedText,
       x: e.clientX,
       y: e.clientY,
     });
@@ -327,32 +328,99 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
       {entries.map((entry) => {
         if (entry.kind === 'code') {
           const { startLine, lang, lines } = entry;
-          const fenced = `\`\`\`${lang}\n${lines.join('\n')}\n\`\`\``;
           const blockEnd = startLine + lines.length + 1;
+          const lastContentLine = startLine + lines.length - 1;
           const hasMatch = searchMatches.some(l => l >= startLine && l <= blockEnd);
           const isCurrent = searchCurrentLine !== null
             && searchCurrentLine >= startLine
             && searchCurrentLine <= blockEnd;
+
+          // Break-point = lines in block with comments or formTargetLine
+          const breakLineSet = new Set<number>();
+          for (let ln = startLine; ln <= lastContentLine; ln++) {
+            if (commentsByEndLine.has(ln)) breakLineSet.add(ln);
+          }
+          if (formTargetLine !== null && formTargetLine >= startLine && formTargetLine <= lastContentLine) {
+            breakLineSet.add(formTargetLine);
+          }
+          const sortedBreaks = [...breakLineSet].sort((a, b) => a - b);
+
+          // Build segments
+          interface Segment { firstLine: number; codeLines: string[]; endLine: number; }
+          const segments: Segment[] = [];
+          let segFirstLine = startLine;
+          for (const bp of sortedBreaks) {
+            segments.push({
+              firstLine: segFirstLine,
+              codeLines: lines.slice(segFirstLine - startLine, bp - startLine + 1),
+              endLine: bp,
+            });
+            segFirstLine = bp + 1;
+          }
+          if (segFirstLine <= lastContentLine) {
+            segments.push({
+              firstLine: segFirstLine,
+              codeLines: lines.slice(segFirstLine - startLine),
+              endLine: lastContentLine,
+            });
+          } else if (segments.length === 0) {
+            segments.push({ firstLine: startLine, codeLines: [], endLine: lastContentLine });
+          }
+
           return (
             <div
+              key={`cb-${startLine}`}
+              data-line={startLine}
+              id={isCurrent ? `line-${searchCurrentLine}` : undefined}
               className={[
-                'line-row', 'code-block-row',
+                'code-block-container',
                 hasMatch ? 'line-row--search-match' : '',
                 isCurrent ? 'line-row--search-current' : '',
               ].filter(Boolean).join(' ')}
-              id={isCurrent ? `line-${searchCurrentLine}` : undefined}
-              key={`cb-${startLine}`}
             >
-              <div className="code-block-gutter">
-                {lines.map((_, idx) => (
-                  <LineGutter key={idx} lineNumber={startLine + idx} onAddComment={onAddLineComment} />
-                ))}
-              </div>
-              <div className="line-content">
-                <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-                  {fenced}
-                </ReactMarkdown>
-              </div>
+              {segments.map((seg, idx) => (
+                <React.Fragment key={idx}>
+                  <div className="line-row code-block-row">
+                    <div className="code-block-gutter">
+                      {seg.codeLines.map((_, i) => (
+                        <LineGutter key={i} lineNumber={seg.firstLine + i} onAddComment={onAddLineComment} />
+                      ))}
+                    </div>
+                    <div className="line-content">
+                      {seg.codeLines.length > 0 && (
+                        <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                          {`\`\`\`${lang}\n${seg.codeLines.join('\n')}\n\`\`\``}
+                        </ReactMarkdown>
+                      )}
+                    </div>
+                  </div>
+                  {(commentsByEndLine.get(seg.endLine) ?? []).map((c) => (
+                    <div key={c.id} className="line-row">
+                      <div className="line-gutter" aria-hidden="true" />
+                      <div className="line-divider" aria-hidden="true" />
+                      <div className="line-content">
+                        <CommentCard
+                          comment={c}
+                          onEdit={onEdit ?? (() => {})}
+                          onDelete={onDelete ?? (() => {})}
+                          onResolve={onResolve ?? (() => {})}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {formTargetLine === seg.endLine
+                    && onCommentSubmit !== undefined
+                    && onCommentCancel !== undefined && (
+                      <div className="line-row">
+                        <div className="line-gutter" aria-hidden="true" />
+                        <div className="line-divider" aria-hidden="true" />
+                        <div className="line-content">
+                          <CommentForm onSubmit={onCommentSubmit} onCancel={onCommentCancel} />
+                        </div>
+                      </div>
+                    )}
+                </React.Fragment>
+              ))}
             </div>
           );
         }
@@ -379,6 +447,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
               searchCurrentLine === lineNumber ? 'line-row--search-current' : '',
             ].filter(Boolean).join(' ')}
             id={`line-${lineNumber}`}
+            data-line={lineNumber}
             key={lineNumber}
             onClick={(e: React.MouseEvent) => {
               if (e.shiftKey && onLineShiftClick !== undefined) {
@@ -443,7 +512,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
             setSelectionState(null);
             window.getSelection()?.removeAllRanges();
             if (onSelectionComment !== undefined) {
-              onSelectionComment(s.startLine, s.endLine, s.startCharOffset, s.endCharOffset);
+              onSelectionComment(s.startLine, s.endLine, s.startCharOffset, s.endCharOffset, s.selectedText);
             }
           }}
         >
