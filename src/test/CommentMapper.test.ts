@@ -15,10 +15,12 @@ function makeComment(overrides: Partial<Comment> = {}): Comment {
     targetEnd: 1,
     sectionId: null,
     body: 'Test comment',
-    category: 'issue',
+    category: 'suggestion',
     resolved: false,
     createdAt: '2026-01-01T00:00:00Z',
     carriedFromId: null,
+    targetStartChar: null,
+    targetEndChar: null,
     ...overrides,
   };
 }

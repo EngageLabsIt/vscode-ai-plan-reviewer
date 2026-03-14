@@ -13,10 +13,12 @@ function makeComment(overrides: Partial<Comment> = {}): Comment {
     targetEnd: 5,
     sectionId: null,
     body: 'Default comment body',
-    category: 'issue',
+    category: 'suggestion',
     resolved: false,
     createdAt: '2026-01-01T00:00:00Z',
     carriedFromId: null,
+    targetStartChar: null,
+    targetEndChar: null,
     ...overrides,
   };
 }
@@ -58,7 +60,7 @@ describe('PromptGenerator', () => {
     it('contains closing instructions', () => {
       const result = generator.generate({ ...baseOpts, mode: 'same_session' });
       expect(result).toContain('Please generate an updated version of the plan');
-      expect(result).toContain('Resolves all issues');
+      expect(result).toContain('Applies the suggested improvements');
     });
   });
 
@@ -76,7 +78,7 @@ describe('PromptGenerator', () => {
     });
 
     it('plan content appears before feedback section', () => {
-      const comment = makeComment({ category: 'issue', body: 'Fix this' });
+      const comment = makeComment({ body: 'Fix this' });
       const result = generator.generate({ ...baseOpts, comments: [comment], mode: 'new_session' });
 
       const planIdx = result.indexOf('## Plan to Review');
@@ -85,52 +87,17 @@ describe('PromptGenerator', () => {
     });
   });
 
-  describe('comment grouping by category', () => {
-    it('issues appear under Issues section', () => {
-      const comment = makeComment({ category: 'issue', body: 'Must fix this' });
-      const result = generator.generate({ ...baseOpts, comments: [comment], mode: 'same_session' });
-
-      expect(result).toContain('### Issues (must fix)');
-      expect(result).toContain('Must fix this');
-    });
-
+  describe('suggestions list', () => {
     it('suggestions appear under Suggestions section', () => {
-      const comment = makeComment({ category: 'suggestion', body: 'Consider refactoring' });
+      const comment = makeComment({ body: 'Consider refactoring' });
       const result = generator.generate({ ...baseOpts, comments: [comment], mode: 'same_session' });
 
-      expect(result).toContain('### Suggestions (recommended improvements)');
+      expect(result).toContain('### Suggestions');
       expect(result).toContain('Consider refactoring');
     });
 
-    it('questions appear under Questions section', () => {
-      const comment = makeComment({ category: 'question', body: 'Why this approach?' });
-      const result = generator.generate({ ...baseOpts, comments: [comment], mode: 'same_session' });
-
-      expect(result).toContain('### Questions (clarification needed)');
-      expect(result).toContain('Why this approach?');
-    });
-
-    it('approvals appear under Approved sections', () => {
-      const comment = makeComment({ category: 'approval', body: 'Looks good' });
-      const result = generator.generate({ ...baseOpts, comments: [comment], mode: 'same_session' });
-
-      expect(result).toContain('### Approved sections (keep as-is)');
-      expect(result).toContain('Looks good');
-    });
-
-    it('sections with no comments in that category are omitted', () => {
-      const comment = makeComment({ category: 'issue', body: 'Only an issue' });
-      const result = generator.generate({ ...baseOpts, comments: [comment], mode: 'same_session' });
-
-      expect(result).not.toContain('### Suggestions');
-      expect(result).not.toContain('### Questions');
-      expect(result).not.toContain('### Approved');
-    });
-
-    it('no comments → no category sections present', () => {
+    it('no comments → no Suggestions section present', () => {
       const result = generator.generate({ ...baseOpts, comments: [], mode: 'same_session' });
-
-      expect(result).not.toContain('### Issues');
       expect(result).not.toContain('### Suggestions');
     });
   });

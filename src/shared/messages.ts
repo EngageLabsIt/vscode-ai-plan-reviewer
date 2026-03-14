@@ -13,7 +13,7 @@ export type HostMessage =
 // WebView → Host
 export type WebViewMessage =
   | { type: 'addComment'; payload: Omit<Comment, 'id' | 'createdAt'> }
-  | { type: 'updateComment'; payload: { id: string; body?: string; category?: Comment['category'] } }
+  | { type: 'updateComment'; payload: { id: string; body?: string } }
   | { type: 'deleteComment'; payload: { id: string } }
   | { type: 'resolveComment'; payload: { id: string } }
   | { type: 'requestPlan'; payload: { planId: string; versionNumber?: number } }

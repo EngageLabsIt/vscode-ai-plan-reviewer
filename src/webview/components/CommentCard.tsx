@@ -1,20 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import type { Comment } from '../../shared/models';
 
-const CATEGORY_META: Record<Comment['category'], { icon: string; label: string }> = {
-  issue:      { icon: '⛔', label: 'Issue' },
-  suggestion: { icon: '💡', label: 'Suggestion' },
-  question:   { icon: '❓', label: 'Question' },
-  approval:   { icon: '✅', label: 'Approval' },
-};
-
-const CATEGORY_OPTIONS: Array<{ value: Comment['category']; label: string; icon: string }> = [
-  { value: 'issue',      label: 'Issue',      icon: '⛔' },
-  { value: 'suggestion', label: 'Suggestion', icon: '💡' },
-  { value: 'question',   label: 'Question',   icon: '❓' },
-  { value: 'approval',   label: 'Approval',   icon: '✅' },
-];
-
 function refLabel(c: Comment): string {
   if (c.type === 'range' && c.targetStart !== c.targetEnd) {
     return `Lines ${c.targetStart}–${c.targetEnd}`;
@@ -24,7 +10,7 @@ function refLabel(c: Comment): string {
 
 interface CommentCardProps {
   comment: Comment;
-  onEdit:    (id: string, body: string, category: Comment['category']) => void;
+  onEdit:    (id: string, body: string) => void;
   onDelete:  (id: string) => void;
   onResolve: (id: string) => void;
 }
@@ -32,29 +18,22 @@ interface CommentCardProps {
 export const CommentCard: React.FC<CommentCardProps> = ({ comment, onEdit, onDelete, onResolve }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(comment.body);
-  const [editCategory, setEditCategory] = useState<Comment['category']>(comment.category);
-
-  const meta = CATEGORY_META[comment.category];
 
   const handleSave = useCallback((): void => {
     if (editBody.trim().length === 0) return;
-    onEdit(comment.id, editBody.trim(), editCategory);
+    onEdit(comment.id, editBody.trim());
     setIsEditing(false);
-  }, [comment.id, editBody, editCategory, onEdit]);
+  }, [comment.id, editBody, onEdit]);
 
   const handleCancelEdit = useCallback((): void => {
     setEditBody(comment.body);
-    setEditCategory(comment.category);
     setIsEditing(false);
-  }, [comment.body, comment.category]);
+  }, [comment.body]);
 
   return (
-    <div className={`comment-card-wrap comment-card--${comment.category}`}>
+    <div className="comment-card-wrap">
       <div className="comment-card">
         <div className="comment-card-header">
-          <span className="comment-card-category" aria-label={meta.label}>
-            {meta.icon} {meta.label}
-          </span>
           <span className="comment-card-ref">{refLabel(comment)}</span>
           {comment.resolved && <span className="comment-card-resolved-badge">✓ resolved</span>}
           {comment.carriedFromId !== null && <span className="comment-card-carried-badge">↩ carried</span>}
@@ -96,15 +75,6 @@ export const CommentCard: React.FC<CommentCardProps> = ({ comment, onEdit, onDel
               rows={3}
               autoFocus
             />
-            <select
-              className="comment-card-edit-select"
-              value={editCategory}
-              onChange={(e) => { setEditCategory(e.target.value as Comment['category']); }}
-            >
-              {CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
-              ))}
-            </select>
             <div className="comment-card-edit-actions">
               <button className="comment-form__btn comment-form__btn--cancel" onClick={handleCancelEdit}>Cancel</button>
               <button className="comment-form__btn comment-form__btn--submit" onClick={handleSave}>Save</button>

@@ -105,7 +105,7 @@ export function registerExportPlanCommand(
                   c.type === 'range' && c.targetStart !== c.targetEnd
                     ? `righe ${c.targetStart}–${c.targetEnd}`
                     : `riga ${c.targetStart}`;
-                return `- **[${c.category}]** ${lineRef}: ${c.body}${c.resolved ? ' ✅' : ''}`;
+                return `- ${lineRef}: ${c.body}${c.resolved ? ' ✅' : ''}`;
               }),
             ].join('\n');
 

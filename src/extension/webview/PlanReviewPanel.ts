@@ -175,18 +175,17 @@ export class PlanReviewPanel {
       id: uuidv7(),
       createdAt: new Date().toISOString(),
     };
-
+    console.log('Adding comment:', comment);
     commentRepo.insert(comment);
     this.postMessage({ type: 'commentAdded', payload: comment });
   }
 
-  private handleUpdateComment(payload: { id: string; body?: string; category?: Comment['category'] }): void {
+  private handleUpdateComment(payload: { id: string; body?: string }): void {
     const rawDb = Database.getInstance().getDb();
     const commentRepo = new CommentRepository(rawDb);
 
     commentRepo.update(payload.id, {
       ...(payload.body !== undefined ? { body: payload.body } : {}),
-      ...(payload.category !== undefined ? { category: payload.category } : {}),
     });
 
     const updated = commentRepo.findById(payload.id);

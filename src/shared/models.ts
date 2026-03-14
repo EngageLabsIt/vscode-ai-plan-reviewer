@@ -35,10 +35,12 @@ export interface Comment {
   targetEnd: number;
   sectionId: string | null;
   body: string;
-  category: 'suggestion' | 'issue' | 'question' | 'approval';
+  category: 'suggestion';
   resolved: boolean;
   createdAt: string;
   carriedFromId: string | null;
+  targetStartChar: number | null;
+  targetEndChar: number | null;
 }
 
 // ── Diff types ────────────────────────────────────────────────────────────

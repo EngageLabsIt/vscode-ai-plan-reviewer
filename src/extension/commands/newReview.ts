@@ -192,6 +192,8 @@ export function registerNewReviewCommand(
                   resolved: false,
                   createdAt: now,
                   carriedFromId: mc.comment.id,
+                  targetStartChar: null,
+                  targetEndChar: null,
                 };
                 commentRepo.insert(carriedComment);
               } else if (mc.status === 'probably_resolved') {

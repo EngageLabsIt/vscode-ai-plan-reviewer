@@ -15,11 +15,6 @@ export class PromptGenerator {
   generate(opts: GenerateOptions): string {
     const { planTitle, versionNumber, versionContent, comments, sections, mode } = opts;
 
-    const issues = comments.filter((c) => c.category === 'issue');
-    const suggestions = comments.filter((c) => c.category === 'suggestion');
-    const questions = comments.filter((c) => c.category === 'question');
-    const approvals = comments.filter((c) => c.category === 'approval');
-
     const formatRef = (comment: Comment): string => {
       if (comment.sectionId !== null) {
         const section = sections.find((s) => s.id === comment.sectionId);
@@ -33,35 +28,13 @@ export class PromptGenerator {
       return `[Lines ${comment.targetStart}–${comment.targetEnd}]`;
     };
 
-    const formatCommentList = (items: Comment[]): string =>
-      items.map((c) => `- ${formatRef(c)}: ${c.body}`).join('\n');
-
-    const feedbackParts: string[] = [];
-
-    if (issues.length > 0) {
-      feedbackParts.push(`### Issues (must fix)\n\n${formatCommentList(issues)}`);
-    }
-
-    if (suggestions.length > 0) {
-      feedbackParts.push(`### Suggestions (recommended improvements)\n\n${formatCommentList(suggestions)}`);
-    }
-
-    if (questions.length > 0) {
-      feedbackParts.push(`### Questions (clarification needed)\n\n${formatCommentList(questions)}`);
-    }
-
-    if (approvals.length > 0) {
-      feedbackParts.push(`### Approved sections (keep as-is)\n\n${formatCommentList(approvals)}`);
-    }
-
-    const feedbackBody = feedbackParts.join('\n\n');
+    const feedbackBody = comments.length > 0
+      ? `### Suggestions\n\n${comments.map((c) => `- ${formatRef(c)}: ${c.body}`).join('\n')}`
+      : '';
 
     const closingInstructions = [
       'Please generate an updated version of the plan that:',
-      '1. Resolves all issues',
-      '2. Applies the suggested improvements where appropriate',
-      '3. Addresses all clarification questions',
-      '4. Preserves all approved sections unchanged',
+      '1. Applies the suggested improvements where appropriate',
     ].join('\n');
 
     if (mode === 'same_session') {
