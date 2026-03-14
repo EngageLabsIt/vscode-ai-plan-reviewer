@@ -718,6 +718,30 @@ body {
   min-width: 0;
 }
 
+/* ── Code block container ─────────────────────────────────── */
+
+.code-block-container {
+  background: var(--vscode-textCodeBlock-background, #1e1e1e);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 4px 0;
+}
+
+/* Code block line rows: monospace font, transparent bg (container owns it) */
+.code-block-container .line-row {
+  background: transparent;
+  font-family: var(--vscode-editor-font-family, var(--md-font-code, monospace));
+  font-size: var(--vscode-editor-font-size, 13px);
+}
+
+/* Inline code content: preserve whitespace, allow horizontal scroll */
+.code-line-content {
+  white-space: pre;
+  overflow-x: auto;
+  tab-size: 2;
+}
+
+
 /* ── Comment Cards (in-line) ──────────────────────────────── */
 
 .comment-card-wrap {

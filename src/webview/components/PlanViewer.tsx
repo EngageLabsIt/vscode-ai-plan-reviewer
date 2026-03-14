@@ -2,11 +2,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeHighlight from 'rehype-highlight';
 import type { Comment, Section } from '../../shared/models';
 import { LineGutter } from './LineGutter';
 import { CommentCard } from './CommentCard';
 import { CommentForm } from './CommentForm';
+import { CodeBlock } from './CodeBlock';
 import '../styles/planViewer.css';
 
 // ---------------------------------------------------------------------------
@@ -328,99 +328,31 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
       {entries.map((entry) => {
         if (entry.kind === 'code') {
           const { startLine, lang, lines } = entry;
-          const blockEnd = startLine + lines.length + 1;
-          const lastContentLine = startLine + lines.length - 1;
+          const blockEnd = startLine + lines.length - 1;
           const hasMatch = searchMatches.some(l => l >= startLine && l <= blockEnd);
-          const isCurrent = searchCurrentLine !== null
-            && searchCurrentLine >= startLine
-            && searchCurrentLine <= blockEnd;
-
-          // Break-point = lines in block with comments or formTargetLine
-          const breakLineSet = new Set<number>();
-          for (let ln = startLine; ln <= lastContentLine; ln++) {
-            if (commentsByEndLine.has(ln)) breakLineSet.add(ln);
-          }
-          if (formTargetLine !== null && formTargetLine >= startLine && formTargetLine <= lastContentLine) {
-            breakLineSet.add(formTargetLine);
-          }
-          const sortedBreaks = [...breakLineSet].sort((a, b) => a - b);
-
-          // Build segments
-          interface Segment { firstLine: number; codeLines: string[]; endLine: number; }
-          const segments: Segment[] = [];
-          let segFirstLine = startLine;
-          for (const bp of sortedBreaks) {
-            segments.push({
-              firstLine: segFirstLine,
-              codeLines: lines.slice(segFirstLine - startLine, bp - startLine + 1),
-              endLine: bp,
-            });
-            segFirstLine = bp + 1;
-          }
-          if (segFirstLine <= lastContentLine) {
-            segments.push({
-              firstLine: segFirstLine,
-              codeLines: lines.slice(segFirstLine - startLine),
-              endLine: lastContentLine,
-            });
-          } else if (segments.length === 0) {
-            segments.push({ firstLine: startLine, codeLines: [], endLine: lastContentLine });
-          }
 
           return (
             <div
               key={`cb-${startLine}`}
-              data-line={startLine}
-              id={isCurrent ? `line-${searchCurrentLine}` : undefined}
               className={[
                 'code-block-container',
                 hasMatch ? 'line-row--search-match' : '',
-                isCurrent ? 'line-row--search-current' : '',
               ].filter(Boolean).join(' ')}
+              data-line={startLine}
             >
-              {segments.map((seg, idx) => (
-                <React.Fragment key={idx}>
-                  <div className="line-row code-block-row">
-                    <div className="code-block-gutter">
-                      {seg.codeLines.map((_, i) => (
-                        <LineGutter key={i} lineNumber={seg.firstLine + i} onAddComment={onAddLineComment} />
-                      ))}
-                    </div>
-                    <div className="line-content">
-                      {seg.codeLines.length > 0 && (
-                        <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-                          {`\`\`\`${lang}\n${seg.codeLines.join('\n')}\n\`\`\``}
-                        </ReactMarkdown>
-                      )}
-                    </div>
-                  </div>
-                  {(commentsByEndLine.get(seg.endLine) ?? []).map((c) => (
-                    <div key={c.id} className="line-row">
-                      <div className="line-gutter" aria-hidden="true" />
-                      <div className="line-divider" aria-hidden="true" />
-                      <div className="line-content">
-                        <CommentCard
-                          comment={c}
-                          onEdit={onEdit ?? (() => {})}
-                          onDelete={onDelete ?? (() => {})}
-                          onResolve={onResolve ?? (() => {})}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  {formTargetLine === seg.endLine
-                    && onCommentSubmit !== undefined
-                    && onCommentCancel !== undefined && (
-                      <div className="line-row">
-                        <div className="line-gutter" aria-hidden="true" />
-                        <div className="line-divider" aria-hidden="true" />
-                        <div className="line-content">
-                          <CommentForm onSubmit={onCommentSubmit} onCancel={onCommentCancel} />
-                        </div>
-                      </div>
-                    )}
-                </React.Fragment>
-              ))}
+              <CodeBlock
+                lines={lines}
+                lang={lang}
+                startLine={startLine}
+                commentsByEndLine={commentsByEndLine}
+                formTargetLine={formTargetLine}
+                onAddLineComment={onAddLineComment}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onResolve={onResolve}
+                onCommentSubmit={onCommentSubmit}
+                onCommentCancel={onCommentCancel}
+              />
             </div>
           );
         }

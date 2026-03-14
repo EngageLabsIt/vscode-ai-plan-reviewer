@@ -2,8 +2,11 @@ import React, { useCallback, useState } from 'react';
 import type { Comment } from '../../shared/models';
 
 function refLabel(c: Comment): string {
-  if (c.type === 'range' && c.targetStart !== c.targetEnd) {
-    return `Lines ${c.targetStart}–${c.targetEnd}`;
+  if (c.type === 'range') {
+    return `Selection ${c.targetStart}–${c.targetEnd}`;
+  }
+  if (c.type === 'section') {
+    return `Section "${c.sectionId}"`;
   }
   return `Line ${c.targetStart}`;
 }
