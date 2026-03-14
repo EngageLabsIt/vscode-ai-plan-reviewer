@@ -28,7 +28,7 @@ jobs:
         run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
 
       - name: Build and package VSIX
-        run: npx vsce package --no-dependencies
+        run: npm run package
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
