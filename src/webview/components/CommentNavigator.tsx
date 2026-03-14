@@ -124,23 +124,12 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
   // ── Tab state ──────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<TabId>('comments');
 
-  // ── Filter state ──────────────────────────────────────────────────────────
-  const [onlyUnresolved, setOnlyUnresolved] = useState(false);
-
   // ── Panel width (resizable) ───────────────────────────────────────────────
   const [panelWidth, setPanelWidth] = useState(DEFAULT_WIDTH);
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(DEFAULT_WIDTH);
   const panelRef = useRef<HTMLElement>(null);
-
-  // ── Derived comment lists ─────────────────────────────────────────────────
-  const filteredComments = useMemo<Comment[]>(() => {
-    return comments.filter((c) => {
-      if (onlyUnresolved && c.resolved) return false;
-      return true;
-    });
-  }, [comments, onlyUnresolved]);
 
   // ── Per-section comment counts (for Sections tab) ─────────────────────────
   const sectionCommentCounts = useMemo<Map<string, number>>(() => {
@@ -164,10 +153,6 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
     }
     return map;
   }, [comments]);
-
-  const handleToggleUnresolved = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
-    setOnlyUnresolved(e.target.checked);
-  }, []);
 
   // ── Tab handlers ──────────────────────────────────────────────────────────
   const handleSelectCommentsTab = useCallback((): void => {
@@ -270,11 +255,11 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
 
         {/* Flat comment list */}
         <div className="comment-navigator__body">
-          {filteredComments.length === 0 ? (
-            <p className="comment-navigator__empty">No comments match the current filters.</p>
+          {comments.length === 0 ? (
+            <p className="comment-navigator__empty">No comments yet.</p>
           ) : (
             <ul className="comment-navigator__group-list" role="list">
-              {filteredComments.map((c) => (
+              {comments.map((c) => (
                 <li key={c.id} role="listitem">
                   <CommentCard
                     comment={c}
