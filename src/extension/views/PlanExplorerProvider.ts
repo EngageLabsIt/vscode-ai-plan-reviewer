@@ -168,7 +168,6 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
   private _buildRootGroups(): PlanTreeItem[] {
     return [
       this._makeGroupItem('In Review'),
-      this._makeGroupItem('Approved'),
       this._makeGroupItem('Archived'),
     ];
   }

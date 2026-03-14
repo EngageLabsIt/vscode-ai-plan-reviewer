@@ -11,6 +11,8 @@ import { CommentForm } from './CommentForm';
 // across line boundaries so each line renders with correct highlighting.
 // ---------------------------------------------------------------------------
 
+const TAG_REGEX = /<(\/?)span([^>]*)>/g;
+
 function splitHighlightedLines(html: string): string[] {
   const rawLines = html.split('\n');
   const result: string[] = [];
@@ -22,10 +24,10 @@ function splitHighlightedLines(html: string): string[] {
 
     // Track which tags are open after this line
     const currentTags = [...openTags];
-    const tagRegex = /<(\/?)span([^>]*)>/g;
     let match: RegExpExecArray | null;
 
-    while ((match = tagRegex.exec(line)) !== null) {
+    TAG_REGEX.lastIndex = 0;
+    while ((match = TAG_REGEX.exec(line)) !== null) {
       if (match[1] === '/') {
         currentTags.pop();
       } else {
