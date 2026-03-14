@@ -7,5 +7,14 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: { headless: true, viewport: { width: 1280, height: 800 } },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'capture',
+      use: {
+        ...devices['Desktop Chrome'],
+        video: { mode: 'on', size: { width: 1280, height: 800 } },
+      },
+    },
+  ],
 });

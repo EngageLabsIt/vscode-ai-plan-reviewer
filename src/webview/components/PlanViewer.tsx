@@ -178,7 +178,12 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
   onSelectionComment,
 }) => {
   const [collapsedSections, setCollapsedSections] = useState<Set<number>>(new Set());
-  const [selectionState, setSelectionState] = useState<{ startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string; x: number; y: number } | null>(null);
+  const [selectionState, setSelectionState] = useState<{
+    startLine: number; endLine: number;
+    startCharOffset: number | null; endCharOffset: number | null;
+    selectedText: string;
+  } | null>(null);
+  const [selectionPos, setSelectionPos] = useState<{ x: number; y: number } | null>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
 
   // Scroll to current search match
@@ -228,11 +233,13 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
     const selection = window.getSelection();
     if (selection === null || selection.isCollapsed) {
       setSelectionState(null);
+      setSelectionPos(null);
       return;
     }
     const selectedText = selection.toString().trim();
     if (selectedText.length === 0) {
       setSelectionState(null);
+      setSelectionPos(null);
       return;
     }
 
@@ -249,6 +256,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
 
     if (startRow === null || startRow === undefined || endRow === null || endRow === undefined) {
       setSelectionState(null);
+      setSelectionPos(null);
       return;
     }
 
@@ -257,6 +265,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
 
     if (isNaN(startLine) || isNaN(endLine)) {
       setSelectionState(null);
+      setSelectionPos(null);
       return;
     }
 
@@ -275,14 +284,13 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
       startCharOffset,
       endCharOffset,
       selectedText,
-      x: e.clientX,
-      y: e.clientY,
     });
+    setSelectionPos({ x: e.clientX, y: e.clientY });
   }, []);
 
   // Determine inline form target line
-  const formTargetLine: number | null = (() => {
-    if (commentFormState === null || commentFormState === undefined) return null;
+  const formTargetLine = useMemo<number | null>(() => {
+    if (commentFormState == null) return null;
     if (commentFormState.type === 'line') return commentFormState.lineNumber;
     if (commentFormState.type === 'range') return commentFormState.endLine;
     if (commentFormState.type === 'section') {
@@ -290,7 +298,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
       return sec !== undefined ? sec.startLine : null;
     }
     return null;
-  })();
+  }, [commentFormState, sections]);
 
   // Group section comments by sectionId for O(1) lookup
   const commentsBySection = useMemo<Map<string, Comment[]>>(() => {
@@ -318,9 +326,15 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
     return map;
   }, [allComments]);
 
+  // O(1) lookup set for search match lines
+  const searchMatchSet = useMemo(() => new Set(searchMatches), [searchMatches]);
+
   // Parse content into per-line entries
   const entries = useMemo(() => parseLines(content), [content]);
-  const totalLines = useMemo(() => Math.max(1, content.split('\n').length), [content]);
+  const totalLines = useMemo(
+    () => entries.reduce((max, e) => Math.max(max, e.kind === 'code' ? e.startLine + e.lines.length - 1 : e.lineNumber), 1),
+    [entries]
+  );
 
   return (
     <div className="plan-viewer-container">
@@ -329,7 +343,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
         if (entry.kind === 'code') {
           const { startLine, lang, lines } = entry;
           const blockEnd = startLine + lines.length - 1;
-          const hasMatch = searchMatches.some(l => l >= startLine && l <= blockEnd);
+          const hasMatch = Array.from({ length: blockEnd - startLine + 1 }, (_, i) => startLine + i).some(l => searchMatchSet.has(l));
 
           return (
             <div
@@ -375,7 +389,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
                 ? 'line-row--range-selected' : '',
               selectionState !== null && lineNumber >= Math.min(selectionState.startLine, selectionState.endLine) && lineNumber <= Math.max(selectionState.startLine, selectionState.endLine)
                 ? 'line-row--selecting' : '',
-              searchMatches.includes(lineNumber) ? 'line-row--search-match' : '',
+              searchMatchSet.has(lineNumber) ? 'line-row--search-match' : '',
               searchCurrentLine === lineNumber ? 'line-row--search-current' : '',
             ].filter(Boolean).join(' ')}
             id={`line-${lineNumber}`}
@@ -433,15 +447,16 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
       })}
 
       {/* Floating selection comment button */}
-      {selectionState !== null && (commentFormState === null || commentFormState === undefined) && (
+      {selectionState !== null && selectionPos !== null && (commentFormState === null || commentFormState === undefined) && (
         <button
           className="selection-comment-btn"
-          style={{ position: 'fixed', left: selectionState.x, top: selectionState.y - 36 }}
+          style={{ position: 'fixed', left: selectionPos.x, top: selectionPos.y - 36 }}
           aria-label="Add comment on selection"
           title="Add comment on selection"
           onClick={() => {
             const s = selectionState;
             setSelectionState(null);
+            setSelectionPos(null);
             window.getSelection()?.removeAllRanges();
             if (onSelectionComment !== undefined) {
               onSelectionComment(s.startLine, s.endLine, s.startCharOffset, s.endCharOffset, s.selectedText);

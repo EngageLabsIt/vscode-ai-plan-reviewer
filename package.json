@@ -154,7 +154,8 @@
     "package": "npm run build && vsce package --no-dependencies",
     "lint": "eslint src",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test --project=chromium",
+    "capture": "npm run build && playwright test --project=capture --grep @capture && node scripts/copy-captures.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

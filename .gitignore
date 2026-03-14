@@ -144,3 +144,9 @@ vite.config.ts.timestamp-*
 .vite/
 
 *.vsix
+
+# Playwright test results
+test-results/
+
+# Capture videos (large files, not versioned)
+docs/screenshots/*.webm
