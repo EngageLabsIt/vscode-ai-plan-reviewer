@@ -308,18 +308,29 @@ export const App: React.FC = () => {
   }, [loadedPlan]);
 
   // ── Render ────────────────────────────────────────────────────────────────
+  const commentContextValue = useMemo(() => ({
+    comments: loadedPlan?.comments ?? [],
+    onEdit: handleEditComment,
+    onDelete: handleDeleteComment,
+    onResolve: handleResolveComment,
+    commentFormState,
+    activeCommentLine,
+    openCommentForm: setCommentFormState,
+    closeCommentForm: handleCommentFormCancel,
+    onCommentSubmit: handleCommentFormSubmit,
+  }), [
+    loadedPlan,
+    handleEditComment,
+    handleDeleteComment,
+    handleResolveComment,
+    commentFormState,
+    activeCommentLine,
+    handleCommentFormCancel,
+    handleCommentFormSubmit,
+  ]);
+
   return (
-    <CommentContext.Provider value={{
-      comments: loadedPlan?.comments ?? [],
-      onEdit: handleEditComment,
-      onDelete: handleDeleteComment,
-      onResolve: handleResolveComment,
-      commentFormState,
-      activeCommentLine,
-      openCommentForm: setCommentFormState,
-      closeCommentForm: handleCommentFormCancel,
-      onCommentSubmit: handleCommentFormSubmit,
-    }}>
+    <CommentContext.Provider value={commentContextValue}>
       <div className="plan-reviewer-app">
         {loadedPlan !== null ? (
           <>
@@ -374,7 +385,6 @@ export const App: React.FC = () => {
                 onSelectionComment={handleSelectionComment}
               />
               <CommentNavigator
-                comments={loadedPlan.comments}
                 sections={loadedPlan.sections}
                 isOpen={navigatorOpen}
               />

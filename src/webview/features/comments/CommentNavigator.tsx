@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Comment, Section } from '../../../shared/models';
 import { CommentCard } from './CommentCard';
+import { useComments } from './CommentContext';
 import '../../styles/planViewer.css';
 import {
   NAVIGATOR_MIN_WIDTH,
@@ -14,7 +15,6 @@ import {
 // ---------------------------------------------------------------------------
 
 interface CommentNavigatorProps {
-  comments: Comment[];
   sections: Section[];
   isOpen: boolean;
 }
@@ -113,10 +113,10 @@ const SectionRow: React.FC<SectionRowProps> = ({ section, commentCount, sectionC
 // ---------------------------------------------------------------------------
 
 export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
-  comments,
   sections,
   isOpen,
 }) => {
+  const { comments } = useComments();
   // ── Tab state ──────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<TabId>('comments');
 

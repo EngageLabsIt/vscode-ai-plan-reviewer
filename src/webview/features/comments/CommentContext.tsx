@@ -10,7 +10,7 @@ export type CommentFormState =
   | { type: 'line';    lineNumber: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null }
   | { type: 'range';   startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null };
 
-interface CommentContextValue {
+export interface CommentContextValue {
   comments: Comment[];
   onEdit:    (id: string, body: string) => void;
   onDelete:  (id: string) => void;
