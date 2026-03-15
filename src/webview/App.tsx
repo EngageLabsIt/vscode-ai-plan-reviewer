@@ -1,28 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVsCodeApi } from './hooks/useVsCodeApi';
+import { usePlanMessages } from './hooks/usePlanMessages';
+import { useSearch } from './features/search/useSearch';
 import { PlanViewer } from './features/plan-viewer/PlanViewer';
 import { ReviewToolbar } from './features/toolbar/ReviewToolbar';
 import { CommentNavigator } from './features/comments/CommentNavigator';
 import { SearchBar } from './features/search/SearchBar';
 import { PromptPreview } from './features/prompt/PromptPreview';
 import { CommentContext } from './features/comments/CommentContext';
-import type { HostMessage } from '../../shared/messages';
-import type { Comment, Plan, Section, Version } from '../../shared/models';
+import type { Comment } from '../../shared/models';
 import type { CommentFormState } from './features/comments/CommentContext';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface LoadedPlan {
-  plan: Plan;
-  versionId: string;
-  content: string;
-  sections: Section[];
-  versionNumber: number;
-  versions: Version[];
-  comments: Comment[];
-}
 
 // ---------------------------------------------------------------------------
 // App
@@ -30,97 +17,24 @@ interface LoadedPlan {
 
 export const App: React.FC = () => {
   const vscode = useVsCodeApi();
-  const [loadedPlan, setLoadedPlan] = useState<LoadedPlan | null>(null);
-  const loadedPlanRef = useRef<LoadedPlan | null>(null);
+  const { loadedPlan, setLoadedPlan, loadedPlanRef } = usePlanMessages(vscode);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
   const [commentFormState, setCommentFormState] = useState<CommentFormState | null>(null);
   const [activeCommentLine, setActiveCommentLine] = useState<number | null>(null);
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchMatches, setSearchMatches] = useState<number[]>([]);
-  const [searchIndex, setSearchIndex] = useState(0);
 
-  // Signal readiness to the extension host
-  useEffect(() => {
-    vscode.postMessage({ type: 'ready' });
-  }, [vscode]);
-
-  // Listen for messages from the extension host
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent<HostMessage>): void => {
-      const message = event.data;
-
-      if (message.type === 'planLoaded') {
-        const { plan, version, versions, sections, comments } = message.payload;
-        const next: LoadedPlan = {
-          plan,
-          versionId: version.id,
-          content: version.content,
-          sections,
-          versionNumber: version.versionNumber,
-          versions,
-          comments,
-        };
-        setLoadedPlan(next);
-        loadedPlanRef.current = next;
-        return;
-      }
-
-      if (message.type === 'commentAdded') {
-        setLoadedPlan((prev) =>
-          prev !== null
-            ? { ...prev, comments: [...prev.comments, message.payload] }
-            : prev,
-        );
-        return;
-      }
-
-      if (message.type === 'commentUpdated') {
-        const updated = message.payload;
-        setLoadedPlan((prev) =>
-          prev !== null
-            ? {
-                ...prev,
-                comments: prev.comments.map((c) => (c.id === updated.id ? updated : c)),
-              }
-            : prev,
-        );
-        return;
-      }
-
-      if (message.type === 'commentDeleted') {
-        const { commentId } = message.payload;
-        setLoadedPlan((prev) =>
-          prev !== null
-            ? { ...prev, comments: prev.comments.filter((c) => c.id !== commentId) }
-            : prev,
-        );
-        return;
-      }
-
-      if (message.type === 'planStatusUpdated') {
-        const { planId, status } = message.payload;
-        setLoadedPlan((prev) =>
-          prev !== null && prev.plan.id === planId
-            ? { ...prev, plan: { ...prev.plan, status } }
-            : prev,
-        );
-        return;
-      }
-
-      if (message.type === 'error') {
-        console.error('[Plan Reviewer]', message.payload.message);
-        return;
-      }
-
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, []);
+  const {
+    searchOpen,
+    searchQuery,
+    searchMatches,
+    searchIndex,
+    handleToggleSearch,
+    setSearchQuery,
+    handleSearchNext,
+    handleSearchPrev,
+    handleSearchClose,
+    searchCurrentLine,
+  } = useSearch(loadedPlan?.content);
 
   // ── Navigator toggle ───────────────────────────────────────────────────────
   const handleToggleNavigator = useCallback((): void => {
@@ -157,7 +71,7 @@ export const App: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent): void => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
-        setSearchOpen(true);
+        handleToggleSearch();
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'G') {
         e.preventDefault();
@@ -170,7 +84,7 @@ export const App: React.FC = () => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [handleToggleSearch]);
 
   // ── Section comment handlers ───────────────────────────────────────────────
 
@@ -248,58 +162,6 @@ export const App: React.FC = () => {
     setCommentFormState(null);
     setActiveCommentLine(null);
   }, []);
-
-  // ── Search ──────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (searchQuery.length === 0 || loadedPlan === null) {
-      setSearchMatches([]);
-      setSearchIndex(0);
-      return;
-    }
-    const q = searchQuery.toLowerCase();
-    const lines = loadedPlan.content.split('\n');
-    const matches: number[] = [];
-    lines.forEach((line, i) => {
-      if (line.toLowerCase().includes(q)) {
-        matches.push(i + 1);
-      }
-    });
-    setSearchMatches(matches);
-    setSearchIndex(matches.length > 0 ? 1 : 0);
-  }, [searchQuery, loadedPlan]);
-
-  const handleToggleSearch = useCallback((): void => {
-    setSearchOpen((open) => {
-      if (open) {
-        setSearchQuery('');
-        setSearchMatches([]);
-        setSearchIndex(0);
-      }
-      return !open;
-    });
-  }, []);
-
-  const handleSearchNext = useCallback((): void => {
-    if (searchMatches.length === 0) return;
-    setSearchIndex((prev) => (prev >= searchMatches.length ? 1 : prev + 1));
-  }, [searchMatches.length]);
-
-  const handleSearchPrev = useCallback((): void => {
-    if (searchMatches.length === 0) return;
-    setSearchIndex((prev) => (prev <= 1 ? searchMatches.length : prev - 1));
-  }, [searchMatches.length]);
-
-  const handleSearchClose = useCallback((): void => {
-    setSearchOpen(false);
-    setSearchQuery('');
-    setSearchMatches([]);
-    setSearchIndex(0);
-  }, []);
-
-  const searchCurrentLine = searchMatches.length > 0 && searchIndex > 0
-    ? searchMatches[searchIndex - 1]
-    : null;
 
   // ── Derived: section-scoped comments only ─────────────────────────────────
   const sectionComments = useMemo<Comment[]>(() => {
