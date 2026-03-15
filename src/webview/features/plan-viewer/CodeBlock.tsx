@@ -56,11 +56,6 @@ interface CodeBlockProps {
   commentsByEndLine: Map<number, Comment[]>;
   formTargetLine: number | null;
   onAddLineComment?: (lineNumber: number) => void;
-  onEdit?: (id: string, body: string) => void;
-  onDelete?: (id: string) => void;
-  onResolve?: (id: string) => void;
-  onCommentSubmit?: (body: string) => void;
-  onCommentCancel?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -74,11 +69,6 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
   commentsByEndLine,
   formTargetLine,
   onAddLineComment,
-  onEdit,
-  onDelete,
-  onResolve,
-  onCommentSubmit,
-  onCommentCancel,
 }) => {
   const lineHtmls = useMemo(() => {
     const code = lines.join('\n');
@@ -118,16 +108,11 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
                 <CommentCard
                   key={c.id}
                   comment={c}
-                  onEdit={onEdit ?? (() => {})}
-                  onDelete={onDelete ?? (() => {})}
-                  onResolve={onResolve ?? (() => {})}
                 />
               ))}
-              {formTargetLine === lineNumber
-                && onCommentSubmit !== undefined
-                && onCommentCancel !== undefined && (
-                  <CommentForm onSubmit={onCommentSubmit} onCancel={onCommentCancel} />
-                )}
+              {formTargetLine === lineNumber && (
+                <CommentForm />
+              )}
             </div>
           </div>
         );

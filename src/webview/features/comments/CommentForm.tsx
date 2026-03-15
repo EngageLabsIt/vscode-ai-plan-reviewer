@@ -1,12 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import '../../styles/planViewer.css';
+import { useComments } from './CommentContext';
 
-interface CommentFormProps {
-  onSubmit: (body: string) => void;
-  onCancel: () => void;
-}
-
-export const CommentForm: React.FC<CommentFormProps> = ({ onSubmit, onCancel }) => {
+export const CommentForm: React.FC = () => {
+  const { onCommentSubmit: onSubmit, closeCommentForm: onCancel } = useComments();
   const [body, setBody] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 

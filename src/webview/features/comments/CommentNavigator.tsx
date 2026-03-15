@@ -17,9 +17,6 @@ interface CommentNavigatorProps {
   comments: Comment[];
   sections: Section[];
   isOpen: boolean;
-  onEdit?:    (id: string, body: string) => void;
-  onDelete?:  (id: string) => void;
-  onResolve?: (id: string) => void;
 }
 
 type TabId = 'comments' | 'sections';
@@ -119,9 +116,6 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
   comments,
   sections,
   isOpen,
-  onEdit,
-  onDelete,
-  onResolve,
 }) => {
   // ── Tab state ──────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<TabId>('comments');
@@ -289,12 +283,7 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
             <ul className="comment-navigator__group-list" role="list">
               {filteredComments.map((c) => (
                 <li key={c.id} role="listitem">
-                  <CommentCard
-                    comment={c}
-                    onEdit={onEdit ?? (() => {})}
-                    onDelete={onDelete ?? (() => {})}
-                    onResolve={onResolve ?? (() => {})}
-                  />
+                  <CommentCard comment={c} />
                 </li>
               ))}
             </ul>

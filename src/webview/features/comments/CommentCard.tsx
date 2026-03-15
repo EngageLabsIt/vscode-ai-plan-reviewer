@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import type { Comment } from '../../../shared/models';
+import { useComments } from './CommentContext';
 
 function refLabel(c: Comment): string {
   if (c.type === 'range') {
@@ -13,12 +14,10 @@ function refLabel(c: Comment): string {
 
 interface CommentCardProps {
   comment: Comment;
-  onEdit:    (id: string, body: string) => void;
-  onDelete:  (id: string) => void;
-  onResolve: (id: string) => void;
 }
 
-export const CommentCard: React.FC<CommentCardProps> = ({ comment, onEdit, onDelete, onResolve }) => {
+export const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
+  const { onEdit, onDelete, onResolve } = useComments();
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(comment.body);
 

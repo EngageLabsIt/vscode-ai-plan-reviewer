@@ -7,6 +7,7 @@ import { LineGutter } from './LineGutter';
 import { CommentCard } from '../comments/CommentCard';
 import { CommentForm } from '../comments/CommentForm';
 import { CodeBlock } from './CodeBlock';
+import { useComments } from '../comments/CommentContext';
 import '../../styles/planViewer.css';
 
 // ---------------------------------------------------------------------------
@@ -22,16 +23,9 @@ interface PlanViewerProps {
   onCommentSection?: (sectionId: string) => void;
   onAddLineComment?: (lineNumber: number) => void;
   onLineShiftClick?: (lineNumber: number) => void;
-  activeCommentLine?: number | null;
   commentRange?: { start: number; end: number } | null;
-  onEdit?: (id: string, body: string) => void;
-  onDelete?: (id: string) => void;
-  onResolve?: (id: string) => void;
   searchMatches?: number[];
   searchCurrentLine?: number | null;
-  commentFormState?: { type: 'line'; lineNumber: number } | { type: 'range'; startLine: number; endLine: number } | { type: 'section'; sectionId: string } | null;
-  onCommentSubmit?: (body: string) => void;
-  onCommentCancel?: () => void;
   onSelectionComment?: (startLine: number, endLine: number, startChar: number | null, endChar: number | null, selectedText: string) => void;
 }
 
@@ -165,18 +159,12 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
   onCommentSection,
   onAddLineComment,
   onLineShiftClick,
-  activeCommentLine,
   commentRange,
-  onEdit,
-  onDelete,
-  onResolve,
   searchMatches = [],
   searchCurrentLine = null,
-  commentFormState,
-  onCommentSubmit,
-  onCommentCancel,
   onSelectionComment,
 }) => {
+  const { activeCommentLine, commentFormState } = useComments();
   const [collapsedSections, setCollapsedSections] = useState<Set<number>>(new Set());
   const [selectionState, setSelectionState] = useState<{
     startLine: number; endLine: number;
@@ -361,11 +349,6 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
                 commentsByEndLine={commentsByEndLine}
                 formTargetLine={formTargetLine}
                 onAddLineComment={onAddLineComment}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onResolve={onResolve}
-                onCommentSubmit={onCommentSubmit}
-                onCommentCancel={onCommentCancel}
               />
             </div>
           );
@@ -430,16 +413,10 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
                 <CommentCard
                   key={c.id}
                   comment={c}
-                  onEdit={onEdit ?? (() => {})}
-                  onDelete={onDelete ?? (() => {})}
-                  onResolve={onResolve ?? (() => {})}
                 />
               ))}
-              {formTargetLine === lineNumber && onCommentSubmit !== undefined && onCommentCancel !== undefined && (
-                <CommentForm
-                  onSubmit={onCommentSubmit}
-                  onCancel={onCommentCancel}
-                />
+              {formTargetLine === lineNumber && (
+                <CommentForm />
               )}
             </div>
           </div>

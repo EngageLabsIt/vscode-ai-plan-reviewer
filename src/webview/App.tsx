@@ -5,8 +5,10 @@ import { ReviewToolbar } from './features/toolbar/ReviewToolbar';
 import { CommentNavigator } from './features/comments/CommentNavigator';
 import { SearchBar } from './features/search/SearchBar';
 import { PromptPreview } from './features/prompt/PromptPreview';
+import { CommentContext } from './features/comments/CommentContext';
 import type { HostMessage } from '../../shared/messages';
 import type { Comment, Plan, Section, Version } from '../../shared/models';
+import type { CommentFormState } from './features/comments/CommentContext';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -21,11 +23,6 @@ interface LoadedPlan {
   versions: Version[];
   comments: Comment[];
 }
-
-type CommentFormState =
-  | { type: 'section'; sectionId: string; heading: string }
-  | { type: 'line';    lineNumber: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null }
-  | { type: 'range';   startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null };
 
 // ---------------------------------------------------------------------------
 // App
@@ -312,94 +309,96 @@ export const App: React.FC = () => {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="plan-reviewer-app">
-      {loadedPlan !== null ? (
-        <>
-          <ReviewToolbar
-            plan={loadedPlan.plan}
-            versionNumber={loadedPlan.versionNumber}
-            versions={loadedPlan.versions}
-            comments={loadedPlan.comments}
-            onToggleNavigator={handleToggleNavigator}
-            navigatorOpen={navigatorOpen}
-            onToggleSearch={handleToggleSearch}
-            searchOpen={searchOpen}
-            onGeneratePrompt={handleGeneratePrompt}
-            onApprove={handleApprove}
-            onSelectVersion={handleSelectVersion}
-          />
-          {/* <PlanTimeline
-            versions={loadedPlan.versions}
-            currentVersionNumber={loadedPlan.versionNumber}
-            onSelectVersion={handleSelectVersion}
-            collapsed={timelineCollapsed}
-            onToggleCollapse={handleTimelineToggle}
-          /> */}
-          <div className="plan-content-area">
-            {searchOpen && (
-              <SearchBar
-                query={searchQuery}
-                onQueryChange={setSearchQuery}
-                currentIndex={searchIndex}
-                totalMatches={searchMatches.length}
-                onNext={handleSearchNext}
-                onPrev={handleSearchPrev}
-                onClose={handleSearchClose}
+    <CommentContext.Provider value={{
+      comments: loadedPlan?.comments ?? [],
+      onEdit: handleEditComment,
+      onDelete: handleDeleteComment,
+      onResolve: handleResolveComment,
+      commentFormState,
+      activeCommentLine,
+      openCommentForm: setCommentFormState,
+      closeCommentForm: handleCommentFormCancel,
+      onCommentSubmit: handleCommentFormSubmit,
+    }}>
+      <div className="plan-reviewer-app">
+        {loadedPlan !== null ? (
+          <>
+            <ReviewToolbar
+              plan={loadedPlan.plan}
+              versionNumber={loadedPlan.versionNumber}
+              versions={loadedPlan.versions}
+              comments={loadedPlan.comments}
+              onToggleNavigator={handleToggleNavigator}
+              navigatorOpen={navigatorOpen}
+              onToggleSearch={handleToggleSearch}
+              searchOpen={searchOpen}
+              onGeneratePrompt={handleGeneratePrompt}
+              onApprove={handleApprove}
+              onSelectVersion={handleSelectVersion}
+            />
+            {/* <PlanTimeline
+              versions={loadedPlan.versions}
+              currentVersionNumber={loadedPlan.versionNumber}
+              onSelectVersion={handleSelectVersion}
+              collapsed={timelineCollapsed}
+              onToggleCollapse={handleTimelineToggle}
+            /> */}
+            <div className="plan-content-area">
+              {searchOpen && (
+                <SearchBar
+                  query={searchQuery}
+                  onQueryChange={setSearchQuery}
+                  currentIndex={searchIndex}
+                  totalMatches={searchMatches.length}
+                  onNext={handleSearchNext}
+                  onPrev={handleSearchPrev}
+                  onClose={handleSearchClose}
+                />
+              )}
+              <PlanViewer
+                content={loadedPlan.content}
+                sections={loadedPlan.sections}
+                versionNumber={loadedPlan.versionNumber}
+                sectionComments={sectionComments}
+                allComments={loadedPlan.comments}
+                onCommentSection={handleCommentSection}
+                onAddLineComment={handleAddLineComment}
+                onLineShiftClick={handleLineShiftClick}
+                commentRange={
+                  commentFormState?.type === 'range'
+                    ? { start: commentFormState.startLine, end: commentFormState.endLine }
+                    : null
+                }
+                searchMatches={searchMatches}
+                searchCurrentLine={searchCurrentLine}
+                onSelectionComment={handleSelectionComment}
+              />
+              <CommentNavigator
+                comments={loadedPlan.comments}
+                sections={loadedPlan.sections}
+                isOpen={navigatorOpen}
+              />
+            </div>
+
+            {promptPreviewOpen && (
+              <PromptPreview
+                planTitle={loadedPlan.plan.title}
+                versionNumber={loadedPlan.versionNumber}
+                versionContent={loadedPlan.content}
+                planCreatedAt={loadedPlan.plan.createdAt}
+                versionId={loadedPlan.versionId}
+                comments={loadedPlan.comments}
+                sections={loadedPlan.sections}
+                onClose={handleClosePromptPreview}
               />
             )}
-            <PlanViewer
-              content={loadedPlan.content}
-              sections={loadedPlan.sections}
-              versionNumber={loadedPlan.versionNumber}
-              sectionComments={sectionComments}
-              allComments={loadedPlan.comments}
-              onCommentSection={handleCommentSection}
-              onAddLineComment={handleAddLineComment}
-              onLineShiftClick={handleLineShiftClick}
-              activeCommentLine={activeCommentLine}
-              commentRange={
-                commentFormState?.type === 'range'
-                  ? { start: commentFormState.startLine, end: commentFormState.endLine }
-                  : null
-              }
-              onEdit={handleEditComment}
-              onDelete={handleDeleteComment}
-              onResolve={handleResolveComment}
-              searchMatches={searchMatches}
-              searchCurrentLine={searchCurrentLine}
-              commentFormState={commentFormState}
-              onCommentSubmit={handleCommentFormSubmit}
-              onCommentCancel={handleCommentFormCancel}
-              onSelectionComment={handleSelectionComment}
-            />
-            <CommentNavigator
-              comments={loadedPlan.comments}
-              sections={loadedPlan.sections}
-              isOpen={navigatorOpen}
-              onEdit={handleEditComment}
-              onDelete={handleDeleteComment}
-              onResolve={handleResolveComment}
-            />
-          </div>
-
-          {promptPreviewOpen && (
-            <PromptPreview
-              planTitle={loadedPlan.plan.title}
-              versionNumber={loadedPlan.versionNumber}
-              versionContent={loadedPlan.content}
-              planCreatedAt={loadedPlan.plan.createdAt}
-              versionId={loadedPlan.versionId}
-              comments={loadedPlan.comments}
-              sections={loadedPlan.sections}
-              onClose={handleClosePromptPreview}
-            />
-          )}
-        </>
-      ) : (
-        <p className="plan-reviewer-placeholder">
-          Plan Reviewer — Ready. Use &ldquo;Plan Reviewer: New Review&rdquo; to start.
-        </p>
-      )}
-    </div>
+          </>
+        ) : (
+          <p className="plan-reviewer-placeholder">
+            Plan Reviewer — Ready. Use &ldquo;Plan Reviewer: New Review&rdquo; to start.
+          </p>
+        )}
+      </div>
+    </CommentContext.Provider>
   );
 };
