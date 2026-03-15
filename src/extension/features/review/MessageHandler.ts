@@ -22,7 +22,7 @@ export class MessageHandler {
     private readonly postMessage: (message: HostMessage) => void,
   ) {}
 
-  handle(message: WebViewMessage): void {
+  handle(message: Exclude<WebViewMessage, { type: 'ready' }>): void {
     switch (message.type) {
       case 'requestPlan':       this.handleRequestPlan(message.payload);       break;
       case 'updatePlanStatus':  this.handleUpdatePlanStatus(message.payload);  break;
@@ -32,7 +32,6 @@ export class MessageHandler {
       case 'resolveComment':    this.handleResolveComment(message.payload);    break;
       case 'requestDiff':       this.handleRequestDiff(message.payload);       break;
       case 'saveReviewPrompt':  this.handleSaveReviewPrompt(message.payload);  break;
-      default: break;
     }
   }
 
