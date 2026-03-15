@@ -16,7 +16,7 @@ interface CommentCardProps {
   comment: Comment;
 }
 
-export const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
+const CommentCardComponent: React.FC<CommentCardProps> = ({ comment }) => {
   const { onEdit, onDelete, onResolve } = useComments();
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(comment.body);
@@ -89,3 +89,5 @@ export const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
     </div>
   );
 };
+
+export const CommentCard = React.memo(CommentCardComponent);

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 interface LineGutterProps {
   lineNumber: number;
   onAddComment?: (lineNumber: number) => void;
 }
 
-export const LineGutter: React.FC<LineGutterProps> = ({ lineNumber, onAddComment }) => {
+const LineGutterComponent: React.FC<LineGutterProps> = ({ lineNumber, onAddComment }) => {
   const [hovered, setHovered] = useState(false);
 
   const handleAddComment = (): void => {
@@ -39,3 +39,5 @@ export const LineGutter: React.FC<LineGutterProps> = ({ lineNumber, onAddComment
     </div>
   );
 };
+
+export const LineGutter = React.memo(LineGutterComponent);
