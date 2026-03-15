@@ -367,16 +367,7 @@ body {
   color: #fbbf24;
   border: 1px solid rgba(251,191,36,0.3);
 }
-.review-toolbar__badge--approved {
-  background: rgba(52,211,153,0.12);
-  color: #34d399;
-  border: 1px solid rgba(52,211,153,0.3);
-}
-.review-toolbar__badge--needs-revision {
-  background: rgba(248,113,113,0.12);
-  color: var(--vscode-editorError-foreground, #f87171);
-  border: 1px solid rgba(248,113,113,0.3);
-}
+
 .review-toolbar__badge--archived {
   background: rgba(139,148,158,0.12);
   color: var(--md-on-surface-dim);
@@ -436,10 +427,6 @@ body {
   box-shadow: 0 0 0 4px var(--md-primary-dim), var(--md-elevation-2);
 }
 
-.plan-timeline__node--approved .plan-timeline__circle {
-  border-color: var(--vscode-testing-iconPassed, #059669);
-  color: var(--vscode-testing-iconPassed, #34d399);
-}
 
 .plan-timeline__label {
   font-size: 10px;

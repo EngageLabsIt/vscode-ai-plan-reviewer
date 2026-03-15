@@ -4,7 +4,7 @@ export interface Plan {
   source: 'copilot' | 'manual' | 'other';
   createdAt: string;
   updatedAt: string;
-  status: 'in_review' | 'approved' | 'archived' | 'needs_revision';
+  status: 'in_review' | 'archived';
   tags: string[];
 }
 
