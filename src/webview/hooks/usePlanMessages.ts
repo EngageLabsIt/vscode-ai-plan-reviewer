@@ -1,17 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import type { Dispatch, RefObject, SetStateAction } from 'react';
 import type { HostMessage } from '../../shared/messages';
 import type { Comment, Plan, Section, Version } from '../../shared/models';
-import type { WebViewMessage } from '../../shared/messages';
+import type { VsCodeApi } from './useVsCodeApi';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-interface VsCodeApi {
-  postMessage(message: WebViewMessage): void;
-  getState<T>(): T | undefined;
-  setState<T>(state: T): T;
-}
 
 export interface LoadedPlan {
   plan: Plan;
@@ -25,8 +20,8 @@ export interface LoadedPlan {
 
 export interface UsePlanMessagesReturn {
   loadedPlan: LoadedPlan | null;
-  setLoadedPlan: React.Dispatch<React.SetStateAction<LoadedPlan | null>>;
-  loadedPlanRef: React.RefObject<LoadedPlan | null>;
+  setLoadedPlan: Dispatch<SetStateAction<LoadedPlan | null>>;
+  loadedPlanRef: RefObject<LoadedPlan | null>;
 }
 
 // ---------------------------------------------------------------------------
@@ -41,6 +36,11 @@ export function usePlanMessages(vscodeApi: VsCodeApi): UsePlanMessagesReturn {
   useEffect(() => {
     vscodeApi.postMessage({ type: 'ready' });
   }, [vscodeApi]);
+
+  // Keep the ref in sync with state so event handlers always see the latest value
+  useEffect(() => {
+    loadedPlanRef.current = loadedPlan;
+  }, [loadedPlan]);
 
   // Listen for messages from the extension host
   useEffect(() => {
@@ -59,7 +59,6 @@ export function usePlanMessages(vscodeApi: VsCodeApi): UsePlanMessagesReturn {
           comments,
         };
         setLoadedPlan(next);
-        loadedPlanRef.current = next;
         return;
       }
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -10,7 +11,7 @@ export interface UseSearchReturn {
   searchMatches: number[];
   searchIndex: number;
   handleToggleSearch: () => void;
-  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+  setSearchQuery: Dispatch<SetStateAction<string>>;
   handleSearchNext: () => void;
   handleSearchPrev: () => void;
   handleSearchClose: () => void;
