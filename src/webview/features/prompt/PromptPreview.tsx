@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Comment, Section } from '../../shared/models';
-import { PromptGenerator } from '../../shared/PromptGenerator';
-import type { PromptMode } from '../../shared/PromptGenerator';
-import { useVsCodeApi } from '../hooks/useVsCodeApi';
+import type { Comment, Section } from '../../../shared/models';
+import { PromptGenerator } from '../../../shared/PromptGenerator';
+import type { PromptMode } from '../../../shared/PromptGenerator';
+import { useVsCodeApi } from '../../hooks/useVsCodeApi';
 
 interface PromptPreviewProps {
   planTitle: string;

@@ -1,7 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Comment, Section } from '../../shared/models';
+import type { Comment, Section } from '../../../shared/models';
 import { CommentCard } from './CommentCard';
-import '../styles/planViewer.css';
+import '../../styles/planViewer.css';
+import {
+  NAVIGATOR_MIN_WIDTH,
+  NAVIGATOR_MAX_WIDTH,
+  NAVIGATOR_DEFAULT_WIDTH,
+  HIGHLIGHT_DURATION_MS,
+} from '../../constants';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -18,12 +24,7 @@ interface CommentNavigatorProps {
 
 type TabId = 'comments' | 'sections';
 
-const highlightTimers = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
-
-const MIN_WIDTH = 200;
-const MAX_WIDTH = 400;
-const DEFAULT_WIDTH = 280;
-const HIGHLIGHT_DURATION_MS = 1000;
+type TimerMap = Map<HTMLElement, ReturnType<typeof setTimeout>>;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -40,18 +41,18 @@ function bodyPreview(body: string): string {
   return trimmed.length > 50 ? `${trimmed.slice(0, 50)}\u2026` : trimmed;
 }
 
-function scrollToLine(targetStart: number): void {
+function scrollToLine(targetStart: number, timers: TimerMap): void {
   const el = document.querySelector<HTMLElement>(`[data-start-line="${targetStart}"]`);
   if (el === null) return;
 
   const row = el.closest<HTMLElement>('.line-row') ?? el;
   row.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  clearTimeout(highlightTimers.get(row));
+  clearTimeout(timers.get(row));
   row.classList.add('line-highlighted');
-  highlightTimers.set(row, window.setTimeout(() => {
+  timers.set(row, window.setTimeout(() => {
     row.classList.remove('line-highlighted');
-    highlightTimers.delete(row);
+    timers.delete(row);
   }, HIGHLIGHT_DURATION_MS));
 }
 
@@ -63,12 +64,13 @@ interface SectionRowProps {
   section: Section;
   commentCount: number;
   sectionComments?: Comment[];
+  onScrollToLine: (targetStart: number) => void;
 }
 
-const SectionRow: React.FC<SectionRowProps> = ({ section, commentCount, sectionComments = [] }) => {
+const SectionRow: React.FC<SectionRowProps> = ({ section, commentCount, sectionComments = [], onScrollToLine }) => {
   const handleClick = useCallback((): void => {
-    scrollToLine(section.startLine);
-  }, [section.startLine]);
+    onScrollToLine(section.startLine);
+  }, [onScrollToLine, section.startLine]);
 
   return (
     <div className="comment-navigator__section-item">
@@ -91,7 +93,7 @@ const SectionRow: React.FC<SectionRowProps> = ({ section, commentCount, sectionC
             <li key={c.id} role="listitem">
               <button
                 className="comment-navigator__section-comment-item"
-                onClick={() => { scrollToLine(c.targetStart); }}
+                onClick={() => { onScrollToLine(c.targetStart); }}
                 title={c.body}
                 aria-label={`Section comment: ${c.body}`}
               >
@@ -127,11 +129,22 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
   // ── Filter state ──────────────────────────────────────────────────────────
   const [onlyUnresolved, setOnlyUnresolved] = useState(false);
 
+  // ── Highlight timers (scoped to this component instance) ──────────────────
+  const highlightTimers = useRef<TimerMap>(new Map());
+
+  useEffect(() => {
+    const timers = highlightTimers.current;
+    return () => {
+      for (const timer of timers.values()) clearTimeout(timer);
+      timers.clear();
+    };
+  }, []);
+
   // ── Panel width (resizable) ───────────────────────────────────────────────
-  const [panelWidth, setPanelWidth] = useState(DEFAULT_WIDTH);
+  const [panelWidth, setPanelWidth] = useState(NAVIGATOR_DEFAULT_WIDTH);
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
-  const dragStartWidth = useRef(DEFAULT_WIDTH);
+  const dragStartWidth = useRef(NAVIGATOR_DEFAULT_WIDTH);
   const panelRef = useRef<HTMLElement>(null);
 
   // ── Derived comment lists ─────────────────────────────────────────────────
@@ -190,7 +203,7 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
     const handleMouseMove = (e: MouseEvent): void => {
       if (!isDragging.current) return;
       const delta = dragStartX.current - e.clientX;
-      const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, dragStartWidth.current + delta));
+      const newWidth = Math.min(NAVIGATOR_MAX_WIDTH, Math.max(NAVIGATOR_MIN_WIDTH, dragStartWidth.current + delta));
       setPanelWidth(newWidth);
     };
 

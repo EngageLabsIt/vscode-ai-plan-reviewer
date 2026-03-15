@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import '../styles/planViewer.css';
+import '../../styles/planViewer.css';
 
 interface CommentFormProps {
   onSubmit: (body: string) => void;

@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import type { Plan, Version } from '../../shared/models';
+import type { Version } from '../../../shared/models';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -8,7 +8,6 @@ import type { Plan, Version } from '../../shared/models';
 interface PlanTimelineProps {
   versions: Version[];
   currentVersionNumber: number;
-  planStatus: Plan['status'];
   onSelectVersion: (versionNumber: number) => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
@@ -46,7 +45,6 @@ function formatElapsed(olderIso: string, newerIso: string): string {
 export const PlanTimeline: React.FC<PlanTimelineProps> = ({
   versions,
   currentVersionNumber,
-  planStatus,
   onSelectVersion,
   collapsed,
   onToggleCollapse,
@@ -59,9 +57,6 @@ export const PlanTimeline: React.FC<PlanTimelineProps> = ({
     },
     [currentVersionNumber, onSelectVersion],
   );
-
-  const isApproved = planStatus === 'approved';
-  const lastVersionNumber = versions.length > 0 ? versions[versions.length - 1].versionNumber : -1;
 
   return (
     <div className={`plan-timeline${collapsed ? ' plan-timeline--collapsed' : ''}`}>
@@ -82,9 +77,6 @@ export const PlanTimeline: React.FC<PlanTimelineProps> = ({
           <div className="plan-timeline__nodes">
             {versions.map((version, idx) => {
               const isCurrent = version.versionNumber === currentVersionNumber;
-              const isLast = version.versionNumber === lastVersionNumber;
-              const nodeApproved = isApproved && isLast;
-
               const prevVersion = idx > 0 ? versions[idx - 1] : null;
               const elapsed =
                 prevVersion !== null
@@ -105,7 +97,6 @@ export const PlanTimeline: React.FC<PlanTimelineProps> = ({
                     className={[
                       'plan-timeline__node',
                       isCurrent ? 'plan-timeline__node--current' : '',
-                      nodeApproved ? 'plan-timeline__node--approved' : '',
                     ]
                       .filter(Boolean)
                       .join(' ')}
@@ -115,11 +106,10 @@ export const PlanTimeline: React.FC<PlanTimelineProps> = ({
                       onClick={() => handleNodeClick(version.versionNumber)}
                       aria-current={isCurrent ? 'true' : undefined}
                       aria-label={`Versione ${version.versionNumber}${isCurrent ? ' (corrente)' : ''}`}
-                      title={`v${version.versionNumber} — ${formatDate(version.createdAt)}${nodeApproved ? ' ✅ Approvato' : ''}`}
+                      title={`v${version.versionNumber} — ${formatDate(version.createdAt)}`}
                     >
                       <span className="plan-timeline__version-label">
                         v{version.versionNumber}
-                        {nodeApproved && ' ✅'}
                       </span>
                     </button>
                     <span className="plan-timeline__date" aria-hidden="true">

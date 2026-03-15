@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { Comment, Section } from '../../shared/models';
+import type { Comment, Section } from '../../../shared/models';
 import { LineGutter } from './LineGutter';
-import { CommentCard } from './CommentCard';
-import { CommentForm } from './CommentForm';
+import { CommentCard } from '../comments/CommentCard';
+import { CommentForm } from '../comments/CommentForm';
 import { CodeBlock } from './CodeBlock';
-import '../styles/planViewer.css';
+import '../../styles/planViewer.css';
 
 // ---------------------------------------------------------------------------
 // Types

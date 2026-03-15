@@ -1,6 +1,6 @@
 import React from 'react';
-import type { Comment, Plan, Version } from '../../shared/models';
-import '../styles/planViewer.css';
+import type { Comment, Plan, Version } from '../../../shared/models';
+import '../../styles/planViewer.css';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,25 +24,10 @@ interface ReviewToolbarProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function statusLabel(status: Plan['status']): string {
-  switch (status) {
-    case 'in_review':      return 'In Review';
-    case 'approved':       return 'Approved';
-    case 'archived':       return 'Archived';
-    case 'needs_revision': return 'Needs Revision';
-    default:               return '';
-  }
-}
-
-function statusBadgeClass(status: Plan['status']): string {
-  switch (status) {
-    case 'in_review':      return 'review-toolbar__badge review-toolbar__badge--in-review';
-    case 'approved':       return 'review-toolbar__badge review-toolbar__badge--approved';
-    case 'archived':       return 'review-toolbar__badge review-toolbar__badge--archived';
-    case 'needs_revision': return 'review-toolbar__badge review-toolbar__badge--needs-revision';
-    default:               return 'review-toolbar__badge';
-  }
-}
+const STATUS_CONFIG: Record<Plan['status'], { label: string; badgeClass: string }> = {
+  in_review: { label: 'In Review', badgeClass: 'review-toolbar__badge review-toolbar__badge--in-review' },
+  archived:  { label: 'Archived',  badgeClass: 'review-toolbar__badge review-toolbar__badge--archived' },
+};
 
 // ---------------------------------------------------------------------------
 // ReviewToolbar

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import type { Comment } from '../../shared/models';
+import type { Comment } from '../../../shared/models';
 
 function refLabel(c: Comment): string {
   if (c.type === 'range') {

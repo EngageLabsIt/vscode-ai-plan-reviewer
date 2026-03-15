@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVsCodeApi } from './hooks/useVsCodeApi';
-import { PlanViewer } from './components/PlanViewer';
-import { ReviewToolbar } from './components/ReviewToolbar';
-import { CommentNavigator } from './components/CommentNavigator';
-import { SearchBar } from './components/SearchBar';
-import { PromptPreview } from './components/PromptPreview';
+import { PlanViewer } from './features/plan-viewer/PlanViewer';
+import { ReviewToolbar } from './features/toolbar/ReviewToolbar';
+import { CommentNavigator } from './features/comments/CommentNavigator';
+import { SearchBar } from './features/search/SearchBar';
+import { PromptPreview } from './features/prompt/PromptPreview';
 import type { HostMessage } from '../../shared/messages';
 import type { Comment, Plan, Section, Version } from '../../shared/models';
 
@@ -331,7 +331,6 @@ export const App: React.FC = () => {
           {/* <PlanTimeline
             versions={loadedPlan.versions}
             currentVersionNumber={loadedPlan.versionNumber}
-            planStatus={loadedPlan.plan.status}
             onSelectVersion={handleSelectVersion}
             collapsed={timelineCollapsed}
             onToggleCollapse={handleTimelineToggle}

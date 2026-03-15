@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import type { DiffLine, MappedComment } from '../../shared/models';
-import '../styles/planViewer.css';
+import type { DiffLine, MappedComment } from '../../../shared/models';
+import '../../styles/planViewer.css';
 
 // ---------------------------------------------------------------------------
 // Types

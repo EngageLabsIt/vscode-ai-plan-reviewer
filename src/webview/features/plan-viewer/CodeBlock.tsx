@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import hljs from 'highlight.js';
-import type { Comment } from '../../shared/models';
+import type { Comment } from '../../../shared/models';
 import { LineGutter } from './LineGutter';
-import { CommentCard } from './CommentCard';
-import { CommentForm } from './CommentForm';
+import { CommentCard } from '../comments/CommentCard';
+import { CommentForm } from '../comments/CommentForm';
 
 // ---------------------------------------------------------------------------
 // splitHighlightedLines
