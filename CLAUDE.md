@@ -27,17 +27,26 @@ Debug the extension: F5 in VS Code (uses `.vscode/launch.json`).
 **Two-process model:** The extension runs in the VS Code host process; the UI runs in a sandboxed webview (React). They communicate via typed messages defined in `src/shared/messages.ts`.
 
 ```
-src/extension/          VS Code host (Node.js)
+src/extension/          VS Code host (Node.js) — vertical slice structure
   extension.ts          Activation, command registration
-  commands/             Command handlers (newReview, loadTestPlan, exportPlan, importPlan)
-  db/                   SQLite via sql.js (database.ts, migrations.ts, repositories/)
-  services/             MarkdownParser, DiffEngine, CommentMapper
-  views/                PlanExplorerProvider (sidebar tree view)
-  webview/              PlanReviewPanel (host-side webview bridge)
+  core/
+    db/                 SQLite via sql.js (database.ts, dbUtils.ts, migrations.ts, repositories/)
+    services/           MarkdownParser, DiffEngine, CommentMapper
+  features/
+    review/             newReview.ts, loadTestPlan.ts, PlanReviewPanel.ts, MessageHandler.ts
+    explorer/           PlanExplorerProvider (sidebar tree view)
+    import-export/      importPlan.ts, exportPlan.ts
 
-src/webview/            React UI (runs in webview iframe)
-  App.tsx               Root component, state management, message handling
-  components/           ReviewToolbar, PlanViewer, CommentCard, CommentForm, etc.
+src/webview/            React UI (runs in webview iframe) — vertical slice structure
+  App.tsx               Root component, state management
+  hooks/                useVsCodeApi.ts, usePlanMessages.ts
+  features/
+    comments/           CommentCard, CommentForm, CommentNavigator, CommentContext
+    plan-viewer/        PlanViewer, LineGutter, CodeBlock
+    diff/               DiffViewer
+    prompt/             PromptPreview
+    search/             SearchBar, useSearch.ts
+    toolbar/            ReviewToolbar, PlanTimeline
   styles/planViewer.css All styling (BEM naming)
 
 src/shared/             Code shared between host and webview
@@ -51,10 +60,11 @@ src/shared/             Code shared between host and webview
 ### Key Data Flow
 
 1. User copies markdown to clipboard, runs "New Review" command
-2. `newReview.ts` parses sections (MarkdownParser), creates Plan+Version in SQLite, opens webview
-3. Webview receives `planLoaded` message with plan data, renders with react-markdown
-4. User adds comments targeting lines/ranges/sections
-5. On new version: `CommentMapper` uses `DiffEngine` to remap unresolved comments
+2. `features/review/newReview.ts` parses sections (MarkdownParser), creates Plan+Version in SQLite, opens webview
+3. `features/review/PlanReviewPanel.ts` manages the webview lifecycle; `MessageHandler.ts` handles all incoming messages
+4. Webview receives `planLoaded` message, `usePlanMessages` hook dispatches state updates, React renders with react-markdown
+5. User adds comments targeting lines/ranges/sections; `CommentContext` provides callbacks to all comment components
+6. On new version: `CommentMapper` uses `DiffEngine` to remap unresolved comments
 
 ### Database
 
@@ -63,6 +73,13 @@ SQLite via sql.js, stored in VS Code global storage (`~/.vscode/plan-reviewer.db
 ### Singletons
 
 `Database.getInstance()`, `PlanExplorerProvider._instance`, `PlanReviewPanel.instance` — be aware when modifying initialization order.
+
+### React Patterns (webview)
+
+- **`CommentContext`** (`features/comments/CommentContext.tsx`) — provides `comments`, edit/delete/resolve callbacks, and form state to all comment components. Use `useComments()` hook; do not prop-drill these values.
+- **`usePlanMessages`** (`hooks/usePlanMessages.ts`) — handles `window.addEventListener('message', ...)` for all `HostMessage` types; returns `loadedPlan` state.
+- **`useSearch`** (`features/search/useSearch.ts`) — encapsulates search state and match computation; takes `content: string | undefined`.
+- **`React.memo`** on `CommentCard` and `LineGutter` — list-rendered components. Keep their callback props stable with `useCallback`.
 
 ## Conventions
 
