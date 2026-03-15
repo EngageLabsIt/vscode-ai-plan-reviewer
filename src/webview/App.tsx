@@ -37,6 +37,12 @@ export const App: React.FC = () => {
     searchCurrentLine,
   } = useSearch(loadedPlan?.content);
 
+  // ── Active comment line setter ─────────────────────────────────────────────
+  const setActiveLine = useCallback((value: number | null) => {
+    activeCommentLineRef.current = value;
+    setActiveCommentLine(value);
+  }, []);
+
   // ── Navigator toggle ───────────────────────────────────────────────────────
   const handleToggleNavigator = useCallback((): void => {
     setNavigatorOpen((open) => !open);
@@ -99,15 +105,13 @@ export const App: React.FC = () => {
 
   const handleAddLineComment = useCallback((lineNumber: number): void => {
     if (activeCommentLineRef.current === lineNumber) {
-      activeCommentLineRef.current = null;
-      setActiveCommentLine(null);
+      setActiveLine(null);
       setCommentFormState(null);
       return;
     }
-    activeCommentLineRef.current = lineNumber;
-    setActiveCommentLine(lineNumber);
+    setActiveLine(lineNumber);
     setCommentFormState({ type: 'line', lineNumber, startCharOffset: null, endCharOffset: null, selectedText: null });
-  }, []);
+  }, [setActiveLine]);
 
   const handleLineShiftClick = useCallback((lineNumber: number): void => {
     if (activeCommentLineRef.current === null) return;
@@ -148,27 +152,23 @@ export const App: React.FC = () => {
     }
 
     setCommentFormState(null);
-    activeCommentLineRef.current = null;
-    setActiveCommentLine(null);
-  }, [commentFormState, loadedPlan, vscode]);
+    setActiveLine(null);
+  }, [commentFormState, loadedPlan, vscode, setActiveLine]);
 
   const handleSelectionComment = useCallback((startLine: number, endLine: number, startChar: number | null, endChar: number | null, selectedText: string): void => {
     if (startLine === endLine) {
-      activeCommentLineRef.current = startLine;
-      setActiveCommentLine(startLine);
+      setActiveLine(startLine);
       setCommentFormState({ type: 'line', lineNumber: startLine, startCharOffset: startChar, endCharOffset: endChar, selectedText });
     } else {
-      activeCommentLineRef.current = startLine;
-      setActiveCommentLine(startLine);
+      setActiveLine(startLine);
       setCommentFormState({ type: 'range', startLine, endLine, startCharOffset: startChar, endCharOffset: endChar, selectedText });
     }
-  }, []);
+  }, [setActiveLine]);
 
   const handleCommentFormCancel = useCallback((): void => {
     setCommentFormState(null);
-    activeCommentLineRef.current = null;
-    setActiveCommentLine(null);
-  }, []);
+    setActiveLine(null);
+  }, [setActiveLine]);
 
   // ── Derived: section-scoped comments only ─────────────────────────────────
   const sectionComments = useMemo<Comment[]>(() => {
