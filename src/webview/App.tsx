@@ -21,6 +21,7 @@ export const App: React.FC = () => {
   const [navigatorOpen, setNavigatorOpen] = useState(false);
   const [commentFormState, setCommentFormState] = useState<CommentFormState | null>(null);
   const [activeCommentLine, setActiveCommentLine] = useState<number | null>(null);
+  const activeCommentLineRef = useRef<number | null>(null);
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
 
   const {
@@ -97,26 +98,28 @@ export const App: React.FC = () => {
   }, []);
 
   const handleAddLineComment = useCallback((lineNumber: number): void => {
-    if (activeCommentLine === lineNumber) {
+    if (activeCommentLineRef.current === lineNumber) {
+      activeCommentLineRef.current = null;
       setActiveCommentLine(null);
       setCommentFormState(null);
       return;
     }
+    activeCommentLineRef.current = lineNumber;
     setActiveCommentLine(lineNumber);
     setCommentFormState({ type: 'line', lineNumber, startCharOffset: null, endCharOffset: null, selectedText: null });
-  }, [activeCommentLine]);
+  }, []);
 
   const handleLineShiftClick = useCallback((lineNumber: number): void => {
-    if (activeCommentLine === null) return;
+    if (activeCommentLineRef.current === null) return;
     setCommentFormState({
       type: 'range',
-      startLine: Math.min(activeCommentLine, lineNumber),
-      endLine: Math.max(activeCommentLine, lineNumber),
+      startLine: Math.min(activeCommentLineRef.current, lineNumber),
+      endLine: Math.max(activeCommentLineRef.current, lineNumber),
       startCharOffset: null,
       endCharOffset: null,
       selectedText: null,
     });
-  }, [activeCommentLine]);
+  }, []);
 
   const handleEditComment = useCallback((id: string, body: string): void => {
     vscode.postMessage({ type: 'updateComment', payload: { id, body } });
@@ -145,14 +148,17 @@ export const App: React.FC = () => {
     }
 
     setCommentFormState(null);
+    activeCommentLineRef.current = null;
     setActiveCommentLine(null);
   }, [commentFormState, loadedPlan, vscode]);
 
   const handleSelectionComment = useCallback((startLine: number, endLine: number, startChar: number | null, endChar: number | null, selectedText: string): void => {
     if (startLine === endLine) {
+      activeCommentLineRef.current = startLine;
       setActiveCommentLine(startLine);
       setCommentFormState({ type: 'line', lineNumber: startLine, startCharOffset: startChar, endCharOffset: endChar, selectedText });
     } else {
+      activeCommentLineRef.current = startLine;
       setActiveCommentLine(startLine);
       setCommentFormState({ type: 'range', startLine, endLine, startCharOffset: startChar, endCharOffset: endChar, selectedText });
     }
@@ -160,6 +166,7 @@ export const App: React.FC = () => {
 
   const handleCommentFormCancel = useCallback((): void => {
     setCommentFormState(null);
+    activeCommentLineRef.current = null;
     setActiveCommentLine(null);
   }, []);
 
