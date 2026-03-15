@@ -1,20 +1,10 @@
-import type { Database, Statement } from 'sql.js';
-import type { Plan, Version } from '../../../shared/models';
+import type { Database } from 'sql.js';
+import type { Plan, Version } from '../../../../shared/models';
+import { collectRows, buildUpdateClause, type Row } from '../dbUtils';
 
 // ---------------------------------------------------------------------------
 // Helpers — snake_case DB rows -> camelCase model objects
 // ---------------------------------------------------------------------------
-
-type Row = Record<string, number | string | Uint8Array | null>;
-
-function collectRows(stmt: Statement): Row[] {
-  const rows: Row[] = [];
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject());
-  }
-  stmt.free();
-  return rows;
-}
 
 function rowToPlan(row: Row): Plan {
   const tagsRaw = row['tags'];
@@ -103,34 +93,17 @@ export class PlanRepository {
     id: string,
     updates: Partial<Pick<Plan, 'title' | 'status' | 'tags' | 'updatedAt'>>
   ): void {
-    const setClauses: string[] = [];
-    const params: Array<string | number | null> = [];
+    const pairs: Array<[string, string | number | null]> = [];
+    if (updates.title !== undefined)     pairs.push(['title',      updates.title]);
+    if (updates.status !== undefined)    pairs.push(['status',     updates.status]);
+    if (updates.tags !== undefined)      pairs.push(['tags',       JSON.stringify(updates.tags)]);
+    if (updates.updatedAt !== undefined) pairs.push(['updated_at', updates.updatedAt]);
 
-    if (updates.title !== undefined) {
-      setClauses.push('title = ?');
-      params.push(updates.title);
-    }
-    if (updates.status !== undefined) {
-      setClauses.push('status = ?');
-      params.push(updates.status);
-    }
-    if (updates.tags !== undefined) {
-      setClauses.push('tags = ?');
-      params.push(JSON.stringify(updates.tags));
-    }
-    if (updates.updatedAt !== undefined) {
-      setClauses.push('updated_at = ?');
-      params.push(updates.updatedAt);
-    }
+    if (pairs.length === 0) return;
 
-    if (setClauses.length === 0) {
-      return;
-    }
-
+    const { setClause, params } = buildUpdateClause(pairs);
     params.push(id);
-    const stmt = this.db.prepare(
-      `UPDATE plans SET ${setClauses.join(', ')} WHERE id = ?`
-    );
+    const stmt = this.db.prepare(`UPDATE plans SET ${setClause} WHERE id = ?`);
     stmt.run(params);
     stmt.free();
   }

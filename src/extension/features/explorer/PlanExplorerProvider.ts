@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { Database } from '../db/database';
-import { PlanRepository } from '../db/repositories/PlanRepository';
-import { CommentRepository } from '../db/repositories/CommentRepository';
-import { SectionRepository } from '../db/repositories/SectionRepository';
-import { PlanReviewPanel } from '../webview/PlanReviewPanel';
-import type { Plan } from '../../shared/models';
+import { Database } from '../../core/db/database';
+import { PlanRepository } from '../../core/db/repositories/PlanRepository';
+import { CommentRepository } from '../../core/db/repositories/CommentRepository';
+import { SectionRepository } from '../../core/db/repositories/SectionRepository';
+import { PlanReviewPanel } from '../review/PlanReviewPanel';
+import type { Plan } from '../../../shared/models';
 
 // ---------------------------------------------------------------------------
 // Tree item kinds
@@ -181,11 +181,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
   }
 
   private _groupLabelToStatus(label: string): Plan['status'] {
-    switch (label) {
-      case 'Approved': return 'approved';
-      case 'Archived': return 'archived';
-      default:         return 'in_review';
-    }
+    return label === 'Archived' ? 'archived' : 'in_review';
   }
 
   private _buildPlanNodes(groupLabel: string): PlanTreeItem[] {
@@ -194,12 +190,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     const commentRepo = new CommentRepository(db);
 
     const status = this._groupLabelToStatus(groupLabel);
-    let plans = planRepo.findAll().filter((p) => {
-      if (status === 'in_review') {
-        return p.status === 'in_review' || p.status === 'needs_revision';
-      }
-      return p.status === status;
-    });
+    let plans = planRepo.findAll().filter((p) => p.status === status);
 
     if (this._filterTerm !== '') {
       const term = this._filterTerm.toLowerCase();

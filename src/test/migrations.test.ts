@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import initSqlJs from 'sql.js';
 import type { SqlJsStatic, Database as SqlDatabase } from 'sql.js';
 import * as path from 'path';
-import { runMigrations } from '../extension/db/migrations';
+import { runMigrations } from '../extension/core/db/migrations';
 
 // sql.js inizializzato una volta (WASM costoso); ogni test crea new SQL.Database()
 let SQL: SqlJsStatic;

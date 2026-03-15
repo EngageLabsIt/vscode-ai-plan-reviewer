@@ -13,8 +13,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { DiffEngine } from '../extension/services/DiffEngine';
-import { CommentMapper } from '../extension/services/CommentMapper';
+import { DiffEngine } from '../extension/core/services/DiffEngine';
+import { CommentMapper } from '../extension/core/services/CommentMapper';
 import { PromptGenerator } from '../shared/PromptGenerator';
 import type { Comment, Section } from '../shared/models';
 

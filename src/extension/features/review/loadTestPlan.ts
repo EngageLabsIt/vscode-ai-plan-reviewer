@@ -2,13 +2,13 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { v7 as uuidv7 } from 'uuid';
-import { MarkdownParser } from '../services/MarkdownParser';
-import { Database } from '../db/database';
-import { PlanRepository } from '../db/repositories/PlanRepository';
-import { SectionRepository } from '../db/repositories/SectionRepository';
-import { PlanReviewPanel } from '../webview/PlanReviewPanel';
-import { PlanExplorerProvider } from '../views/PlanExplorerProvider';
-import type { Plan, Version, Section } from '../../shared/models';
+import { MarkdownParser } from '../../core/services/MarkdownParser';
+import { Database } from '../../core/db/database';
+import { PlanRepository } from '../../core/db/repositories/PlanRepository';
+import { SectionRepository } from '../../core/db/repositories/SectionRepository';
+import { PlanReviewPanel } from './PlanReviewPanel';
+import { PlanExplorerProvider } from '../explorer/PlanExplorerProvider';
+import type { Plan, Version, Section } from '../../../shared/models';
 
 export function registerLoadTestPlanCommand(
   context: vscode.ExtensionContext

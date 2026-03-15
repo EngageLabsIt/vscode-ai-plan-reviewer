@@ -1,20 +1,10 @@
-import type { Database, Statement } from 'sql.js';
-import type { Comment } from '../../../shared/models';
+import type { Database } from 'sql.js';
+import type { Comment } from '../../../../shared/models';
+import { collectRows, buildUpdateClause, type Row } from '../dbUtils';
 
 // ---------------------------------------------------------------------------
 // Helper — snake_case DB row -> camelCase Comment
 // ---------------------------------------------------------------------------
-
-type Row = Record<string, number | string | Uint8Array | null>;
-
-function collectRows(stmt: Statement): Row[] {
-  const rows: Row[] = [];
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject());
-  }
-  stmt.free();
-  return rows;
-}
 
 function rowToComment(row: Row): Comment {
   return {
@@ -101,30 +91,16 @@ export class CommentRepository {
     id: string,
     updates: Partial<Pick<Comment, 'body' | 'category' | 'resolved'>>
   ): void {
-    const setClauses: string[] = [];
-    const params: Array<string | number | null> = [];
+    const pairs: Array<[string, string | number | null]> = [];
+    if (updates.body !== undefined)     pairs.push(['body',     updates.body]);
+    if (updates.category !== undefined) pairs.push(['category', updates.category]);
+    if (updates.resolved !== undefined) pairs.push(['resolved', updates.resolved ? 1 : 0]);
 
-    if (updates.body !== undefined) {
-      setClauses.push('body = ?');
-      params.push(updates.body);
-    }
-    if (updates.category !== undefined) {
-      setClauses.push('category = ?');
-      params.push(updates.category);
-    }
-    if (updates.resolved !== undefined) {
-      setClauses.push('resolved = ?');
-      params.push(updates.resolved ? 1 : 0);
-    }
+    if (pairs.length === 0) return;
 
-    if (setClauses.length === 0) {
-      return;
-    }
-
+    const { setClause, params } = buildUpdateClause(pairs);
     params.push(id);
-    const stmt = this.db.prepare(
-      `UPDATE comments SET ${setClauses.join(', ')} WHERE id = ?`
-    );
+    const stmt = this.db.prepare(`UPDATE comments SET ${setClause} WHERE id = ?`);
     stmt.run(params);
     stmt.free();
   }

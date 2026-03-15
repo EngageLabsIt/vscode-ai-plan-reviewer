@@ -1,20 +1,10 @@
-import type { Database, Statement } from 'sql.js';
-import type { Section } from '../../../shared/models';
+import type { Database } from 'sql.js';
+import type { Section } from '../../../../shared/models';
+import { collectRows, type Row } from '../dbUtils';
 
 // ---------------------------------------------------------------------------
 // Helper — snake_case DB row -> camelCase Section
 // ---------------------------------------------------------------------------
-
-type Row = Record<string, number | string | Uint8Array | null>;
-
-function collectRows(stmt: Statement): Row[] {
-  const rows: Row[] = [];
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject());
-  }
-  stmt.free();
-  return rows;
-}
 
 function rowToSection(row: Row): Section {
   return {

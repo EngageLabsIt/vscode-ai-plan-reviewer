@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
 import { v7 as uuidv7 } from 'uuid';
-import { MarkdownParser } from '../services/MarkdownParser';
-import { Database } from '../db/database';
-import { PlanRepository } from '../db/repositories/PlanRepository';
-import { SectionRepository } from '../db/repositories/SectionRepository';
-import { CommentRepository } from '../db/repositories/CommentRepository';
-import { DiffEngine } from '../services/DiffEngine';
-import { CommentMapper } from '../services/CommentMapper';
-import { PlanReviewPanel } from '../webview/PlanReviewPanel';
-import { PlanExplorerProvider } from '../views/PlanExplorerProvider';
-import type { Plan, Version, Section, Comment } from '../../shared/models';
+import { MarkdownParser } from '../../core/services/MarkdownParser';
+import { Database } from '../../core/db/database';
+import { PlanRepository } from '../../core/db/repositories/PlanRepository';
+import { SectionRepository } from '../../core/db/repositories/SectionRepository';
+import { CommentRepository } from '../../core/db/repositories/CommentRepository';
+import { DiffEngine } from '../../core/services/DiffEngine';
+import { CommentMapper } from '../../core/services/CommentMapper';
+import { PlanReviewPanel } from './PlanReviewPanel';
+import { PlanExplorerProvider } from '../explorer/PlanExplorerProvider';
+import type { Plan, Version, Section, Comment } from '../../../shared/models';
 
 // ---------------------------------------------------------------------------
 // QuickPick item carrying extra metadata
@@ -33,9 +33,7 @@ type ReviewPickItem = ExistingPlanItem | NewPlanItem;
 // ---------------------------------------------------------------------------
 
 function findInReviewPlans(planRepo: PlanRepository): Plan[] {
-  return planRepo
-    .findAll()
-    .filter((p) => p.status === 'in_review' || p.status === 'needs_revision');
+  return planRepo.findAll().filter((p) => p.status === 'in_review');
 }
 
 // ---------------------------------------------------------------------------

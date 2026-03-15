@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { v7 as uuidv7 } from 'uuid';
-import { Database } from '../db/database';
-import { PlanRepository } from '../db/repositories/PlanRepository';
-import { SectionRepository } from '../db/repositories/SectionRepository';
-import { CommentRepository } from '../db/repositories/CommentRepository';
-import type { Plan, Version, Section, Comment } from '../../shared/models';
+import { Database } from '../../core/db/database';
+import { PlanRepository } from '../../core/db/repositories/PlanRepository';
+import { SectionRepository } from '../../core/db/repositories/SectionRepository';
+import { CommentRepository } from '../../core/db/repositories/CommentRepository';
+import type { Plan, Version, Section, Comment } from '../../../shared/models';
 
 // ---------------------------------------------------------------------------
 // Import format (mirrors exportPlan.ts)
@@ -179,7 +179,9 @@ export function registerImportPlanCommand(
     );
 
     // Refresh explorer if available
-    const { PlanExplorerProvider } = await import('../views/PlanExplorerProvider');
+    const { PlanExplorerProvider } = await import('../explorer/PlanExplorerProvider');
     PlanExplorerProvider.instance?.refresh();
+
+    void oldPlanId; // suppress unused variable warning
   });
 }

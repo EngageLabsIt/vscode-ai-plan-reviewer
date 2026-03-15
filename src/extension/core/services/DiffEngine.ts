@@ -1,5 +1,5 @@
 import { diffLines } from 'diff';
-import type { DiffLine } from '../../shared/models';
+import type { DiffLine } from '../../../shared/models';
 
 /**
  * DiffEngine computes a line-by-line diff between two text documents.

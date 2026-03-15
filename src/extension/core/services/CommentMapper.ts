@@ -1,4 +1,4 @@
-import type { Comment, DiffLine, MappedComment } from '../../shared/models';
+import type { Comment, DiffLine, MappedComment } from '../../../shared/models';
 
 /**
  * CommentMapper re-anchors comments from a previous document version to their
