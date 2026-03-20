@@ -2,6 +2,8 @@
 
 🇬🇧 [English](README.md) | 🇮🇹 [Italiano](README.it.md)
 
+> **⚠️ Software in fase Alpha** — Questo progetto è in alpha iniziale. API, formati dati e funzionalità possono cambiare senza preavviso. Usalo a tuo rischio e aspettati modifiche incompatibili tra le versioni.
+
 Revisiona i piani generati dall'AI con commenti inline, direttamente dentro VS Code. Come una code review su GitHub, ma per piani in markdown.
 
 ![Panoramica di Plan Reviewer](docs/screenshots/overview.png)
@@ -157,6 +159,10 @@ Per lanciare un singolo test: `npx vitest run src/test/SomeTest.test.ts`
 ## Stack tecnologico
 
 TypeScript, React 19, esbuild, sql.js (WASM), react-markdown, highlight.js, Playwright, Vitest
+
+## Contribuire
+
+Consulta [CONTRIBUTING.it.md](CONTRIBUTING.it.md) per le linee guida. Tutti i contributi devono passare attraverso una Pull Request.
 
 ## Licenza
 
