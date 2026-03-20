@@ -83,6 +83,7 @@ out
 dist
 .output
 
+
 # Gatsby files
 .cache/
 # Comment in the public line in if your project uses Gatsby and not Next.js
@@ -150,3 +151,4 @@ test-results/
 
 # Capture videos (large files, not versioned)
 docs/screenshots/*.webm
+docs/plans

@@ -69,7 +69,7 @@ export const PlanTimeline: React.FC<PlanTimelineProps> = ({
         className="plan-timeline__toggle"
         onClick={onToggleCollapse}
         aria-expanded={!collapsed}
-        aria-label={collapsed ? 'Espandi timeline' : 'Comprimi timeline'}
+        aria-label={collapsed ? 'Expand timeline' : 'Collapse timeline'}
       >
         <span className="plan-timeline__toggle-label">Timeline</span>
         <span className="plan-timeline__toggle-chevron" aria-hidden="true">
@@ -78,7 +78,7 @@ export const PlanTimeline: React.FC<PlanTimelineProps> = ({
       </button>
 
       {!collapsed && (
-        <div className="plan-timeline__scroll" role="list" aria-label="Versioni del piano">
+        <div className="plan-timeline__scroll" role="list" aria-label="Plan versions">
           <div className="plan-timeline__nodes">
             {versions.map((version, idx) => {
               const isCurrent = version.versionNumber === currentVersionNumber;
@@ -114,8 +114,8 @@ export const PlanTimeline: React.FC<PlanTimelineProps> = ({
                       className="plan-timeline__circle"
                       onClick={() => handleNodeClick(version.versionNumber)}
                       aria-current={isCurrent ? 'true' : undefined}
-                      aria-label={`Versione ${version.versionNumber}${isCurrent ? ' (corrente)' : ''}`}
-                      title={`v${version.versionNumber} — ${formatDate(version.createdAt)}${nodeApproved ? ' ✅ Approvato' : ''}`}
+                      aria-label={`Version ${version.versionNumber}${isCurrent ? ' (current)' : ''}`}
+                      title={`v${version.versionNumber} — ${formatDate(version.createdAt)}${nodeApproved ? ' ✅ Approved' : ''}`}
                     >
                       <span className="plan-timeline__version-label">
                         v{version.versionNumber}

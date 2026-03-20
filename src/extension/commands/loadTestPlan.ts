@@ -24,7 +24,7 @@ export function registerLoadTestPlanCommand(
 
       if (!fs.existsSync(fixturePath)) {
         await vscode.window.showErrorMessage(
-          `Test fixture non trovato: ${fixturePath}`
+          `Test fixture not found: ${fixturePath}`
         );
         return;
       }
@@ -87,7 +87,7 @@ export function registerLoadTestPlanCommand(
       });
 
       await vscode.window.showInformationMessage(
-        `Test plan caricato: "${plan.title}" (${sections.length} sezioni)`
+        `Test plan loaded: "${plan.title}" (${sections.length} sections)`
       );
     }
   );

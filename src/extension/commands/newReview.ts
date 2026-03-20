@@ -53,7 +53,7 @@ export function registerNewReviewCommand(
 
       if (content.trim() === '') {
         await vscode.window.showInformationMessage(
-          'Copia un piano markdown negli appunti, poi esegui di nuovo questo comando.'
+          'Copy a markdown plan to clipboard, then run this command again.'
         );
         return;
       }
@@ -86,18 +86,18 @@ export function registerNewReviewCommand(
             planId: plan.id,
             planTitle: plan.title,
             nextVersion,
-            label: `Aggiungi come versione ${nextVersion} a: ${plan.title}`,
+            label: `Add as version ${nextVersion} to: ${plan.title}`,
           };
         });
 
         const newPlanItem: NewPlanItem = {
           itemKind: 'new',
-          label: 'Nuovo piano',
+          label: 'New plan',
         };
         items.push(newPlanItem);
 
         const selected = await vscode.window.showQuickPick<ReviewPickItem>(items, {
-          placeHolder: 'Esiste già un piano in revisione. Cosa vuoi fare?',
+          placeHolder: 'A plan is already in review. What do you want to do?',
         });
 
         if (selected === undefined) {
@@ -214,7 +214,7 @@ export function registerNewReviewCommand(
       const plan = planRepo.findById(targetPlanId);
       if (plan === null) {
         await vscode.window.showErrorMessage(
-          "Errore interno: piano non trovato dopo l'inserimento."
+          'Internal error: plan not found after insert.'
         );
         return;
       }
