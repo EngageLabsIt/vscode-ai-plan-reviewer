@@ -82,6 +82,7 @@ out
 .nuxt
 dist
 .output
+docs/plans/*
 
 # Gatsby files
 .cache/
