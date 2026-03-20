@@ -1,7 +1,5 @@
 # Plan Reviewer
 
-🇬🇧 [English](README.md) | 🇮🇹 [Italiano](README.it.md)
-
 > **⚠️ Alpha software** — This project is in early alpha. APIs, data formats, and features may change without notice. Use at your own risk and expect breaking changes between versions.
 
 Review AI-generated plans with inline comments, right inside VS Code. Think GitHub PR reviews, but for markdown plans.

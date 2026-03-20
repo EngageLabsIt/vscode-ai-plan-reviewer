@@ -59,7 +59,7 @@ export function registerImportPlanCommand(
     const uris = await vscode.window.showOpenDialog({
       canSelectMany: false,
       filters: { JSON: ['json'] },
-      openLabel: 'Importa piano',
+      openLabel: 'Import plan',
     });
     if (uris === undefined || uris.length === 0) return;
 
@@ -68,7 +68,7 @@ export function registerImportPlanCommand(
     try {
       raw = fs.readFileSync(uris[0].fsPath, 'utf-8');
     } catch (err) {
-      await vscode.window.showErrorMessage(`Errore lettura file: ${String(err)}`);
+      await vscode.window.showErrorMessage(`Error reading file: ${String(err)}`);
       return;
     }
 
@@ -76,13 +76,13 @@ export function registerImportPlanCommand(
     try {
       parsed = JSON.parse(raw) as unknown;
     } catch {
-      await vscode.window.showErrorMessage('Il file non è un JSON valido.');
+      await vscode.window.showErrorMessage('File is not valid JSON.');
       return;
     }
 
     if (!isValidExport(parsed)) {
       await vscode.window.showErrorMessage(
-        'Il file non è un export Plan Reviewer valido (exportVersion mancante o errato).',
+        'File is not a valid Plan Reviewer export (missing or invalid exportVersion).',
       );
       return;
     }
@@ -175,7 +175,7 @@ export function registerImportPlanCommand(
     }
 
     await vscode.window.showInformationMessage(
-      `Piano "${newPlan.title}" importato con successo.`,
+      `Plan "${newPlan.title}" imported successfully.`,
     );
 
     // Refresh explorer if available

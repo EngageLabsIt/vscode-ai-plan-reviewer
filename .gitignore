@@ -82,7 +82,7 @@ out
 .nuxt
 dist
 .output
-docs/plans/*
+
 
 # Gatsby files
 .cache/
@@ -151,3 +151,4 @@ test-results/
 
 # Capture videos (large files, not versioned)
 docs/screenshots/*.webm
+docs/plans
