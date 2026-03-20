@@ -2,6 +2,8 @@
 
 🇬🇧 [English](README.md) | 🇮🇹 [Italiano](README.it.md)
 
+> **⚠️ Alpha software** — This project is in early alpha. APIs, data formats, and features may change without notice. Use at your own risk and expect breaking changes between versions.
+
 Review AI-generated plans with inline comments, right inside VS Code. Think GitHub PR reviews, but for markdown plans.
 
 ![Plan Reviewer overview](docs/screenshots/overview.png)
@@ -157,6 +159,10 @@ Run a single test: `npx vitest run src/test/SomeTest.test.ts`
 ## Tech Stack
 
 TypeScript, React 19, esbuild, sql.js (WASM), react-markdown, highlight.js, Playwright, Vitest
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. All contributions must go through a Pull Request.
 
 ## License
 
