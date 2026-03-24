@@ -2,12 +2,50 @@
 .plan-review-view {
   position: relative;
   padding-left: 40px;
+  padding-right: 48px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .markdown-body {
   padding: 16px;
   padding-left: 0;
   line-height: 1.6;
+}
+
+/* ── Lists ───────────────────────────────────────────────────────────────── */
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 2em;
+  margin: 0.25em 0 0.8em;
+}
+
+.markdown-body li {
+  margin: 0.3em 0;
+  line-height: 1.6;
+}
+
+/* Unordered: disc → circle → square per depth */
+.markdown-body ul             { list-style-type: disc;   }
+.markdown-body ul ul          { list-style-type: circle; }
+.markdown-body ul ul ul       { list-style-type: square; }
+
+/* Ordered: decimal → lower-alpha → lower-roman per depth */
+.markdown-body ol             { list-style-type: decimal;     }
+.markdown-body ol ol          { list-style-type: lower-alpha; }
+.markdown-body ol ol ol       { list-style-type: lower-roman; }
+
+/* Colore marker con accent primario */
+.markdown-body li::marker {
+  color: var(--md-primary, #6366f1);
+}
+
+/* Sub-liste: margini più stretti */
+.markdown-body li > ul,
+.markdown-body li > ol {
+  margin: 0.15em 0;
 }
 
 /* ── Annotatable Blocks ──────────────────────────────────────────────────── */
@@ -20,24 +58,11 @@
   background-color: var(--vscode-editor-hoverHighlightBackground, rgba(128, 128, 128, 0.07));
 }
 
-/* ── Annotation Gutter ───────────────────────────────────────────────────── */
-.annotation-gutter {
+/* ── Block Comment Button ───────────────────────────────────────────────── */
+.block-comment-btn {
   position: absolute;
-  left: 0;
-  top: 0;
-  width: 36px;
-  pointer-events: none;
-}
-
-.gutter-item {
-  pointer-events: all;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 24px;
-}
-
-.gutter-button {
+  top: 2px;
+  right: -40px;
   width: 24px;
   height: 24px;
   border-radius: 4px;
@@ -47,25 +72,35 @@
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s;
-  font-size: 16px;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  z-index: 1;
 }
-.gutter-item--active .gutter-button,
-.gutter-item:hover .gutter-button,
-.annotatable-block:hover ~ .annotation-gutter .gutter-button {
+
+.block-comment-btn .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.annotatable-block:hover .block-comment-btn,
+.block-comment-btn--active {
   opacity: 1;
 }
 
-.gutter-dot {
+.block-comment-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* ── Block Comment Dot ───────────────────────────────────────────────────── */
+.block-comment-dot {
+  position: absolute;
+  top: 6px;
+  left: -20px;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--vscode-editorInfo-foreground, #75beff);
-  flex-shrink: 0;
 }
 
 /* ── Comment Thread ──────────────────────────────────────────────────────── */
