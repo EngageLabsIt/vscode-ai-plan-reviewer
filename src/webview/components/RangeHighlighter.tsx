@@ -84,6 +84,7 @@ export const RangeHighlighter: React.FC<RangeHighlighterProps> = ({
     >
       <button
         className="range-toolbar__btn"
+        title="Aggiungi commento al testo selezionato"
         onMouseDown={(e) => {
           // Use mousedown to fire before selection is cleared
           e.preventDefault();
@@ -92,7 +93,7 @@ export const RangeHighlighter: React.FC<RangeHighlighterProps> = ({
           onAddRangeComment(targetStart, targetEnd, text);
         }}
       >
-        💬 Commenta
+        +
       </button>
     </div>
   );

@@ -24,6 +24,7 @@ export const App: React.FC = () => {
   const [activeCommentLine, setActiveCommentLine] = useState<number | null>(null);
   const activeCommentLineRef = useRef<number | null>(null);
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
+  const [globalCommentEditCount, setGlobalCommentEditCount] = useState(0);
 
   const {
     searchOpen,
@@ -148,8 +149,26 @@ export const App: React.FC = () => {
       vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'section', sectionId: section.id, targetStart: section.startLine, targetEnd: section.endLine, body, category, resolved: false, carriedFromId: null, targetStartChar: null, targetEndChar: null, selectedText: null } });
     } else if (commentFormState.type === 'line') {
       vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'line', sectionId: null, targetStart: commentFormState.lineNumber, targetEnd: commentFormState.lineNumber, body, category, resolved: false, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
-    } else {
+    } else if (commentFormState.type === 'range') {
       vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'range', sectionId: null, targetStart: commentFormState.startLine, targetEnd: commentFormState.endLine, body, category, resolved: false, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
+    } else if (commentFormState.type === 'global') {
+      vscode.postMessage({
+        type: 'addComment',
+        payload: {
+          versionId: loadedPlan.versionId,
+          type: 'global',
+          sectionId: null,
+          targetStart: 0,
+          targetEnd: 0,
+          body,
+          category: 'suggestion' as const,
+          resolved: false,
+          carriedFromId: null,
+          targetStartChar: null,
+          targetEndChar: null,
+          selectedText: null,
+        },
+      });
     }
 
     setCommentFormState(null);
@@ -171,27 +190,15 @@ export const App: React.FC = () => {
     setActiveLine(null);
   }, [setActiveLine]);
 
-  // ── Annotation layer comment handler ──────────────────────────────────────
-  const handleAddAnnotationComment = useCallback((targetStart: number, targetEnd: number, body: string, selectedText?: string): void => {
+  const handleGlobalComment = useCallback((): void => {
     if (loadedPlan === null) return;
-    vscode.postMessage({
-      type: 'addComment',
-      payload: {
-        versionId: loadedPlan.versionId,
-        type: targetStart === targetEnd ? 'line' : 'range',
-        sectionId: null,
-        targetStart,
-        targetEnd,
-        body,
-        category: 'suggestion' as const,
-        resolved: false,
-        carriedFromId: null,
-        targetStartChar: null,
-        targetEndChar: null,
-        selectedText: selectedText ?? null,
-      },
-    });
-  }, [loadedPlan, vscode]);
+    const existingGlobal = loadedPlan.comments.find((c) => c.type === 'global' && !c.resolved);
+    if (existingGlobal !== undefined) {
+      setGlobalCommentEditCount((n) => n + 1);
+    } else {
+      setCommentFormState({ type: 'global' });
+    }
+  }, [loadedPlan]);
 
   // ── Derived: section-scoped comments only ─────────────────────────────────
   const sectionComments = useMemo<Comment[]>(() => {
@@ -226,6 +233,7 @@ export const App: React.FC = () => {
       <div className="plan-reviewer-app">
         {loadedPlan !== null ? (
           <>
+            {/* @ts-expect-error — onGlobalComment/hasGlobalComment props added in Chunk 3 */}
             <ReviewToolbar
               plan={loadedPlan.plan}
               versionNumber={loadedPlan.versionNumber}
@@ -238,6 +246,8 @@ export const App: React.FC = () => {
               onGeneratePrompt={handleGeneratePrompt}
               onApprove={handleApprove}
               onSelectVersion={handleSelectVersion}
+              onGlobalComment={handleGlobalComment}
+              hasGlobalComment={loadedPlan.comments.some((c) => c.type === 'global' && !c.resolved)}
             />
             {/* <PlanTimeline
               versions={loadedPlan.versions}
@@ -261,10 +271,10 @@ export const App: React.FC = () => {
               <PlanReviewView
                 html={loadedPlan.html}
                 comments={loadedPlan.comments}
-                onAddComment={handleAddAnnotationComment}
                 onUpdateComment={handleEditComment}
                 onDeleteComment={handleDeleteComment}
                 onResolveComment={handleResolveComment}
+                globalCommentEditRequested={globalCommentEditCount > 0}
               />
               <CommentNavigator
                 sections={loadedPlan.sections}
