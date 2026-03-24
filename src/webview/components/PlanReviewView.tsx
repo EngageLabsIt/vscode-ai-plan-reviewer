@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import type { Comment } from '../../../shared/models';
+import type { Comment } from '../../shared/models';
 import { MarkdownBody } from './MarkdownBody';
 import { CommentThread } from './CommentThread';
-import { CommentForm } from './CommentForm';
+import { CommentForm } from '../features/comments/CommentForm';
 import { RangeHighlighter } from './RangeHighlighter';
 import { useBlockMapping } from '../hooks/useBlockMapping';
 import { useComments } from '../features/comments/CommentContext';

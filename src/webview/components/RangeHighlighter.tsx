@@ -1,5 +1,5 @@
 import React, { useEffect, type RefObject } from 'react';
-import type { Comment } from '../../../shared/models';
+import type { Comment } from '../../shared/models';
 import { useTextSelection } from '../hooks/useTextSelection';
 
 interface RangeHighlighterProps {
