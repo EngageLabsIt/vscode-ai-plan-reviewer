@@ -8,7 +8,8 @@ import type { Comment } from '../../../shared/models';
 export type CommentFormState =
   | { type: 'section'; sectionId: string; heading: string }
   | { type: 'line';    lineNumber: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null }
-  | { type: 'range';   startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null };
+  | { type: 'range';   startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null }
+  | { type: 'global' };
 
 export interface CommentContextValue {
   comments: Comment[];

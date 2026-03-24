@@ -30,7 +30,7 @@ export interface Section {
 export interface Comment {
   id: string;
   versionId: string;
-  type: 'line' | 'range' | 'section';
+  type: 'line' | 'range' | 'section' | 'global';
   targetStart: number;
   targetEnd: number;
   sectionId: string | null;
