@@ -33,7 +33,7 @@ export function registerExportPlanCommand(
     // Step 1 — choose plan
     const allPlans = planRepo.findAll();
     if (allPlans.length === 0) {
-      await vscode.window.showInformationMessage('Nessun piano da esportare.');
+      await vscode.window.showInformationMessage('No plans to export.');
       return;
     }
 
@@ -44,18 +44,18 @@ export function registerExportPlanCommand(
     }));
 
     const selectedPlan = await vscode.window.showQuickPick(planItems, {
-      placeHolder: 'Seleziona il piano da esportare',
+      placeHolder: 'Select plan to export',
     });
     if (selectedPlan === undefined) return;
 
     // Step 2 — choose format
     const formatItems = [
-      { label: 'JSON (completo — piano + versioni + sezioni + commenti)', format: 'json' as const },
-      { label: 'Markdown (ultima versione con commenti in fondo)', format: 'md' as const },
+      { label: 'JSON (full - plan + versions + sections + comments)', format: 'json' as const },
+      { label: 'Markdown (latest version with comments appended)', format: 'md' as const },
     ];
 
     const selectedFormat = await vscode.window.showQuickPick(formatItems, {
-      placeHolder: 'Scegli il formato di esportazione',
+      placeHolder: 'Choose export format',
     });
     if (selectedFormat === undefined) return;
 
@@ -91,7 +91,7 @@ export function registerExportPlanCommand(
       // Markdown export — latest version + comments appended
       const latest = planRepo.findLatestVersion(plan.id);
       if (latest === null) {
-        await vscode.window.showErrorMessage('Nessuna versione trovata.');
+        await vscode.window.showErrorMessage('No version found.');
         return;
       }
       const comments = commentRepo.findByVersionId(latest.id);
@@ -99,12 +99,12 @@ export function registerExportPlanCommand(
         comments.length === 0
           ? ''
           : [
-              '\n\n---\n\n## Commenti di Review\n',
+              '\n\n---\n\n## Review Comments\n',
               ...comments.map((c) => {
                 const lineRef =
                   c.type === 'range' && c.targetStart !== c.targetEnd
-                    ? `righe ${c.targetStart}–${c.targetEnd}`
-                    : `riga ${c.targetStart}`;
+                    ? `lines ${c.targetStart}-${c.targetEnd}`
+                    : `line ${c.targetStart}`;
                 return `- ${lineRef}: ${c.body}`;
               }),
             ].join('\n');
@@ -113,7 +113,7 @@ export function registerExportPlanCommand(
     }
 
     await vscode.window.showInformationMessage(
-      `Piano esportato in: ${uri.fsPath}`,
+      `Plan exported to: ${uri.fsPath}`,
     );
   });
 }

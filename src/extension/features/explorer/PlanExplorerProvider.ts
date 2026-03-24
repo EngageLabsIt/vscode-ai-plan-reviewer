@@ -66,7 +66,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     const planRepo = new PlanRepository(db);
     const plan = planRepo.findById(item.planId);
     if (plan === null) {
-      void vscode.window.showErrorMessage('Piano non trovato.');
+      void vscode.window.showErrorMessage('Plan not found.');
       return;
     }
     // Open the latest version, or the specific version if clicked on a version node
@@ -77,7 +77,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
       : allVersions[allVersions.length - 1];
 
     if (version === undefined) {
-      void vscode.window.showErrorMessage('Nessuna versione trovata.');
+      void vscode.window.showErrorMessage('No version found.');
       return;
     }
 
@@ -105,12 +105,12 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     if (item.planId === undefined) return;
     void vscode.window
       .showWarningMessage(
-        `Eliminare il piano "${item.label as string}" e tutti i suoi dati?`,
+        `Delete plan "${item.label as string}" and all its data?`,
         { modal: true },
-        'Elimina',
+        'Delete',
       )
       .then((choice) => {
-        if (choice !== 'Elimina') return;
+        if (choice !== 'Delete') return;
         const db = Database.getInstance().getDb();
         const planRepo = new PlanRepository(db);
         planRepo.delete(item.planId!);
@@ -122,7 +122,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     if (item.planId === undefined) return;
     void vscode.window
       .showInputBox({
-        prompt: 'Nuovo nome del piano',
+        prompt: 'New plan name',
         value: item.label as string,
       })
       .then((newTitle) => {
@@ -139,7 +139,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
 
   handleSearch(): void {
     void vscode.window
-      .showInputBox({ prompt: 'Cerca piani per titolo', placeHolder: 'es. autenticazione' })
+      .showInputBox({ prompt: 'Search plans by title', placeHolder: 'e.g. authentication' })
       .then((term) => {
         this.setFilter(term ?? '');
       });
@@ -214,7 +214,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
       item.description = `${date}${openCount > 0 ? ` · ${openCount} open` : ''}`;
       item.iconPath = new vscode.ThemeIcon('notebook');
       if (openCount > 0) {
-        item.tooltip = `${openCount} commenti aperti`;
+        item.tooltip = `${openCount} open comments`;
       }
       return item;
     });
@@ -226,7 +226,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     const versions = planRepo.findVersionsByPlanId(planId);
 
     return versions.map((v): PlanTreeItem => {
-      const date = new Date(v.createdAt).toLocaleDateString('it-IT', {
+      const date = new Date(v.createdAt).toLocaleDateString('en-US', {
         day: 'numeric',
         month: 'short',
       });
