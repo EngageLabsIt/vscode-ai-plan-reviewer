@@ -103,12 +103,11 @@ describe('runMigrations', () => {
     db.close();
   });
 
-  it('repair: DB at version 5 but missing target_start_char columns gets repaired via V6 table rebuild', () => {
+  it('applies V6 migration on a manually-built V5 fixture', () => {
     const db = new SQL.Database();
 
-    // Build a V5 DB manually but WITHOUT the char columns (simulates the old bug where
-    // V3 migration ran but columns were not actually added). V6 does a full table rebuild
-    // so it handles column normalization; the post-V6 repair adds any still-missing columns.
+    // Build a complete V5 fixture manually (all columns present, old CHECK constraint),
+    // then run migrations to verify V6 rebuilds the table and updates the type constraint.
     db.exec(`
       CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);
       CREATE TABLE IF NOT EXISTS plans (
@@ -274,6 +273,15 @@ describe('runMigrations', () => {
 
     const globalRows = db.exec("SELECT type FROM comments WHERE id = 'cmt-global'");
     expect(globalRows[0].values[0][0]).toBe('global');
+
+    // Verify that an invalid type is still rejected by the CHECK constraint
+    expect(() => {
+      db.run(
+        `INSERT INTO comments (id, version_id, type, target_start, target_end, section_id, body, category, resolved, created_at)
+         VALUES ('cmt-invalid', ?, 'invalid', 1, 1, NULL, 'Bad type', 'suggestion', 0, '2025-01-01T00:00:00.000Z')`,
+        ['ver-1']
+      );
+    }).toThrow();
 
     db.close();
   });
