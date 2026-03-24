@@ -111,6 +111,23 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
 
   return (
     <div className="plan-review-view">
+      {/* Anchor for global comment (top of page) */}
+      <div ref={globalAnchorRef} className="global-comment-anchor" />
+
+      {/* Global comment thread */}
+      {globalComment !== null && (
+        <CommentThread
+          comment={globalComment}
+          anchorElement={globalAnchorRef.current ?? undefined}
+          onUpdate={onUpdateComment}
+          onDelete={onDeleteComment}
+          editRequested={globalCommentEditRequested}
+        />
+      )}
+
+      {/* Global comment form */}
+      {globalFormContainer !== null && createPortal(<CommentForm />, globalFormContainer)}
+
       <MarkdownBody ref={bodyRef} html={html} />
 
       {/* + buttons per-block (portaled inside each .annotatable-block) */}
@@ -148,23 +165,6 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
 
       {/* Inline form for line/range */}
       {formContainer !== null && createPortal(<CommentForm />, formContainer)}
-
-      {/* Anchor for global comment (bottom of page) */}
-      <div ref={globalAnchorRef} className="global-comment-anchor" />
-
-      {/* Global comment thread */}
-      {globalComment !== null && (
-        <CommentThread
-          comment={globalComment}
-          anchorElement={globalAnchorRef.current ?? undefined}
-          onUpdate={onUpdateComment}
-          onDelete={onDeleteComment}
-          editRequested={globalCommentEditRequested}
-        />
-      )}
-
-      {/* Global comment form */}
-      {globalFormContainer !== null && createPortal(<CommentForm />, globalFormContainer)}
 
       <RangeHighlighter
         bodyRef={bodyRef}

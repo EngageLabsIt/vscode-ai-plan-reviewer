@@ -5,12 +5,11 @@ import { Database } from '../../core/db/database';
 import { PlanRepository } from '../../core/db/repositories/PlanRepository';
 import { SectionRepository } from '../../core/db/repositories/SectionRepository';
 import { CommentRepository } from '../../core/db/repositories/CommentRepository';
-import { DiffEngine } from '../../core/services/DiffEngine';
-import { CommentMapper } from '../../core/services/CommentMapper';
+
 import { PlanMarkdownEngine } from '../../markdown/PlanMarkdownEngine';
 import { PlanReviewPanel } from './PlanReviewPanel';
 import { PlanExplorerProvider } from '../explorer/PlanExplorerProvider';
-import type { Plan, Version, Section, Comment } from '../../../shared/models';
+import type { Plan, Version, Section } from '../../../shared/models';
 
 // ---------------------------------------------------------------------------
 // QuickPick item carrying extra metadata
@@ -158,51 +157,7 @@ export function registerNewReviewCommand(
         sectionRepo.insertMany(sections);
       }
 
-      // Step 7 — carry over unresolved comments from the previous version (versionNumber > 1 only)
-      if (versionNumber > 1) {
-        const allVersionsSoFar = planRepo.findVersionsByPlanId(targetPlanId);
-        const prevVersion = allVersionsSoFar.find(
-          (v) => v.versionNumber === versionNumber - 1
-        );
-
-        if (prevVersion !== undefined) {
-          const prevComments = commentRepo.findByVersionId(prevVersion.id);
-
-          if (prevComments.length > 0) {
-            const diffLines = new DiffEngine().compute(prevVersion.content, version.content);
-            const mappedComments = new CommentMapper().map(prevComments, diffLines);
-
-            for (const mc of mappedComments) {
-              if (mc.status === 'probably_unresolved') {
-                // Guard: newTargetStart/End must be non-null (they are for probably_unresolved,
-                // but we check explicitly to satisfy strict TypeScript and the quality requirement).
-                if (mc.newTargetStart === null || mc.newTargetEnd === null) {
-                  continue;
-                }
-                const carriedComment: Comment = {
-                  id: uuidv7(),
-                  versionId: version.id,
-                  type: mc.comment.type,
-                  targetStart: mc.newTargetStart,
-                  targetEnd: mc.newTargetEnd,
-                  sectionId: mc.comment.sectionId,
-                  body: mc.comment.body,
-                  category: mc.comment.category,
-                  createdAt: now,
-                  carriedFromId: mc.comment.id,
-                  targetStartChar: null,
-                  targetEndChar: null,
-                  selectedText: null,
-                };
-                commentRepo.insert(carriedComment);
-              }
-              // orphaned: do nothing — comment stays in old version, not copied
-            }
-          }
-        }
-      }
-
-      // Step 8 — refresh tree view and open/reveal WebView
+      // Step 7 — refresh tree view and open/reveal WebView
       PlanExplorerProvider.instance?.refresh();
       const panel = PlanReviewPanel.createOrShow(context.extensionUri);
 

@@ -101,10 +101,10 @@ export const ReviewToolbar: React.FC<ReviewToolbarProps> = ({
           className={`review-toolbar__btn review-toolbar__btn--ghost${hasGlobalComment ? ' active' : ''}`}
           onClick={onGlobalComment}
           aria-pressed={hasGlobalComment}
-          title={hasGlobalComment ? 'Modifica review globale del piano' : 'Aggiungi review globale del piano'}
+          title={hasGlobalComment ? 'Edit global review' : 'Add global review'}
         >
           <span className="material-symbols-outlined">rate_review</span>
-          {hasGlobalComment ? 'Modifica Review' : 'Review Globale'}
+          {hasGlobalComment ? 'Edit Review' : 'Global Review'}
         </button>
 
         {/* Generate Prompt */}

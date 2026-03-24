@@ -89,6 +89,9 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
   overflow: hidden;
   background: var(--md-surface-0);
 }
@@ -1091,45 +1094,6 @@ body {
   flex-direction: column;
   overflow: hidden;
   flex: 1;
-}
-
-/* Filters */
-.comment-navigator__filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--md-border);
-}
-
-.comment-navigator__filter-btn {
-  border-radius: var(--md-radius-full);
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-  font-family: var(--md-font-ui);
-  transition: all var(--md-duration-short) var(--md-easing-standard);
-}
-
-/* Inactive */
-.comment-navigator__filter-btn--inactive {
-  background: transparent;
-  border: 1px solid var(--md-border-subtle);
-  color: var(--md-on-surface-faint);
-}
-.comment-navigator__filter-btn--inactive:hover {
-  background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.05));
-  color: var(--md-on-surface-dim);
-}
-
-/* Counter */
-.comment-navigator__counter {
-  font-size: 11px;
-  color: var(--md-on-surface-faint);
-  padding: 4px 12px;
-  border-bottom: 1px solid var(--md-border);
 }
 
 /* Body / scrollable */

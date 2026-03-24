@@ -33,7 +33,6 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
     return () => { clearTimeout(timerId); };
   }, [editRequested, comment.body, portalContainer]);
 
-  // Create a container div and insert it after the anchor element
   useEffect(() => {
     if (anchorElement === undefined) return;
 

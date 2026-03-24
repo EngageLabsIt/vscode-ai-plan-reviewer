@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Comment, Section } from '../../../shared/models';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { Comment } from '../../../shared/models';
 import { CommentCard } from './CommentCard';
 import { useComments } from './CommentContext';
 import '../../styles/planViewer.css';
@@ -7,7 +7,6 @@ import {
   NAVIGATOR_MIN_WIDTH,
   NAVIGATOR_MAX_WIDTH,
   NAVIGATOR_DEFAULT_WIDTH,
-  HIGHLIGHT_DURATION_MS,
 } from '../../constants';
 
 // ---------------------------------------------------------------------------
@@ -15,118 +14,17 @@ import {
 // ---------------------------------------------------------------------------
 
 interface CommentNavigatorProps {
-  sections: Section[];
   isOpen: boolean;
 }
-
-type TabId = 'comments' | 'sections';
-
-type TimerMap = Map<HTMLElement, ReturnType<typeof setTimeout>>;
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function locationLabel(comment: Comment): string {
-  if (comment.type === 'line') return `Line ${comment.targetStart}`;
-  if (comment.type === 'range') return `Lines ${comment.targetStart}–${comment.targetEnd}`;
-  return 'Section';
-}
-
-function bodyPreview(body: string): string {
-  const trimmed = body.trim();
-  return trimmed.length > 50 ? `${trimmed.slice(0, 50)}\u2026` : trimmed;
-}
-
-function scrollToLine(targetStart: number, timers: TimerMap): void {
-  const el = document.querySelector<HTMLElement>(`[data-start-line="${targetStart}"]`);
-  if (el === null) return;
-
-  const row = el.closest<HTMLElement>('.line-row') ?? el;
-  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-  clearTimeout(timers.get(row));
-  row.classList.add('line-highlighted');
-  timers.set(row, window.setTimeout(() => {
-    row.classList.remove('line-highlighted');
-    timers.delete(row);
-  }, HIGHLIGHT_DURATION_MS));
-}
-
-// ---------------------------------------------------------------------------
-// SectionRow
-// ---------------------------------------------------------------------------
-
-interface SectionRowProps {
-  section: Section;
-  commentCount: number;
-  sectionComments?: Comment[];
-  onScrollToLine: (targetStart: number) => void;
-}
-
-const SectionRow: React.FC<SectionRowProps> = ({ section, commentCount, sectionComments = [], onScrollToLine }) => {
-  const handleClick = useCallback((): void => {
-    onScrollToLine(section.startLine);
-  }, [onScrollToLine, section.startLine]);
-
-  return (
-    <div className="comment-navigator__section-item">
-      <button
-        className="comment-navigator__section-row"
-        onClick={handleClick}
-        aria-label={`${section.heading}, ${commentCount} comment${commentCount !== 1 ? 's' : ''}`}
-        title={section.heading}
-      >
-        <span className="comment-navigator__section-heading">{section.heading}</span>
-        {commentCount > 0 && (
-          <span className="comment-navigator__section-count" aria-hidden="true">
-            {commentCount}
-          </span>
-        )}
-      </button>
-      {sectionComments.length > 0 && (
-        <ul className="comment-navigator__section-comment-list" role="list">
-          {sectionComments.map((c) => (
-            <li key={c.id} role="listitem">
-              <button
-                className="comment-navigator__section-comment-item"
-                onClick={() => { onScrollToLine(c.targetStart); }}
-                title={c.body}
-                aria-label={`Section comment: ${c.body}`}
-              >
-                <span className="comment-navigator__item-icon" aria-hidden="true">💡</span>
-                <span className="comment-navigator__item-preview">{bodyPreview(c.body)}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
 
 // ---------------------------------------------------------------------------
 // CommentNavigator
 // ---------------------------------------------------------------------------
 
 export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
-  sections,
   isOpen,
 }) => {
   const { comments } = useComments();
-  // ── Tab state ──────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<TabId>('comments');
-
-  // ── Highlight timers (scoped to this component instance) ──────────────────
-  const highlightTimers = useRef<TimerMap>(new Map());
-
-  useEffect(() => {
-    const timers = highlightTimers.current;
-    return () => {
-      for (const timer of timers.values()) clearTimeout(timer);
-      timers.clear();
-    };
-  }, []);
 
   // ── Panel width (resizable) ───────────────────────────────────────────────
   const [panelWidth, setPanelWidth] = useState(NAVIGATOR_DEFAULT_WIDTH);
@@ -134,43 +32,6 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(NAVIGATOR_DEFAULT_WIDTH);
   const panelRef = useRef<HTMLElement>(null);
-
-  // ── Derived comment lists ─────────────────────────────────────────────────
-  const filteredComments = useMemo<Comment[]>(() => {
-    return comments;
-  }, [comments]);
-
-  // ── Per-section comment counts (for Sections tab) ─────────────────────────
-  const sectionCommentCounts = useMemo<Map<string, number>>(() => {
-    const map = new Map<string, number>();
-    for (const c of comments) {
-      if (c.sectionId !== null && c.type === 'section') {
-        map.set(c.sectionId, (map.get(c.sectionId) ?? 0) + 1);
-      }
-    }
-    return map;
-  }, [comments]);
-
-  // ── Per-section comment objects (section-type only, for Sections tab) ──────
-  const sectionCommentsBySection = useMemo<Map<string, Comment[]>>(() => {
-    const map = new Map<string, Comment[]>();
-    for (const c of comments) {
-      if (c.type === 'section' && c.sectionId !== null) {
-        const existing = map.get(c.sectionId) ?? [];
-        map.set(c.sectionId, [...existing, c]);
-      }
-    }
-    return map;
-  }, [comments]);
-
-  // ── Tab handlers ──────────────────────────────────────────────────────────
-  const handleSelectCommentsTab = useCallback((): void => {
-    setActiveTab('comments');
-  }, []);
-
-  const handleSelectSectionsTab = useCallback((): void => {
-    setActiveTab('sections');
-  }, []);
 
   // ── Resize logic ──────────────────────────────────────────────────────────
   const handleResizeMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>): void => {
@@ -209,11 +70,6 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
 
   const panelStyle = isOpen ? { width: `${panelWidth}px` } : undefined;
 
-  const headerTitle =
-    activeTab === 'comments'
-      ? `Comments`
-      : `Sections (${sections.length})`;
-
   return (
     <aside
       ref={panelRef}
@@ -231,9 +87,9 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
         aria-orientation="vertical"
       />
 
-      {/* Panel header with title */}
+      {/* Panel header */}
       <div className="comment-navigator__header">
-        <span className="comment-navigator__header-title">{headerTitle}</span>
+        <span className="comment-navigator__header-title">Comments</span>
       </div>
 
       {/* Tab bar */}
@@ -241,34 +97,27 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
         <button
           role="tab"
           id="tab-comments"
-          aria-selected={activeTab === 'comments'}
+          aria-selected={true}
           aria-controls="tabpanel-comments"
-          className={[
-            'comment-navigator__tab',
-            activeTab === 'comments' ? 'comment-navigator__tab--active' : '',
-          ].join(' ').trim()}
-          onClick={handleSelectCommentsTab}
+          className="comment-navigator__tab comment-navigator__tab--active"
         >
           Comments
         </button>
       </div>
 
-      {/* ── Comments tab panel ─────────────────────────────────────────────── */}
+      {/* Comments tab panel */}
       <div
         role="tabpanel"
         id="tabpanel-comments"
         aria-labelledby="tab-comments"
-        hidden={activeTab !== 'comments'}
         className="comment-navigator__tabpanel"
       >
-
-        {/* Flat comment list */}
         <div className="comment-navigator__body">
-          {filteredComments.length === 0 ? (
-            <p className="comment-navigator__empty">No comments match the current filters.</p>
+          {comments.length === 0 ? (
+            <p className="comment-navigator__empty">No comments yet.</p>
           ) : (
             <ul className="comment-navigator__group-list" role="list">
-              {filteredComments.map((c) => (
+              {comments.map((c: Comment) => (
                 <li key={c.id} role="listitem">
                   <CommentCard comment={c} />
                 </li>

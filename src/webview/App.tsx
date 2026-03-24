@@ -217,7 +217,6 @@ export const App: React.FC = () => {
                 globalCommentEditRequested={globalCommentEditCount}
               />
               <CommentNavigator
-                sections={loadedPlan.sections}
                 isOpen={navigatorOpen}
               />
             </div>
