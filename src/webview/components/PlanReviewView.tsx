@@ -14,7 +14,7 @@ interface PlanReviewViewProps {
   onUpdateComment: (id: string, body: string) => void;
   onDeleteComment: (id: string) => void;
   onResolveComment: (id: string) => void;
-  globalCommentEditRequested?: boolean;
+  globalCommentEditRequested?: number;
 }
 
 export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
@@ -23,7 +23,7 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
   onUpdateComment,
   onDeleteComment,
   onResolveComment,
-  globalCommentEditRequested = false,
+  globalCommentEditRequested = 0,
 }) => {
   const bodyRef = useRef<HTMLDivElement>(null);
   const globalAnchorRef = useRef<HTMLDivElement>(null);
@@ -103,7 +103,7 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
       container.remove();
       setGlobalFormContainer(null);
     };
-  }, [commentFormState]);
+  }, [commentFormState?.type]);
 
   // Existing global comment (non-resolved)
   const globalComment = useMemo(

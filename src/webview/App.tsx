@@ -274,7 +274,7 @@ export const App: React.FC = () => {
                 onUpdateComment={handleEditComment}
                 onDeleteComment={handleDeleteComment}
                 onResolveComment={handleResolveComment}
-                globalCommentEditRequested={globalCommentEditCount > 0}
+                globalCommentEditRequested={globalCommentEditCount}
               />
               <CommentNavigator
                 sections={loadedPlan.sections}
