@@ -8,6 +8,7 @@ interface CommentThreadProps {
   onUpdate: (id: string, body: string) => void;
   onDelete: (id: string) => void;
   onResolve: (id: string) => void;
+  editRequested?: number;
 }
 
 export const CommentThread: React.FC<CommentThreadProps> = ({
@@ -16,11 +17,22 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
   onUpdate,
   onDelete,
   onResolve,
+  editRequested = 0,
 }) => {
   const [collapsed, setCollapsed] = useState(comment.resolved);
   const [editing, setEditing] = useState(false);
   const [editBody, setEditBody] = useState(comment.body);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (editRequested === 0) return;
+    setCollapsed(false);
+    setEditing(true);
+    setEditBody(comment.body);
+    setTimeout(() => {
+      containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+  }, [editRequested, comment.body]);
 
   // Create a container div and insert it after the anchor element
   useEffect(() => {
@@ -39,9 +51,12 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
 
   if (anchorElement === undefined || containerRef.current === null) return null;
 
-  const lineLabel = comment.targetStart === comment.targetEnd
-    ? `Line ${comment.targetStart}`
-    : `Lines ${comment.targetStart}–${comment.targetEnd}`;
+  const lineLabel =
+    comment.type === 'global'
+      ? 'Piano intero'
+      : comment.targetStart === comment.targetEnd
+        ? `Line ${comment.targetStart}`
+        : `Lines ${comment.targetStart}–${comment.targetEnd}`;
 
   const handleSaveEdit = (): void => {
     if (editBody.trim()) {

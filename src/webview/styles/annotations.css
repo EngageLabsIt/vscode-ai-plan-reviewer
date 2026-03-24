@@ -276,3 +276,10 @@ section[data-section-id] {
   margin: 0;
   padding: 0;
 }
+
+/* ── Global comment anchor ──────────────────────────────────────────────── */
+.global-comment-anchor {
+  display: block;
+  height: 1px;
+  margin-top: 32px;
+}

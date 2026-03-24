@@ -233,7 +233,6 @@ export const App: React.FC = () => {
       <div className="plan-reviewer-app">
         {loadedPlan !== null ? (
           <>
-            {/* @ts-expect-error — onGlobalComment/hasGlobalComment props added in Chunk 3 */}
             <ReviewToolbar
               plan={loadedPlan.plan}
               versionNumber={loadedPlan.versionNumber}

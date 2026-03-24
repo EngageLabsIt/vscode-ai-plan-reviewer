@@ -157,7 +157,6 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
 
       {/* Global comment thread */}
       {globalComment !== null && (
-        // @ts-expect-error — editRequested added in Chunk 3
         <CommentThread
           comment={globalComment}
           anchorElement={globalAnchorRef.current ?? undefined}

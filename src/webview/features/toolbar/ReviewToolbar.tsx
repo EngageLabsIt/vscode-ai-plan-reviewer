@@ -18,6 +18,8 @@ interface ReviewToolbarProps {
   onGeneratePrompt: () => void;
   onApprove: () => void;
   onSelectVersion: (vn: number) => void;
+  onGlobalComment: () => void;
+  hasGlobalComment: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -45,6 +47,8 @@ export const ReviewToolbar: React.FC<ReviewToolbarProps> = ({
   onGeneratePrompt,
   onApprove,
   onSelectVersion,
+  onGlobalComment,
+  hasGlobalComment,
 }) => {
   return (
     <div className="review-toolbar" role="toolbar" aria-label="Review toolbar">
@@ -90,6 +94,16 @@ export const ReviewToolbar: React.FC<ReviewToolbarProps> = ({
         >
           <span className="material-symbols-outlined">chat_bubble</span>
           {comments.length}
+        </button>
+
+        {/* Global Review */}
+        <button
+          className={`review-toolbar__btn review-toolbar__btn--ghost${hasGlobalComment ? ' active' : ''}`}
+          onClick={onGlobalComment}
+          title={hasGlobalComment ? 'Modifica review globale del piano' : 'Aggiungi review globale del piano'}
+        >
+          <span className="material-symbols-outlined">rate_review</span>
+          {hasGlobalComment ? 'Modifica Review' : 'Review Globale'}
         </button>
 
         {/* Generate Prompt */}
