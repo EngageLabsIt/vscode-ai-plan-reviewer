@@ -99,38 +99,6 @@ export const App: React.FC = () => {
     };
   }, [handleToggleSearch]);
 
-  // ── Section comment handlers ───────────────────────────────────────────────
-
-  const handleCommentSection = useCallback((sectionId: string): void => {
-    const current = loadedPlanRef.current;
-    if (current === null) return;
-    const section = current.sections.find((s) => s.id === sectionId);
-    if (section === undefined) return;
-    setCommentFormState({ type: 'section', sectionId, heading: section.heading });
-  }, []);
-
-  const handleAddLineComment = useCallback((lineNumber: number): void => {
-    if (activeCommentLineRef.current === lineNumber) {
-      setActiveLine(null);
-      setCommentFormState(null);
-      return;
-    }
-    setActiveLine(lineNumber);
-    setCommentFormState({ type: 'line', lineNumber, startCharOffset: null, endCharOffset: null, selectedText: null });
-  }, [setActiveLine]);
-
-  const handleLineShiftClick = useCallback((lineNumber: number): void => {
-    if (activeCommentLineRef.current === null) return;
-    setCommentFormState({
-      type: 'range',
-      startLine: Math.min(activeCommentLineRef.current, lineNumber),
-      endLine: Math.max(activeCommentLineRef.current, lineNumber),
-      startCharOffset: null,
-      endCharOffset: null,
-      selectedText: null,
-    });
-  }, []);
-
   const handleEditComment = useCallback((id: string, body: string): void => {
     vscode.postMessage({ type: 'updateComment', payload: { id, body } });
   }, [vscode]);
@@ -179,16 +147,6 @@ export const App: React.FC = () => {
     setActiveLine(null);
   }, [commentFormState, loadedPlan, vscode, setActiveLine]);
 
-  const handleSelectionComment = useCallback((startLine: number, endLine: number, startChar: number | null, endChar: number | null, selectedText: string): void => {
-    if (startLine === endLine) {
-      setActiveLine(startLine);
-      setCommentFormState({ type: 'line', lineNumber: startLine, startCharOffset: startChar, endCharOffset: endChar, selectedText });
-    } else {
-      setActiveLine(startLine);
-      setCommentFormState({ type: 'range', startLine, endLine, startCharOffset: startChar, endCharOffset: endChar, selectedText });
-    }
-  }, [setActiveLine]);
-
   const handleCommentFormCancel = useCallback((): void => {
     setCommentFormState(null);
     setActiveLine(null);
@@ -202,12 +160,6 @@ export const App: React.FC = () => {
     } else {
       setCommentFormState({ type: 'global' });
     }
-  }, [loadedPlan]);
-
-  // ── Derived: section-scoped comments only ─────────────────────────────────
-  const sectionComments = useMemo<Comment[]>(() => {
-    if (loadedPlan === null) return [];
-    return loadedPlan.comments.filter((c) => c.type === 'section');
   }, [loadedPlan]);
 
   // ── Render ────────────────────────────────────────────────────────────────

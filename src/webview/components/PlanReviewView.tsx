@@ -103,7 +103,7 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
       container.remove();
       setGlobalFormContainer(null);
     };
-  }, [commentFormState?.type]);
+  }, [commentFormState]);
 
   // Existing global comment (non-resolved)
   const globalComment = useMemo(

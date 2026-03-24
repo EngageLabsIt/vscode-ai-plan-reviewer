@@ -79,10 +79,6 @@
   z-index: 1;
 }
 
-.block-comment-btn .material-symbols-outlined {
-  font-size: 14px;
-}
-
 .annotatable-block:hover .block-comment-btn,
 .block-comment-btn--active {
   opacity: 1;
