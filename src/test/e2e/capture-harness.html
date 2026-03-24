@@ -91,30 +91,78 @@
       {
         id: 'cmt-1', versionId: VERSION_ID, type: 'line', targetStart: 8, targetEnd: 8,
         sectionId: null, body: 'Consider adding a rollback migration for this table in case the deploy fails.',
-        category: 'suggestion', resolved: false, createdAt: NOW, carriedFromId: null,
+        category: 'suggestion', createdAt: NOW, carriedFromId: null,
         targetStartChar: null, targetEndChar: null, selectedText: null,
       },
       {
         id: 'cmt-2', versionId: VERSION_ID, type: 'range', targetStart: 26, targetEnd: 29,
         sectionId: null, body: 'These endpoints could benefit from a CQRS pattern to separate read and write operations.',
-        category: 'suggestion', resolved: false, createdAt: NOW, carriedFromId: null,
+        category: 'suggestion', createdAt: NOW, carriedFromId: null,
         targetStartChar: null, targetEndChar: null, selectedText: null,
       },
       {
         id: 'cmt-3', versionId: VERSION_ID, type: 'line', targetStart: 33, targetEnd: 33,
         sectionId: null, body: 'Token rotation should include a grace period to avoid invalidating in-flight requests.',
-        category: 'suggestion', resolved: false, createdAt: NOW, carriedFromId: null,
+        category: 'suggestion', createdAt: NOW, carriedFromId: null,
         targetStartChar: null, targetEndChar: null, selectedText: null,
       },
       {
         id: 'cmt-4', versionId: VERSION_ID, type: 'line', targetStart: 43, targetEnd: 43,
         sectionId: null, body: 'A sliding window approach is good. Consider using Redis sorted sets for distributed rate limiting.',
-        category: 'suggestion', resolved: false, createdAt: NOW, carriedFromId: null,
+        category: 'suggestion', createdAt: NOW, carriedFromId: null,
         targetStartChar: null, targetEndChar: null, selectedText: null,
       },
     ];
 
     let commentCounter = 10;
+
+    // Build renderedLines from PLAN_CONTENT (mirrors MarkdownRenderer.ts logic,
+    // using plain HTML escaping since markdown-it is not available in the browser).
+    function escapeHtml(text) {
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderLine(text) {
+      if (!text.trim()) return '';
+      const listMatch = text.match(/^(\s*)([-*+]|\d+[.)]) (.*)$/);
+      if (listMatch) {
+        const depth = Math.floor(listMatch[1].length / 2);
+        const marker = listMatch[2];
+        const content = escapeHtml(listMatch[3]);
+        const isOrdered = /^\d+[.)]$/.test(marker);
+        const bullet = isOrdered ? marker : '\u2022';
+        return '<span class="md-list-item md-list-item--depth-' + depth + '">'
+             + '<span class="md-list-marker">' + bullet + '</span> ' + content + '</span>';
+      }
+      return escapeHtml(text);
+    }
+
+    function buildRenderedLines(content) {
+      const lines = content.split('\n');
+      const entries = [];
+      let i = 0;
+      while (i < lines.length) {
+        const line = lines[i];
+        const fenceMatch = line.match(/^(`{3,}|~{3,})\s*(\w*)/);
+        if (fenceMatch) {
+          const fence = fenceMatch[1];
+          const startLine = i + 1;
+          const codeLines = [];
+          i++;
+          while (i < lines.length) {
+            const codeLine = lines[i];
+            if (codeLine.match(new RegExp('^' + fence[0] + '{' + fence.length + ',}\\s*$'))) { i++; break; }
+            codeLines.push(codeLine);
+            i++;
+          }
+          entries.push({ kind: 'code', startLine, lineHtmls: codeLines.map(escapeHtml) });
+        } else {
+          entries.push({ kind: 'text', lineNumber: i + 1, html: renderLine(line) });
+          i++;
+        }
+      }
+      return entries;
+    }
 
     function acquireVsCodeApi() {
       return {
@@ -129,6 +177,7 @@
                   versions: [{ id: VERSION_ID, planId: PLAN_ID, versionNumber: 1, content: PLAN_CONTENT, reviewPrompt: null, createdAt: NOW }],
                   sections: SECTIONS,
                   comments: COMMENTS,
+                  renderedLines: buildRenderedLines(PLAN_CONTENT),
                 },
               }, '*');
             }, 50);
@@ -162,15 +211,6 @@
             }
           }
 
-          if (msg.type === 'resolveComment') {
-            const existing = COMMENTS.find(c => c.id === msg.payload.id);
-            if (existing) {
-              const updated = { ...existing, resolved: !existing.resolved };
-              setTimeout(() => {
-                window.postMessage({ type: 'commentUpdated', payload: updated }, '*');
-              }, 30);
-            }
-          }
         },
         getState() { return undefined; },
         setState(s) { return s; },

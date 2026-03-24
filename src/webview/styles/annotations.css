@@ -1,0 +1,272 @@
+/* ── Plan Review View Layout ─────────────────────────────────────────────── */
+.plan-review-view {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.markdown-body {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 16px 48px 16px 40px;
+  line-height: 1.6;
+}
+
+/* ── Lists ───────────────────────────────────────────────────────────────── */
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 2em;
+  margin: 0.25em 0 0.8em;
+}
+
+.markdown-body li {
+  margin: 0.3em 0;
+  line-height: 1.6;
+}
+
+/* Unordered: disc → circle → square per depth */
+.markdown-body ul             { list-style-type: disc;   }
+.markdown-body ul ul          { list-style-type: circle; }
+.markdown-body ul ul ul       { list-style-type: square; }
+
+/* Ordered: decimal → lower-alpha → lower-roman per depth */
+.markdown-body ol             { list-style-type: decimal;     }
+.markdown-body ol ol          { list-style-type: lower-alpha; }
+.markdown-body ol ol ol       { list-style-type: lower-roman; }
+
+/* Marker eredita il colore del testo padre */
+.markdown-body li::marker {
+  color: inherit;
+}
+
+/* Sub-liste: margini più stretti */
+.markdown-body li > ul,
+.markdown-body li > ol {
+  margin: 0.15em 0;
+}
+
+/* ── Annotatable Blocks ──────────────────────────────────────────────────── */
+.annotatable-block {
+  position: relative;
+  transition: background-color 0.15s;
+  border-radius: 3px;
+}
+.annotatable-block:hover {
+  background-color: var(--vscode-editor-hoverHighlightBackground, rgba(128, 128, 128, 0.07));
+}
+
+/* ── Block Comment Button ───────────────────────────────────────────────── */
+.block-comment-btn {
+  position: absolute;
+  top: 2px;
+  right: -40px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 1;
+}
+
+.annotatable-block:hover .block-comment-btn,
+.block-comment-btn--active {
+  opacity: 1;
+}
+
+.block-comment-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* ── Block Comment Dot ───────────────────────────────────────────────────── */
+.block-comment-dot {
+  position: absolute;
+  top: 6px;
+  left: -20px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vscode-editorInfo-foreground, #75beff);
+}
+
+/* ── Comment Thread ──────────────────────────────────────────────────────── */
+.comment-thread {
+  margin: 6px 0 12px 0;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  background: var(--vscode-editorWidget-background);
+  overflow: hidden;
+  font-size: 13px;
+}
+
+.comment-thread__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--vscode-editorWidget-background);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  user-select: none;
+}
+.comment-thread__header:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.comment-thread__toggle {
+  font-size: 10px;
+}
+
+.comment-thread__body {
+  padding: 10px 12px;
+}
+
+.comment-thread__text {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.comment-thread__edit-input {
+  width: 100%;
+  min-height: 56px;
+  resize: vertical;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.comment-thread__actions {
+  display: flex;
+  gap: 6px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+.comment-thread__btn {
+  padding: 2px 10px;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+}
+.comment-thread__btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+.comment-thread__btn--delete {
+  margin-left: auto;
+  background: var(--vscode-errorForeground, #f48771);
+  color: white;
+}
+
+/* ── Annotation Comment Form ─────────────────────────────────────────────── */
+.annotation-comment-form {
+  margin: 6px 0 12px 0;
+  border: 1px solid var(--vscode-focusBorder);
+  border-radius: 6px;
+  background: var(--vscode-editorWidget-background);
+  padding: 10px 12px;
+}
+
+.annotation-comment-form__input {
+  width: 100%;
+  min-height: 56px;
+  resize: vertical;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: var(--vscode-font-family);
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.annotation-comment-form__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.annotation-comment-form__btn {
+  padding: 3px 12px;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+}
+.annotation-comment-form__btn--save {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+.annotation-comment-form__btn--save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.annotation-comment-form__btn--cancel {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+}
+
+/* ── Range Highlight ─────────────────────────────────────────────────────── */
+mark.range-hl {
+  background: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 197, 0, 0.3));
+  border-radius: 2px;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* ── Range Toolbar ───────────────────────────────────────────────────────── */
+.range-toolbar {
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.range-toolbar__btn {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.range-toolbar__btn:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+/* ── Section wrappers ────────────────────────────────────────────────────── */
+section[data-section-id] {
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Global comment anchor ──────────────────────────────────────────────── */
+.global-comment-anchor {
+  display: block;
+  height: 1px;
+}

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import initSqlJs from 'sql.js';
 import type { SqlJsStatic, Database as SqlDatabase } from 'sql.js';
 import * as path from 'path';
-import { runMigrations } from '../extension/db/migrations';
+import { runMigrations } from '../extension/core/db/migrations';
 
 // sql.js inizializzato una volta (WASM costoso); ogni test crea new SQL.Database()
 let SQL: SqlJsStatic;
@@ -48,7 +48,7 @@ describe('runMigrations', () => {
   it('schema version tracking: versione corrente dopo migrazione fresh', () => {
     const db = new SQL.Database();
     runMigrations(db);
-    expect(getSchemaVersion(db)).toBe(5);
+    expect(getSchemaVersion(db)).toBe(7);
     db.close();
   });
 
@@ -98,15 +98,16 @@ describe('runMigrations', () => {
     expect(colsAfter).toContain('target_start_char');
     expect(colsAfter).toContain('target_end_char');
     expect(colsAfter).toContain('selected_text');
-    expect(getSchemaVersion(db)).toBe(5);
+    expect(getSchemaVersion(db)).toBe(7);
 
     db.close();
   });
 
-  it('repair: DB at version 3+ but missing target_start_char columns gets repaired', () => {
+  it('applies V6 migration on a manually-built V5 fixture', () => {
     const db = new SQL.Database();
 
-    // Build a V3 DB manually but WITHOUT the char columns (simulates the old bug)
+    // Build a complete V5 fixture manually (all columns present, old CHECK constraint),
+    // then run migrations to verify V6 rebuilds the table and updates the type constraint.
     db.exec(`
       CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);
       CREATE TABLE IF NOT EXISTS plans (
@@ -130,25 +131,25 @@ describe('runMigrations', () => {
         type TEXT NOT NULL CHECK(type IN ('line','range','section')),
         target_start INTEGER NOT NULL, target_end INTEGER NOT NULL,
         section_id TEXT REFERENCES sections(id), body TEXT NOT NULL,
-        category TEXT NOT NULL,
-        resolved INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
+        category TEXT NOT NULL CHECK(category IN ('suggestion')),
+        resolved INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL,
+        carried_from_id TEXT REFERENCES comments(id),
+        target_start_char INTEGER DEFAULT NULL,
+        target_end_char INTEGER DEFAULT NULL,
+        selected_text TEXT DEFAULT NULL
       );
     `);
-    db.exec('ALTER TABLE comments ADD COLUMN carried_from_id TEXT REFERENCES comments(id)');
-    // Fake version 3 WITHOUT actually adding the char columns
-    db.exec('INSERT OR REPLACE INTO schema_version (version) VALUES (3)');
-
-    // Precondition: columns missing despite version = 3
-    const colsBefore = getColumns(db, 'comments');
-    expect(colsBefore).not.toContain('target_start_char');
-    expect(colsBefore).not.toContain('target_end_char');
+    // Mark as V5 (all prior columns present but CHECK constraint still uses old type list)
+    db.exec('INSERT OR REPLACE INTO schema_version (version) VALUES (5)');
 
     runMigrations(db);
 
-    // Repair should have added the missing columns
+    // After V6+V7, columns must exist and type CHECK must include 'global'
     const colsAfter = getColumns(db, 'comments');
     expect(colsAfter).toContain('target_start_char');
     expect(colsAfter).toContain('target_end_char');
+    expect(colsAfter).toContain('selected_text');
+    expect(getSchemaVersion(db)).toBe(7);
 
     db.close();
   });
@@ -196,7 +197,157 @@ describe('runMigrations', () => {
 
     const colsAfter = getColumns(db, 'comments');
     expect(colsAfter).toContain('selected_text');
-    expect(getSchemaVersion(db)).toBe(5);
+    expect(getSchemaVersion(db)).toBe(7);
+
+    db.close();
+  });
+
+  it('V6: DB at V5 migrates to V6 and accepts global comment type', () => {
+    const db = new SQL.Database();
+
+    // Build a complete V5 fixture
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS plans (
+        id TEXT PRIMARY KEY, title TEXT NOT NULL, source TEXT NOT NULL DEFAULT 'manual',
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'in_review', tags TEXT DEFAULT '[]'
+      );
+      CREATE TABLE IF NOT EXISTS versions (
+        id TEXT PRIMARY KEY, plan_id TEXT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+        version_number INTEGER NOT NULL, content TEXT NOT NULL,
+        review_prompt TEXT, created_at TEXT NOT NULL,
+        UNIQUE(plan_id, version_number)
+      );
+      CREATE TABLE IF NOT EXISTS sections (
+        id TEXT PRIMARY KEY, version_id TEXT NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
+        heading TEXT NOT NULL, start_line INTEGER NOT NULL, end_line INTEGER NOT NULL,
+        level INTEGER NOT NULL, order_index INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS comments (
+        id TEXT PRIMARY KEY, version_id TEXT NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
+        type TEXT NOT NULL CHECK(type IN ('line','range','section')),
+        target_start INTEGER NOT NULL, target_end INTEGER NOT NULL,
+        section_id TEXT REFERENCES sections(id), body TEXT NOT NULL,
+        category TEXT NOT NULL CHECK(category IN ('suggestion')),
+        resolved INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL,
+        carried_from_id TEXT REFERENCES comments(id),
+        target_start_char INTEGER DEFAULT NULL,
+        target_end_char INTEGER DEFAULT NULL,
+        selected_text TEXT DEFAULT NULL
+      );
+    `);
+
+    // Insert a pre-existing comment that should survive migration
+    db.exec(`
+      INSERT INTO plans (id, title, source, created_at, updated_at, status)
+        VALUES ('plan-1', 'Test Plan', 'manual', '2024-01-01T00:00:00Z', '2024-01-01T00:00:00Z', 'in_review');
+      INSERT INTO versions (id, plan_id, version_number, content, created_at)
+        VALUES ('ver-1', 'plan-1', 1, '# Hello', '2024-01-01T00:00:00Z');
+      INSERT INTO comments
+        (id, version_id, type, target_start, target_end, body, category, resolved, created_at)
+        VALUES ('cmt-1', 'ver-1', 'line', 1, 1, 'Pre-existing comment', 'suggestion', 0, '2024-01-01T00:00:00Z');
+    `);
+
+    db.exec('INSERT OR REPLACE INTO schema_version (version) VALUES (5)');
+
+    // Run migration
+    runMigrations(db);
+
+    // 1. Schema version must be 7
+    expect(getSchemaVersion(db)).toBe(7);
+
+    // 2. Pre-existing comment survives
+    const existingRows = db.exec("SELECT id, body FROM comments WHERE id = 'cmt-1'");
+    expect(existingRows.length).toBe(1);
+    expect(existingRows[0].values[0][1]).toBe('Pre-existing comment');
+
+    // 3. A comment with type='global' can now be inserted
+    expect(() => {
+      db.exec(`
+        INSERT INTO comments
+          (id, version_id, type, target_start, target_end, body, category, created_at)
+          VALUES ('cmt-global', 'ver-1', 'global', 0, 0, 'Global comment', 'suggestion', '2024-01-01T00:00:00Z')
+      `);
+    }).not.toThrow();
+
+    const globalRows = db.exec("SELECT type FROM comments WHERE id = 'cmt-global'");
+    expect(globalRows[0].values[0][0]).toBe('global');
+
+    // Verify that an invalid type is still rejected by the CHECK constraint
+    expect(() => {
+      db.run(
+        `INSERT INTO comments (id, version_id, type, target_start, target_end, section_id, body, category, created_at)
+         VALUES ('cmt-invalid', ?, 'invalid', 1, 1, NULL, 'Bad type', 'suggestion', '2025-01-01T00:00:00.000Z')`,
+        ['ver-1']
+      );
+    }).toThrow();
+
+    db.close();
+  });
+
+  it('V7: rimuove colonna resolved dalla tabella comments', () => {
+    const db = new SQL.Database();
+
+    // Build a V6 fixture (has resolved column)
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS plans (
+        id TEXT PRIMARY KEY, title TEXT NOT NULL, source TEXT NOT NULL DEFAULT 'manual',
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'in_review', tags TEXT DEFAULT '[]'
+      );
+      CREATE TABLE IF NOT EXISTS versions (
+        id TEXT PRIMARY KEY, plan_id TEXT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+        version_number INTEGER NOT NULL, content TEXT NOT NULL,
+        review_prompt TEXT, created_at TEXT NOT NULL,
+        UNIQUE(plan_id, version_number)
+      );
+      CREATE TABLE IF NOT EXISTS sections (
+        id TEXT PRIMARY KEY, version_id TEXT NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
+        heading TEXT NOT NULL, start_line INTEGER NOT NULL, end_line INTEGER NOT NULL,
+        level INTEGER NOT NULL, order_index INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS comments (
+        id TEXT PRIMARY KEY, version_id TEXT NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
+        type TEXT NOT NULL CHECK(type IN ('line', 'range', 'section', 'global')),
+        target_start INTEGER NOT NULL, target_end INTEGER NOT NULL,
+        section_id TEXT REFERENCES sections(id), body TEXT NOT NULL,
+        category TEXT NOT NULL CHECK(category IN ('suggestion')),
+        resolved INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL,
+        carried_from_id TEXT REFERENCES comments(id),
+        target_start_char INTEGER DEFAULT NULL,
+        target_end_char INTEGER DEFAULT NULL,
+        selected_text TEXT DEFAULT NULL
+      );
+    `);
+
+    // Insert a comment with resolved column
+    db.exec(`
+      INSERT INTO plans (id, title, source, created_at, updated_at, status)
+        VALUES ('plan-v7', 'V7 Test', 'manual', '2024-01-01T00:00:00Z', '2024-01-01T00:00:00Z', 'in_review');
+      INSERT INTO versions (id, plan_id, version_number, content, created_at)
+        VALUES ('ver-v7', 'plan-v7', 1, '# Hello', '2024-01-01T00:00:00Z');
+      INSERT INTO comments
+        (id, version_id, type, target_start, target_end, body, category, resolved, created_at)
+        VALUES ('cmt-v7', 'ver-v7', 'line', 1, 1, 'Survive V7', 'suggestion', 0, '2024-01-01T00:00:00Z');
+    `);
+    db.exec('INSERT OR REPLACE INTO schema_version (version) VALUES (6)');
+
+    // Precondizione: resolved presente
+    const colsBefore = getColumns(db, 'comments');
+    expect(colsBefore).toContain('resolved');
+
+    runMigrations(db);
+
+    // Dopo V7: resolved rimossa, comment sopravvive
+    const colsAfter = getColumns(db, 'comments');
+    expect(colsAfter).not.toContain('resolved');
+    expect(getSchemaVersion(db)).toBe(7);
+
+    const survivingRows = db.exec("SELECT id, body FROM comments WHERE id = 'cmt-v7'");
+    expect(survivingRows.length).toBe(1);
+    expect(survivingRows[0].values[0][1]).toBe('Survive V7');
 
     db.close();
   });

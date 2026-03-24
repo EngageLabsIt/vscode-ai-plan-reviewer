@@ -4,7 +4,7 @@ export interface Plan {
   source: 'copilot' | 'manual' | 'other';
   createdAt: string;
   updatedAt: string;
-  status: 'in_review' | 'approved' | 'archived' | 'needs_revision';
+  status: 'in_review' | 'archived';
   tags: string[];
 }
 
@@ -30,19 +30,24 @@ export interface Section {
 export interface Comment {
   id: string;
   versionId: string;
-  type: 'line' | 'range' | 'section';
+  type: 'line' | 'range' | 'section' | 'global';
   targetStart: number;
   targetEnd: number;
   sectionId: string | null;
   body: string;
   category: 'suggestion';
-  resolved: boolean;
   createdAt: string;
   carriedFromId: string | null;
   targetStartChar: number | null;
   targetEndChar: number | null;
   selectedText: string | null;
 }
+
+// ── Rendered markdown types ───────────────────────────────────────────────
+
+export type RenderedLine =
+  | { kind: 'text'; lineNumber: number; html: string }
+  | { kind: 'code'; startLine: number; lineHtmls: string[] };
 
 // ── Diff types ────────────────────────────────────────────────────────────
 

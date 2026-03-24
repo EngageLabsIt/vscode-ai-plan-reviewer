@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { WebViewMessage } from '../../shared/messages';
 
-interface VsCodeApi {
+export interface VsCodeApi {
   postMessage(message: WebViewMessage): void;
   getState<T>(): T | undefined;
   setState<T>(state: T): T;

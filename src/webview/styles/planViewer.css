@@ -89,6 +89,9 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
   overflow: hidden;
   background: var(--md-surface-0);
 }
@@ -367,16 +370,7 @@ body {
   color: #fbbf24;
   border: 1px solid rgba(251,191,36,0.3);
 }
-.review-toolbar__badge--approved {
-  background: rgba(52,211,153,0.12);
-  color: #34d399;
-  border: 1px solid rgba(52,211,153,0.3);
-}
-.review-toolbar__badge--needs-revision {
-  background: rgba(248,113,113,0.12);
-  color: var(--vscode-editorError-foreground, #f87171);
-  border: 1px solid rgba(248,113,113,0.3);
-}
+
 .review-toolbar__badge--archived {
   background: rgba(139,148,158,0.12);
   color: var(--md-on-surface-dim);
@@ -436,10 +430,6 @@ body {
   box-shadow: 0 0 0 4px var(--md-primary-dim), var(--md-elevation-2);
 }
 
-.plan-timeline__node--approved .plan-timeline__circle {
-  border-color: var(--vscode-testing-iconPassed, #059669);
-  color: var(--vscode-testing-iconPassed, #34d399);
-}
 
 .plan-timeline__label {
   font-size: 10px;
@@ -477,16 +467,19 @@ body {
 
 .plan-viewer {
   background: var(--vscode-editor-background);
-  font-family: var(--vscode-editor-font-family, monospace);
-  font-size: var(--vscode-editor-font-size, 14px);
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  font-size: var(--vscode-markdown-font-size, 14px);
   line-height: 1.6;
   color: var(--vscode-foreground);
+  word-wrap: break-word;
   padding: 0 0 32px;
   margin: 0;
   width: 100%;
   overflow-y: auto;
   flex: 1;
 }
+
+.plan-viewer img { max-width: 100%; }
 
 /* ── Headings ─────────────────────────────────────────────── */
 
@@ -563,6 +556,22 @@ body {
 }
 
 .plan-viewer li { margin: 0.25em 0; }
+
+/* Inline list items rendered by MarkdownRenderer */
+.md-list-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+}
+.md-list-item--depth-0 { padding-left: 0.5em; }
+.md-list-item--depth-1 { padding-left: 2em; }
+.md-list-item--depth-2 { padding-left: 3.5em; }
+.md-list-item--depth-3 { padding-left: 5em; }
+.md-list-marker {
+  color: var(--md-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
 
 /* ── Tables ───────────────────────────────────────────────── */
 
@@ -780,13 +789,6 @@ body {
   color: var(--md-on-surface-faint);
 }
 
-.comment-card-resolved-badge {
-  font-size: 11px;
-  color: var(--vscode-testing-iconPassed, #34d399);
-  font-weight: 600;
-  margin-left: auto;
-}
-
 .comment-card-actions {
   display: flex;
   gap: 2px;
@@ -809,8 +811,6 @@ body {
 }
 .comment-card-actions .delete-btn { color: var(--vscode-editorError-foreground, #f87171); }
 .comment-card-actions .delete-btn:hover { background: rgba(248,113,113,0.1); }
-.comment-card-actions .resolve-btn { color: var(--vscode-testing-iconPassed, #34d399); }
-.comment-card-actions .resolve-btn:hover { background: rgba(52,211,153,0.1); }
 
 .comment-card-body {
   font-size: 13px;
@@ -1096,60 +1096,6 @@ body {
   flex: 1;
 }
 
-/* Filters */
-.comment-navigator__filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--md-border);
-}
-
-.comment-navigator__filter-btn {
-  border-radius: var(--md-radius-full);
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-  font-family: var(--md-font-ui);
-  transition: all var(--md-duration-short) var(--md-easing-standard);
-}
-
-/* Inactive */
-.comment-navigator__filter-btn--inactive {
-  background: transparent;
-  border: 1px solid var(--md-border-subtle);
-  color: var(--md-on-surface-faint);
-}
-.comment-navigator__filter-btn--inactive:hover {
-  background: var(--vscode-list-hoverBackground, rgba(136,198,255,0.05));
-  color: var(--md-on-surface-dim);
-}
-
-/* Unresolved checkbox */
-.comment-navigator__unresolved-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: var(--md-on-surface-faint);
-  cursor: pointer;
-  user-select: none;
-}
-.comment-navigator__unresolved-checkbox {
-  cursor: pointer;
-  accent-color: var(--md-primary);
-}
-
-/* Counter */
-.comment-navigator__counter {
-  font-size: 11px;
-  color: var(--md-on-surface-faint);
-  padding: 4px 12px;
-  border-bottom: 1px solid var(--md-border);
-}
-
 /* Body / scrollable */
 .comment-navigator__body {
   flex: 1;
@@ -1228,12 +1174,6 @@ body {
 
 .comment-navigator__item-carried {
   color: var(--md-primary);
-}
-
-.comment-navigator__item-resolved {
-  font-size: 11px;
-  color: var(--vscode-testing-iconPassed, #34d399);
-  flex-shrink: 0;
 }
 
 /* Section tab items */

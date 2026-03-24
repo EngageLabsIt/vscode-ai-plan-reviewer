@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DiffEngine } from '../extension/services/DiffEngine';
+import { DiffEngine } from '../extension/core/services/DiffEngine';
 
 const engine = new DiffEngine();
 

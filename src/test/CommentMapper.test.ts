@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { DiffEngine } from '../extension/services/DiffEngine';
-import { CommentMapper } from '../extension/services/CommentMapper';
+import { DiffEngine } from '../extension/core/services/DiffEngine';
+import { CommentMapper } from '../extension/core/services/CommentMapper';
 import type { Comment } from '../shared/models';
 
 const engine = new DiffEngine();
@@ -16,7 +16,6 @@ function makeComment(overrides: Partial<Comment> = {}): Comment {
     sectionId: null,
     body: 'Test comment',
     category: 'suggestion',
-    resolved: false,
     createdAt: '2026-01-01T00:00:00Z',
     carriedFromId: null,
     targetStartChar: null,

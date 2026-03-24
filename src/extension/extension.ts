@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { Database } from './db/database';
-import { runMigrations } from './db/migrations';
-import { PlanReviewPanel } from './webview/PlanReviewPanel';
-import { PlanExplorerProvider } from './views/PlanExplorerProvider';
-import { registerNewReviewCommand } from './commands/newReview';
-import { registerLoadTestPlanCommand } from './commands/loadTestPlan';
-import { registerExportPlanCommand } from './commands/exportPlan';
-import { registerImportPlanCommand } from './commands/importPlan';
+import { Database } from './core/db/database';
+import { runMigrations } from './core/db/migrations';
+import { PlanReviewPanel } from './features/review/PlanReviewPanel';
+import { PlanExplorerProvider } from './features/explorer/PlanExplorerProvider';
+import { registerNewReviewCommand } from './features/review/newReview';
+import { registerLoadTestPlanCommand } from './features/review/loadTestPlan';
+import { registerExportPlanCommand } from './features/import-export/exportPlan';
+import { registerImportPlanCommand } from './features/import-export/importPlan';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   console.log('Plan Reviewer is now active!');

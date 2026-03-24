@@ -13,8 +13,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { DiffEngine } from '../extension/services/DiffEngine';
-import { CommentMapper } from '../extension/services/CommentMapper';
+import { DiffEngine } from '../extension/core/services/DiffEngine';
+import { CommentMapper } from '../extension/core/services/CommentMapper';
 import { PromptGenerator } from '../shared/PromptGenerator';
 import type { Comment, Section } from '../shared/models';
 
@@ -88,7 +88,6 @@ function makeDemoComment(overrides: Partial<Comment>): Comment {
     sectionId: null,
     body: '',
     category: 'suggestion',
-    resolved: false,
     createdAt: '2026-01-01T00:00:00Z',
     carriedFromId: null,
     targetStartChar: null,
@@ -425,7 +424,6 @@ describe('PromptGenerator — edge cases (demo interactions)', () => {
     const resolvedComment = makeDemoComment({
       id: 'c-resolved',
       body: 'This was fixed already',
-      resolved: true,
       targetStart: 5,
       targetEnd: 5,
     });

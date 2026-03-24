@@ -54,8 +54,29 @@
       "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && npm run compile 2>&1 && echo \"✓ TypeScript compile passed\")",
       "Bash(cd \"C:\\\\_\\\\Repos\\\\Sandbox\\\\Plan Reviewer\" && grep -n \"export.*Gutter\\\\|export.*Form\\\\|export.*Card\\\\|export.*Navigator\\\\|export.*Viewer\" src/webview/components/*.tsx)",
       "Bash(find '/c/_/Repos/Sandbox/Plan Reviewer/dist' -name *.css)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(git:*)",
+      "Bash(grep:*)",
+      "Bash(for dir:*)",
+      "Bash(do echo:*)",
+      "Read(//c/_/Repos/Sandbox/Plan Reviewer/src/webview/features/**)",
+      "Bash(done)",
+      "Bash(npm run:*)",
+      "Bash(python3:*)",
+      "Bash(py:*)",
+      "Skill(humanizer)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(node -e \"const md = require\\(''markdown-it''\\); console.log\\(''markdown-it version:'', require\\(''./node_modules/markdown-it/package.json''\\).version\\)\")",
+      "Bash(npx tsc:*)",
+      "Bash(node -e \":*)",
+      "Bash(node -e \"const p = require\\(''''./package.json''''\\); console.log\\(JSON.stringify\\({deps: p.dependencies, devDeps: p.devDependencies}, null, 2\\)\\)\")",
+      "Bash(node:*)",
+      "Bash(npm test:*)"
     ]
+  },
+  "enabledPlugins": {
+    "ui-ux-pro-max@ui-ux-pro-max-skill": true
   },
   "bypassPermissions": true
 }

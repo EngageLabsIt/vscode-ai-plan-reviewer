@@ -65,7 +65,7 @@ export class PromptGenerator {
       const parts = [`**${ref}**`];
       if (citation) parts.push(citation);
       parts.push(comment.body);
-      return parts.join('\n');
+      return parts.join('\n\n');
     };
 
     const feedbackBody = comments.length > 0
