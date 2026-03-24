@@ -85,6 +85,11 @@ export class CommentMapper {
     // ── Map each comment ─────────────────────────────────────────────────
 
     return comments.map((comment): MappedComment => {
+      // Global comments are not line-anchored — pass through unchanged
+      if (comment.type === 'global') {
+        return { comment, newTargetStart: 0, newTargetEnd: 0, status: 'probably_unresolved' };
+      }
+
       const { targetStart, targetEnd } = comment;
 
       // Check modified (removed-adjacent-to-added) lines first, BEFORE the

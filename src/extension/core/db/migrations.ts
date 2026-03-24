@@ -58,6 +58,8 @@ const SCHEMA_V2 = `
 ALTER TABLE comments ADD COLUMN carried_from_id TEXT REFERENCES comments(id);
 `;
 
+// Note: V3, V4, and V5 migrations are applied as inline db.exec() calls
+// inside runMigrations because they were simple ALTER TABLE / UPDATE statements.
 const SCHEMA_V6 = `
 CREATE TABLE comments_new (
   id TEXT PRIMARY KEY,
@@ -162,6 +164,7 @@ export function runMigrations(db: Database): void {
     stmt.free();
   }
 
+  // Depends on V4 having normalized all category values to 'suggestion'.
   if (currentVersion < 6) {
     db.exec(SCHEMA_V6);
     const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
