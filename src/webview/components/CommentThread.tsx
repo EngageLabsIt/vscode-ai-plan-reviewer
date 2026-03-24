@@ -29,9 +29,10 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
     setCollapsed(false);
     setEditing(true);
     setEditBody(comment.body);
-    setTimeout(() => {
+    const timerId = setTimeout(() => {
       containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 50);
+    return () => { clearTimeout(timerId); };
   }, [editRequested, comment.body]);
 
   // Create a container div and insert it after the anchor element

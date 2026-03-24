@@ -100,6 +100,7 @@ export const ReviewToolbar: React.FC<ReviewToolbarProps> = ({
         <button
           className={`review-toolbar__btn review-toolbar__btn--ghost${hasGlobalComment ? ' active' : ''}`}
           onClick={onGlobalComment}
+          aria-pressed={hasGlobalComment}
           title={hasGlobalComment ? 'Modifica review globale del piano' : 'Aggiungi review globale del piano'}
         >
           <span className="material-symbols-outlined">rate_review</span>

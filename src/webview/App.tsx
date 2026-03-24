@@ -26,6 +26,10 @@ export const App: React.FC = () => {
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
   const [globalCommentEditCount, setGlobalCommentEditCount] = useState(0);
 
+  useEffect(() => {
+    setGlobalCommentEditCount(0);
+  }, [loadedPlan?.versionId]);
+
   const {
     searchOpen,
     searchQuery,
