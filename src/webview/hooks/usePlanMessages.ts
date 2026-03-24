@@ -12,6 +12,7 @@ export interface LoadedPlan {
   plan: Plan;
   versionId: string;
   content: string;
+  html: string;
   sections: Section[];
   versionNumber: number;
   versions: Version[];
@@ -48,11 +49,12 @@ export function usePlanMessages(vscodeApi: VsCodeApi): UsePlanMessagesReturn {
       const message = event.data;
 
       if (message.type === 'planLoaded') {
-        const { plan, version, versions, sections, comments } = message.payload;
+        const { plan, version, versions, sections, comments, html } = message.payload;
         const next: LoadedPlan = {
           plan,
           versionId: version.id,
           content: version.content,
+          html,
           sections,
           versionNumber: version.versionNumber,
           versions,

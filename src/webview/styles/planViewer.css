@@ -551,6 +551,22 @@ body {
 
 .plan-viewer li { margin: 0.25em 0; }
 
+/* Inline list items rendered by MarkdownRenderer */
+.md-list-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+}
+.md-list-item--depth-0 { padding-left: 0.5em; }
+.md-list-item--depth-1 { padding-left: 2em; }
+.md-list-item--depth-2 { padding-left: 3.5em; }
+.md-list-item--depth-3 { padding-left: 5em; }
+.md-list-marker {
+  color: var(--md-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
 /* ── Tables ───────────────────────────────────────────────── */
 
 .plan-viewer table {

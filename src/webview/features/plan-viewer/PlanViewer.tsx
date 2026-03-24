@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import type { Components } from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import type { Comment, Section } from '../../../shared/models';
+import type { Comment, RenderedLine, Section } from '../../../shared/models';
 import { LineGutter } from './LineGutter';
 import { CommentCard } from '../comments/CommentCard';
 import { CommentForm } from '../comments/CommentForm';
@@ -16,6 +13,7 @@ import '../../styles/planViewer.css';
 
 interface PlanViewerProps {
   content: string;
+  renderedLines: RenderedLine[];
   sections: Section[];
   versionNumber: number;
   sectionComments?: Comment[];
@@ -27,51 +25,6 @@ interface PlanViewerProps {
   searchMatches?: number[];
   searchCurrentLine?: number | null;
   onSelectionComment?: (startLine: number, endLine: number, startChar: number | null, endChar: number | null, selectedText: string) => void;
-}
-
-type TextLine = { kind: 'text'; lineNumber: number; text: string };
-type CodeBlock = { kind: 'code'; startLine: number; lang: string; lines: string[] };
-type LineEntry = TextLine | CodeBlock;
-
-// ---------------------------------------------------------------------------
-// parseLines — segment raw markdown content into per-line entries
-// ---------------------------------------------------------------------------
-
-function parseLines(content: string): LineEntry[] {
-  const rawLines = content.split('\n');
-  const entries: LineEntry[] = [];
-  let i = 0;
-
-  while (i < rawLines.length) {
-    const line = rawLines[i];
-    const fenceMatch = line.match(/^(`{3,}|~{3,})\s*(\w*)/);
-
-    if (fenceMatch) {
-      const fence = fenceMatch[1];
-      const lang = fenceMatch[2] ?? '';
-      const startLine = i + 1; // 1-based line number of the opening fence
-      const codeLines: string[] = [];
-      i++; // skip opening fence line
-
-      while (i < rawLines.length) {
-        const codeLine = rawLines[i];
-        // closing fence: same or longer sequence of same char
-        if (codeLine.match(new RegExp(`^${fence[0]}{${fence.length},}\\s*$`))) {
-          i++; // skip closing fence line
-          break;
-        }
-        codeLines.push(codeLine);
-        i++;
-      }
-
-      entries.push({ kind: 'code', startLine, lang, lines: codeLines });
-    } else {
-      entries.push({ kind: 'text', lineNumber: i + 1, text: line });
-      i++;
-    }
-  }
-
-  return entries;
 }
 
 // ---------------------------------------------------------------------------
@@ -96,14 +49,6 @@ const SectionCommentBadge: React.FC<SectionCommentBadgeProps> = ({ comment }) =>
       <span className="section-comment-badge__body">{comment.body}</span>
     </div>
   );
-};
-
-// ---------------------------------------------------------------------------
-// textLineComponents — strip the <p> wrapper ReactMarkdown adds
-// ---------------------------------------------------------------------------
-
-const textLineComponents: Components = {
-  p: ({ children }) => <>{children}</>,
 };
 
 // ---------------------------------------------------------------------------
@@ -152,6 +97,7 @@ function findTextPosition(container: Element, charOffset: number): { node: Text;
 
 export const PlanViewer: React.FC<PlanViewerProps> = ({
   content,
+  renderedLines,
   sections,
   versionNumber,
   sectionComments = [],
@@ -317,20 +263,18 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
   // O(1) lookup set for search match lines
   const searchMatchSet = useMemo(() => new Set(searchMatches), [searchMatches]);
 
-  // Parse content into per-line entries
-  const entries = useMemo(() => parseLines(content), [content]);
   const totalLines = useMemo(
-    () => entries.reduce((max, e) => Math.max(max, e.kind === 'code' ? e.startLine + e.lines.length - 1 : e.lineNumber), 1),
-    [entries]
+    () => renderedLines.reduce((max, e) => Math.max(max, e.kind === 'code' ? e.startLine + e.lineHtmls.length - 1 : e.lineNumber), 1),
+    [renderedLines]
   );
 
   return (
     <div className="plan-viewer-container">
     <div ref={viewerRef} className="plan-viewer" aria-label={`Plan version ${versionNumber}`} onMouseUp={handleMouseUp}>
-      {entries.map((entry) => {
+      {renderedLines.map((entry) => {
         if (entry.kind === 'code') {
-          const { startLine, lang, lines } = entry;
-          const blockEnd = startLine + lines.length - 1;
+          const { startLine, lineHtmls } = entry;
+          const blockEnd = startLine + lineHtmls.length - 1;
           const hasMatch = Array.from({ length: blockEnd - startLine + 1 }, (_, i) => startLine + i).some(l => searchMatchSet.has(l));
 
           return (
@@ -343,8 +287,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
               data-line={startLine}
             >
               <CodeBlock
-                lines={lines}
-                lang={lang}
+                lineHtmls={lineHtmls}
                 startLine={startLine}
                 commentsByEndLine={commentsByEndLine}
                 formTargetLine={formTargetLine}
@@ -355,7 +298,7 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
         }
 
         // TextLine
-        const { lineNumber, text } = entry;
+        const { lineNumber, html } = entry;
 
         if (!isLineVisible(lineNumber, sections, collapsedSections)) return null;
 
@@ -387,23 +330,11 @@ export const PlanViewer: React.FC<PlanViewerProps> = ({
             <LineGutter lineNumber={lineNumber} onAddComment={onAddLineComment} />
             <div className="line-divider" aria-hidden="true" />
             <div className="line-content">
-              {text.trim() ? (
+              {html ? (
                 matchedSection !== undefined && onCommentSection !== undefined ? (
-                  <div className="line-heading-wrapper">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={textLineComponents}
-                    >
-                      {text}
-                    </ReactMarkdown>
-                  </div>
+                  <div className="line-heading-wrapper" dangerouslySetInnerHTML={{ __html: html }} />
                 ) : (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={textLineComponents}
-                  >
-                    {text}
-                  </ReactMarkdown>
+                  <span dangerouslySetInnerHTML={{ __html: html }} />
                 )
               ) : null}
               {comments.map((c) => (

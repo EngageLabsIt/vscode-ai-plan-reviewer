@@ -2,7 +2,7 @@ import type { Plan, Version, Section, Comment, DiffLine, MappedComment } from '.
 
 // Host → WebView
 export type HostMessage =
-  | { type: 'planLoaded'; payload: { plan: Plan; version: Version; versions: Version[]; sections: Section[]; comments: Comment[] } }
+  | { type: 'planLoaded'; payload: { plan: Plan; version: Version; versions: Version[]; sections: Section[]; comments: Comment[]; html: string } }
   | { type: 'commentAdded'; payload: Comment }
   | { type: 'commentUpdated'; payload: Comment }
   | { type: 'commentDeleted'; payload: { commentId: string } }

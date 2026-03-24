@@ -4,6 +4,7 @@ import { PlanRepository } from '../../core/db/repositories/PlanRepository';
 import { CommentRepository } from '../../core/db/repositories/CommentRepository';
 import { SectionRepository } from '../../core/db/repositories/SectionRepository';
 import { PlanReviewPanel } from '../review/PlanReviewPanel';
+import { PlanMarkdownEngine } from '../../markdown/PlanMarkdownEngine';
 import type { Plan } from '../../../shared/models';
 
 // ---------------------------------------------------------------------------
@@ -88,7 +89,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     const panel = PlanReviewPanel.createOrShow(context.extensionUri);
     panel.postMessage({
       type: 'planLoaded',
-      payload: { plan, version, versions: allVersions, sections, comments },
+      payload: { plan, version, versions: allVersions, sections, comments, html: new PlanMarkdownEngine().render(version.content, sections).html },
     });
   }
 

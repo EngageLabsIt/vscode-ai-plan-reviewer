@@ -8,6 +8,7 @@ import { PlanRepository } from '../../core/db/repositories/PlanRepository';
 import { SectionRepository } from '../../core/db/repositories/SectionRepository';
 import { PlanReviewPanel } from './PlanReviewPanel';
 import { PlanExplorerProvider } from '../explorer/PlanExplorerProvider';
+import { PlanMarkdownEngine } from '../../markdown/PlanMarkdownEngine';
 import type { Plan, Version, Section } from '../../../shared/models';
 
 export function registerLoadTestPlanCommand(
@@ -83,7 +84,7 @@ export function registerLoadTestPlanCommand(
 
       panel.postMessage({
         type: 'planLoaded',
-        payload: { plan, version, versions: allVersions, sections, comments: [] },
+        payload: { plan, version, versions: allVersions, sections, comments: [], html: new PlanMarkdownEngine().render(version.content, sections).html },
       });
 
       await vscode.window.showInformationMessage(

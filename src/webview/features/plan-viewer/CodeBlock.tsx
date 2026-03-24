@@ -1,57 +1,15 @@
-import React, { useMemo } from 'react';
-import hljs from 'highlight.js';
+import React from 'react';
 import type { Comment } from '../../../shared/models';
 import { LineGutter } from './LineGutter';
 import { CommentCard } from '../comments/CommentCard';
 import { CommentForm } from '../comments/CommentForm';
 
 // ---------------------------------------------------------------------------
-// splitHighlightedLines
-// Splits hljs HTML output into per-line strings, preserving open <span> tags
-// across line boundaries so each line renders with correct highlighting.
-// ---------------------------------------------------------------------------
-
-const TAG_REGEX = /<(\/?)span([^>]*)>/g;
-
-function splitHighlightedLines(html: string): string[] {
-  const rawLines = html.split('\n');
-  const result: string[] = [];
-  let openTags: string[] = [];
-
-  for (const line of rawLines) {
-    // Prepend open tags inherited from previous line
-    const lineContent = openTags.join('') + line;
-
-    // Track which tags are open after this line
-    const currentTags = [...openTags];
-    let match: RegExpExecArray | null;
-
-    TAG_REGEX.lastIndex = 0;
-    while ((match = TAG_REGEX.exec(line)) !== null) {
-      if (match[1] === '/') {
-        currentTags.pop();
-      } else {
-        currentTags.push(`<span${match[2]}>`);
-      }
-    }
-
-    // Close all open tags at end of this line
-    result.push(lineContent + '</span>'.repeat(currentTags.length));
-
-    // Carry open tags to the next line
-    openTags = currentTags;
-  }
-
-  return result;
-}
-
-// ---------------------------------------------------------------------------
 // CodeBlockProps
 // ---------------------------------------------------------------------------
 
 interface CodeBlockProps {
-  lines: string[];
-  lang: string;
+  lineHtmls: string[];
   startLine: number;
   commentsByEndLine: Map<number, Comment[]>;
   formTargetLine: number | null;
@@ -63,28 +21,12 @@ interface CodeBlockProps {
 // ---------------------------------------------------------------------------
 
 export const CodeBlock: React.FC<CodeBlockProps> = ({
-  lines,
-  lang,
+  lineHtmls,
   startLine,
   commentsByEndLine,
   formTargetLine,
   onAddLineComment,
 }) => {
-  const lineHtmls = useMemo(() => {
-    const code = lines.join('\n');
-    let highlighted: string;
-    try {
-      const result = hljs.highlight(code, { language: lang, ignoreIllegals: true });
-      highlighted = result.value;
-    } catch {
-      // Fallback: escape HTML and render plain
-      highlighted = code
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    }
-    return splitHighlightedLines(highlighted);
-  }, [lines, lang]);
 
   return (
     <>

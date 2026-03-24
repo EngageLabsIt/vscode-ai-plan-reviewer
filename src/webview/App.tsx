@@ -2,14 +2,15 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useVsCodeApi } from './hooks/useVsCodeApi';
 import { usePlanMessages } from './hooks/usePlanMessages';
 import { useSearch } from './features/search/useSearch';
-import { PlanViewer } from './features/plan-viewer/PlanViewer';
 import { ReviewToolbar } from './features/toolbar/ReviewToolbar';
 import { CommentNavigator } from './features/comments/CommentNavigator';
 import { SearchBar } from './features/search/SearchBar';
 import { PromptPreview } from './features/prompt/PromptPreview';
 import { CommentContext } from './features/comments/CommentContext';
+import { PlanReviewView } from './components/PlanReviewView';
 import type { Comment } from '../../shared/models';
 import type { CommentFormState } from './features/comments/CommentContext';
+import './styles/annotations.css';
 
 // ---------------------------------------------------------------------------
 // App
@@ -170,6 +171,28 @@ export const App: React.FC = () => {
     setActiveLine(null);
   }, [setActiveLine]);
 
+  // ── Annotation layer comment handler ──────────────────────────────────────
+  const handleAddAnnotationComment = useCallback((targetStart: number, targetEnd: number, body: string, selectedText?: string): void => {
+    if (loadedPlan === null) return;
+    vscode.postMessage({
+      type: 'addComment',
+      payload: {
+        versionId: loadedPlan.versionId,
+        type: targetStart === targetEnd ? 'line' : 'range',
+        sectionId: null,
+        targetStart,
+        targetEnd,
+        body,
+        category: 'suggestion' as const,
+        resolved: false,
+        carriedFromId: null,
+        targetStartChar: null,
+        targetEndChar: null,
+        selectedText: selectedText ?? null,
+      },
+    });
+  }, [loadedPlan, vscode]);
+
   // ── Derived: section-scoped comments only ─────────────────────────────────
   const sectionComments = useMemo<Comment[]>(() => {
     if (loadedPlan === null) return [];
@@ -235,23 +258,13 @@ export const App: React.FC = () => {
                   onClose={handleSearchClose}
                 />
               )}
-              <PlanViewer
-                content={loadedPlan.content}
-                sections={loadedPlan.sections}
-                versionNumber={loadedPlan.versionNumber}
-                sectionComments={sectionComments}
-                allComments={loadedPlan.comments}
-                onCommentSection={handleCommentSection}
-                onAddLineComment={handleAddLineComment}
-                onLineShiftClick={handleLineShiftClick}
-                commentRange={
-                  commentFormState?.type === 'range'
-                    ? { start: commentFormState.startLine, end: commentFormState.endLine }
-                    : null
-                }
-                searchMatches={searchMatches}
-                searchCurrentLine={searchCurrentLine}
-                onSelectionComment={handleSelectionComment}
+              <PlanReviewView
+                html={loadedPlan.html}
+                comments={loadedPlan.comments}
+                onAddComment={handleAddAnnotationComment}
+                onUpdateComment={handleEditComment}
+                onDeleteComment={handleDeleteComment}
+                onResolveComment={handleResolveComment}
               />
               <CommentNavigator
                 sections={loadedPlan.sections}

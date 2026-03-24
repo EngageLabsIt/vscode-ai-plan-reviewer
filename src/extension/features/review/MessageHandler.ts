@@ -6,6 +6,7 @@ import { SectionRepository } from '../../core/db/repositories/SectionRepository'
 import { CommentRepository } from '../../core/db/repositories/CommentRepository';
 import { DiffEngine } from '../../core/services/DiffEngine';
 import { CommentMapper } from '../../core/services/CommentMapper';
+import { PlanMarkdownEngine } from '../../markdown/PlanMarkdownEngine';
 import type { Comment, Plan } from '../../../shared/models';
 import { PlanExplorerProvider } from '../explorer/PlanExplorerProvider';
 
@@ -63,7 +64,7 @@ export class MessageHandler {
 
     this.postMessage({
       type: 'planLoaded',
-      payload: { plan, version, versions: allVersions, sections, comments },
+      payload: { plan, version, versions: allVersions, sections, comments, html: new PlanMarkdownEngine().render(version.content, sections).html },
     });
   }
 

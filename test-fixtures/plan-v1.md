@@ -11,6 +11,7 @@ Il refresh token avrà durata di 30 giorni e sarà rotante.
 ### Requisiti funzionali
 
 - L'utente deve poter fare login con email e password
+    - prova
 - Il sistema deve emettere un access token (JWT, 24h) e un refresh token (30d)
 - Il logout deve invalidare i token attivi
 - Il rate limiting deve bloccare dopo 5 tentativi falliti in 10 minuti

@@ -44,6 +44,12 @@ export interface Comment {
   selectedText: string | null;
 }
 
+// ── Rendered markdown types ───────────────────────────────────────────────
+
+export type RenderedLine =
+  | { kind: 'text'; lineNumber: number; html: string }
+  | { kind: 'code'; startLine: number; lineHtmls: string[] };
+
 // ── Diff types ────────────────────────────────────────────────────────────
 
 export interface DiffLine {

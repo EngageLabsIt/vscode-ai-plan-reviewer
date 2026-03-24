@@ -7,6 +7,7 @@ import { SectionRepository } from '../../core/db/repositories/SectionRepository'
 import { CommentRepository } from '../../core/db/repositories/CommentRepository';
 import { DiffEngine } from '../../core/services/DiffEngine';
 import { CommentMapper } from '../../core/services/CommentMapper';
+import { PlanMarkdownEngine } from '../../markdown/PlanMarkdownEngine';
 import { PlanReviewPanel } from './PlanReviewPanel';
 import { PlanExplorerProvider } from '../explorer/PlanExplorerProvider';
 import type { Plan, Version, Section, Comment } from '../../../shared/models';
@@ -230,6 +231,7 @@ export function registerNewReviewCommand(
           versions: allVersions,
           sections,
           comments: versionComments,
+          html: new PlanMarkdownEngine().render(version.content, sections).html,
         },
       });
     }
