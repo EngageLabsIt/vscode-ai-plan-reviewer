@@ -16,7 +16,6 @@ function makeComment(overrides: Partial<Comment> = {}): Comment {
     sectionId: null,
     body: 'Test comment',
     category: 'suggestion',
-    resolved: false,
     createdAt: '2026-01-01T00:00:00Z',
     carriedFromId: null,
     targetStartChar: null,

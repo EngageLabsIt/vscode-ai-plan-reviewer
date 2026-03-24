@@ -30,7 +30,6 @@ export class MessageHandler {
       case 'addComment':        this.handleAddComment(message.payload);        break;
       case 'updateComment':     this.handleUpdateComment(message.payload);     break;
       case 'deleteComment':     this.handleDeleteComment(message.payload);     break;
-      case 'resolveComment':    this.handleResolveComment(message.payload);    break;
       case 'requestDiff':       this.handleRequestDiff(message.payload);       break;
       case 'saveReviewPrompt':  this.handleSaveReviewPrompt(message.payload);  break;
     }
@@ -114,17 +113,6 @@ export class MessageHandler {
 
     commentRepo.delete(payload.id);
     this.postMessage({ type: 'commentDeleted', payload: { commentId: payload.id } });
-  }
-
-  private handleResolveComment(payload: { id: string }): void {
-    const commentRepo = new CommentRepository(Database.getInstance().getDb());
-
-    commentRepo.update(payload.id, { resolved: true });
-
-    const updated = commentRepo.findById(payload.id);
-    if (updated !== null) {
-      this.postMessage({ type: 'commentUpdated', payload: updated });
-    }
   }
 
   private handleRequestDiff(payload: { planId: string; versionNumberOld: number; versionNumberNew: number }): void {

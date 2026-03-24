@@ -88,6 +88,32 @@ CREATE INDEX IF NOT EXISTS idx_comments_version ON comments(version_id);
 CREATE INDEX IF NOT EXISTS idx_comments_resolved ON comments(version_id, resolved);
 `;
 
+const SCHEMA_V7 = `
+CREATE TABLE comments_new (
+  id TEXT PRIMARY KEY,
+  version_id TEXT NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK(type IN ('line', 'range', 'section', 'global')),
+  target_start INTEGER NOT NULL,
+  target_end INTEGER NOT NULL,
+  section_id TEXT REFERENCES sections(id),
+  body TEXT NOT NULL,
+  category TEXT NOT NULL CHECK(category IN ('suggestion')),
+  created_at TEXT NOT NULL,
+  carried_from_id TEXT REFERENCES comments_new(id),
+  target_start_char INTEGER DEFAULT NULL,
+  target_end_char INTEGER DEFAULT NULL,
+  selected_text TEXT DEFAULT NULL
+);
+INSERT INTO comments_new
+  (id, version_id, type, target_start, target_end, section_id, body, category, created_at, carried_from_id, target_start_char, target_end_char, selected_text)
+SELECT
+  id, version_id, type, target_start, target_end, section_id, body, category, created_at, carried_from_id, target_start_char, target_end_char, selected_text
+FROM comments;
+DROP TABLE comments;
+ALTER TABLE comments_new RENAME TO comments;
+CREATE INDEX IF NOT EXISTS idx_comments_version ON comments(version_id);
+`;
+
 
 function getColumnNames(db: Database, table: string): string[] {
   const results = db.exec(`PRAGMA table_info(${table})`);
@@ -169,6 +195,13 @@ export function runMigrations(db: Database): void {
     db.exec(SCHEMA_V6);
     const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
     stmt.run([6]);
+    stmt.free();
+  }
+
+  if (currentVersion < 7) {
+    db.exec(SCHEMA_V7);
+    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    stmt.run([7]);
     stmt.free();
   }
 

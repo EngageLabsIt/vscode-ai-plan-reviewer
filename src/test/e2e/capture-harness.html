@@ -91,25 +91,25 @@
       {
         id: 'cmt-1', versionId: VERSION_ID, type: 'line', targetStart: 8, targetEnd: 8,
         sectionId: null, body: 'Consider adding a rollback migration for this table in case the deploy fails.',
-        category: 'suggestion', resolved: false, createdAt: NOW, carriedFromId: null,
+        category: 'suggestion', createdAt: NOW, carriedFromId: null,
         targetStartChar: null, targetEndChar: null, selectedText: null,
       },
       {
         id: 'cmt-2', versionId: VERSION_ID, type: 'range', targetStart: 26, targetEnd: 29,
         sectionId: null, body: 'These endpoints could benefit from a CQRS pattern to separate read and write operations.',
-        category: 'suggestion', resolved: false, createdAt: NOW, carriedFromId: null,
+        category: 'suggestion', createdAt: NOW, carriedFromId: null,
         targetStartChar: null, targetEndChar: null, selectedText: null,
       },
       {
         id: 'cmt-3', versionId: VERSION_ID, type: 'line', targetStart: 33, targetEnd: 33,
         sectionId: null, body: 'Token rotation should include a grace period to avoid invalidating in-flight requests.',
-        category: 'suggestion', resolved: false, createdAt: NOW, carriedFromId: null,
+        category: 'suggestion', createdAt: NOW, carriedFromId: null,
         targetStartChar: null, targetEndChar: null, selectedText: null,
       },
       {
         id: 'cmt-4', versionId: VERSION_ID, type: 'line', targetStart: 43, targetEnd: 43,
         sectionId: null, body: 'A sliding window approach is good. Consider using Redis sorted sets for distributed rate limiting.',
-        category: 'suggestion', resolved: false, createdAt: NOW, carriedFromId: null,
+        category: 'suggestion', createdAt: NOW, carriedFromId: null,
         targetStartChar: null, targetEndChar: null, selectedText: null,
       },
     ];
@@ -211,15 +211,6 @@
             }
           }
 
-          if (msg.type === 'resolveComment') {
-            const existing = COMMENTS.find(c => c.id === msg.payload.id);
-            if (existing) {
-              const updated = { ...existing, resolved: !existing.resolved };
-              setTimeout(() => {
-                window.postMessage({ type: 'commentUpdated', payload: updated }, '*');
-              }, 30);
-            }
-          }
         },
         getState() { return undefined; },
         setState(s) { return s; },

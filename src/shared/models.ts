@@ -36,7 +36,6 @@ export interface Comment {
   sectionId: string | null;
   body: string;
   category: 'suggestion';
-  resolved: boolean;
   createdAt: string;
   carriedFromId: string | null;
   targetStartChar: number | null;

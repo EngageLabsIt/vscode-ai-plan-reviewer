@@ -96,9 +96,6 @@ const SectionRow: React.FC<SectionRowProps> = ({ section, commentCount, sectionC
               >
                 <span className="comment-navigator__item-icon" aria-hidden="true">💡</span>
                 <span className="comment-navigator__item-preview">{bodyPreview(c.body)}</span>
-                {c.resolved && (
-                  <span className="comment-navigator__item-resolved" aria-label="Resolved">✓</span>
-                )}
               </button>
             </li>
           ))}
@@ -120,9 +117,6 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
   // ── Tab state ──────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<TabId>('comments');
 
-  // ── Filter state ──────────────────────────────────────────────────────────
-  const [onlyUnresolved, setOnlyUnresolved] = useState(false);
-
   // ── Highlight timers (scoped to this component instance) ──────────────────
   const highlightTimers = useRef<TimerMap>(new Map());
 
@@ -143,11 +137,8 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
 
   // ── Derived comment lists ─────────────────────────────────────────────────
   const filteredComments = useMemo<Comment[]>(() => {
-    return comments.filter((c) => {
-      if (onlyUnresolved && c.resolved) return false;
-      return true;
-    });
-  }, [comments, onlyUnresolved]);
+    return comments;
+  }, [comments]);
 
   // ── Per-section comment counts (for Sections tab) ─────────────────────────
   const sectionCommentCounts = useMemo<Map<string, number>>(() => {
@@ -171,10 +162,6 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
     }
     return map;
   }, [comments]);
-
-  const handleToggleUnresolved = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
-    setOnlyUnresolved(e.target.checked);
-  }, []);
 
   // ── Tab handlers ──────────────────────────────────────────────────────────
   const handleSelectCommentsTab = useCallback((): void => {

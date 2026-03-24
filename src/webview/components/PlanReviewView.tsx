@@ -13,7 +13,6 @@ interface PlanReviewViewProps {
   comments: Comment[];
   onUpdateComment: (id: string, body: string) => void;
   onDeleteComment: (id: string) => void;
-  onResolveComment: (id: string) => void;
   globalCommentEditRequested?: number;
 }
 
@@ -22,21 +21,20 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
   comments,
   onUpdateComment,
   onDeleteComment,
-  onResolveComment,
   globalCommentEditRequested = 0,
 }) => {
   const bodyRef = useRef<HTMLDivElement>(null);
   const globalAnchorRef = useRef<HTMLDivElement>(null);
-  const blockMap = useBlockMapping(bodyRef);
+  const blockMap = useBlockMapping(bodyRef, html);
 
   const { openCommentForm, commentFormState } = useComments();
 
-  // Lines already commented (line/range, non-resolved) → hide the + button
+  // Lines already commented (line/range) → hide the + button
   // Excludes 'section' and 'global' because they have different anchors
   const commentedLines = useMemo(
     () => new Set(
       comments
-        .filter((c) => !c.resolved && c.type !== 'global' && c.type !== 'section')
+        .filter((c) => c.type !== 'global' && c.type !== 'section')
         .map((c) => c.targetStart)
     ),
     [comments]
@@ -105,9 +103,9 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
     };
   }, [commentFormState]);
 
-  // Existing global comment (non-resolved)
+  // Existing global comment
   const globalComment = useMemo(
-    () => comments.find((c) => c.type === 'global' && !c.resolved) ?? null,
+    () => comments.find((c) => c.type === 'global') ?? null,
     [comments]
   );
 
@@ -145,7 +143,6 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
             anchorElement={blockMap.get(comment.targetStart)}
             onUpdate={onUpdateComment}
             onDelete={onDeleteComment}
-            onResolve={onResolveComment}
           />
         ))}
 
@@ -162,7 +159,6 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
           anchorElement={globalAnchorRef.current ?? undefined}
           onUpdate={onUpdateComment}
           onDelete={onDeleteComment}
-          onResolve={onResolveComment}
           editRequested={globalCommentEditRequested}
         />
       )}

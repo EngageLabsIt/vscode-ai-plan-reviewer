@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { Comment } from '../../../shared/models';
 
@@ -7,7 +7,6 @@ interface CommentThreadProps {
   anchorElement: HTMLElement | undefined;
   onUpdate: (id: string, body: string) => void;
   onDelete: (id: string) => void;
-  onResolve: (id: string) => void;
   editRequested?: number;
 }
 
@@ -16,13 +15,12 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
   anchorElement,
   onUpdate,
   onDelete,
-  onResolve,
   editRequested = 0,
 }) => {
-  const [collapsed, setCollapsed] = useState(comment.resolved);
+  const [collapsed, setCollapsed] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editBody, setEditBody] = useState(comment.body);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (editRequested === 0) return;
@@ -30,10 +28,10 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
     setEditing(true);
     setEditBody(comment.body);
     const timerId = setTimeout(() => {
-      containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      portalContainer?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 50);
     return () => { clearTimeout(timerId); };
-  }, [editRequested, comment.body]);
+  }, [editRequested, comment.body, portalContainer]);
 
   // Create a container div and insert it after the anchor element
   useEffect(() => {
@@ -42,15 +40,15 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
     const container = document.createElement('div');
     container.className = 'comment-thread-portal';
     anchorElement.insertAdjacentElement('afterend', container);
-    containerRef.current = container;
+    setPortalContainer(container);
 
     return () => {
       container.remove();
-      containerRef.current = null;
+      setPortalContainer(null);
     };
   }, [anchorElement]);
 
-  if (anchorElement === undefined || containerRef.current === null) return null;
+  if (anchorElement === undefined || portalContainer === null) return null;
 
   const lineLabel =
     comment.type === 'global'
@@ -67,7 +65,7 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
   };
 
   const threadEl = (
-    <div className={['comment-thread', comment.resolved ? 'comment-thread--resolved' : ''].filter(Boolean).join(' ')}>
+    <div className="comment-thread">
       <div
         className="comment-thread__header"
         onClick={() => { setCollapsed(c => !c); }}
@@ -99,15 +97,10 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
             )}
           </div>
           <div className="comment-thread__actions">
-            {!comment.resolved && !editing && (
-              <>
-                <button className="comment-thread__btn comment-thread__btn--resolve" onClick={() => { onResolve(comment.id); }}>
-                  Resolve
-                </button>
-                <button className="comment-thread__btn comment-thread__btn--edit" onClick={() => { setEditing(true); setEditBody(comment.body); }}>
-                  Edit
-                </button>
-              </>
+            {!editing && (
+              <button className="comment-thread__btn comment-thread__btn--edit" onClick={() => { setEditing(true); setEditBody(comment.body); }}>
+                Edit
+              </button>
             )}
             {editing && (
               <>
@@ -128,5 +121,5 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
     </div>
   );
 
-  return createPortal(threadEl, containerRef.current);
+  return createPortal(threadEl, portalContainer);
 };

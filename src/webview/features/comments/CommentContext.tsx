@@ -15,7 +15,6 @@ export interface CommentContextValue {
   comments: Comment[];
   onEdit:    (id: string, body: string) => void;
   onDelete:  (id: string) => void;
-  onResolve: (id: string) => void;
   commentFormState: CommentFormState | null;
   activeCommentLine: number | null;
   openCommentForm: (state: CommentFormState) => void;

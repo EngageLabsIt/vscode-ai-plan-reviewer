@@ -17,7 +17,6 @@ function rowToComment(row: Row): Comment {
       typeof row['section_id'] === 'string' ? row['section_id'] : null,
     body: String(row['body'] ?? ''),
     category: (row['category'] as Comment['category']) ?? 'suggestion',
-    resolved: row['resolved'] === 1,
     createdAt: String(row['created_at'] ?? ''),
     carriedFromId:
       typeof row['carried_from_id'] === 'string' ? row['carried_from_id'] : null,
@@ -37,8 +36,8 @@ export class CommentRepository {
   insert(comment: Comment): void {
     const stmt = this.db.prepare(
       `INSERT INTO comments
-         (id, version_id, type, target_start, target_end, section_id, body, category, resolved, created_at, carried_from_id, target_start_char, target_end_char, selected_text)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         (id, version_id, type, target_start, target_end, section_id, body, category, created_at, carried_from_id, target_start_char, target_end_char, selected_text)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
     stmt.run([
       comment.id,
@@ -49,7 +48,6 @@ export class CommentRepository {
       comment.sectionId,
       comment.body,
       comment.category,
-      comment.resolved ? 1 : 0,
       comment.createdAt,
       comment.carriedFromId,
       comment.targetStartChar ?? null,
@@ -79,22 +77,13 @@ export class CommentRepository {
     return collectRows(stmt).map(rowToComment);
   }
 
-  findUnresolvedByVersionId(versionId: string): Comment[] {
-    const stmt = this.db.prepare(
-      'SELECT * FROM comments WHERE version_id = ? AND resolved = 0 ORDER BY target_start ASC'
-    );
-    stmt.bind([versionId]);
-    return collectRows(stmt).map(rowToComment);
-  }
-
   update(
     id: string,
-    updates: Partial<Pick<Comment, 'body' | 'category' | 'resolved'>>
+    updates: Partial<Pick<Comment, 'body' | 'category'>>
   ): void {
     const pairs: Array<[string, string | number | null]> = [];
     if (updates.body !== undefined)     pairs.push(['body',     updates.body]);
     if (updates.category !== undefined) pairs.push(['category', updates.category]);
-    if (updates.resolved !== undefined) pairs.push(['resolved', updates.resolved ? 1 : 0]);
 
     if (pairs.length === 0) return;
 
@@ -119,11 +108,11 @@ export class CommentRepository {
     stmt.free();
   }
 
-  countOpenByPlanId(planId: string): number {
+  countByPlanId(planId: string): number {
     const stmt = this.db.prepare(
       `SELECT COUNT(*) AS cnt FROM comments c
        JOIN versions v ON c.version_id = v.id
-       WHERE v.plan_id = ? AND c.resolved = 0`
+       WHERE v.plan_id = ?`
     );
     stmt.bind([planId]);
     let count = 0;

@@ -199,7 +199,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     }
 
     return plans.map((plan): PlanTreeItem => {
-      const openCount = commentRepo.countOpenByPlanId(plan.id);
+      const openCount = commentRepo.countByPlanId(plan.id);
       const date = new Date(plan.updatedAt).toLocaleDateString('it-IT', {
         day: 'numeric',
         month: 'short',

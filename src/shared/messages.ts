@@ -15,7 +15,6 @@ export type WebViewMessage =
   | { type: 'addComment'; payload: Omit<Comment, 'id' | 'createdAt'> }
   | { type: 'updateComment'; payload: { id: string; body?: string } }
   | { type: 'deleteComment'; payload: { id: string } }
-  | { type: 'resolveComment'; payload: { id: string } }
   | { type: 'requestPlan'; payload: { planId: string; versionNumber?: number } }
   | { type: 'requestDiff'; payload: { planId: string; versionNumberOld: number; versionNumberNew: number } }
   | { type: 'updatePlanStatus'; payload: { planId: string; status: Plan['status']; note?: string } }

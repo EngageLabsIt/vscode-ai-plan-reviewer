@@ -464,16 +464,19 @@ body {
 
 .plan-viewer {
   background: var(--vscode-editor-background);
-  font-family: var(--vscode-editor-font-family, monospace);
-  font-size: var(--vscode-editor-font-size, 14px);
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  font-size: var(--vscode-markdown-font-size, 14px);
   line-height: 1.6;
   color: var(--vscode-foreground);
+  word-wrap: break-word;
   padding: 0 0 32px;
   margin: 0;
   width: 100%;
   overflow-y: auto;
   flex: 1;
 }
+
+.plan-viewer img { max-width: 100%; }
 
 /* ── Headings ─────────────────────────────────────────────── */
 
@@ -783,13 +786,6 @@ body {
   color: var(--md-on-surface-faint);
 }
 
-.comment-card-resolved-badge {
-  font-size: 11px;
-  color: var(--vscode-testing-iconPassed, #34d399);
-  font-weight: 600;
-  margin-left: auto;
-}
-
 .comment-card-actions {
   display: flex;
   gap: 2px;
@@ -812,8 +808,6 @@ body {
 }
 .comment-card-actions .delete-btn { color: var(--vscode-editorError-foreground, #f87171); }
 .comment-card-actions .delete-btn:hover { background: rgba(248,113,113,0.1); }
-.comment-card-actions .resolve-btn { color: var(--vscode-testing-iconPassed, #34d399); }
-.comment-card-actions .resolve-btn:hover { background: rgba(52,211,153,0.1); }
 
 .comment-card-body {
   font-size: 13px;
@@ -1130,21 +1124,6 @@ body {
   color: var(--md-on-surface-dim);
 }
 
-/* Unresolved checkbox */
-.comment-navigator__unresolved-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: var(--md-on-surface-faint);
-  cursor: pointer;
-  user-select: none;
-}
-.comment-navigator__unresolved-checkbox {
-  cursor: pointer;
-  accent-color: var(--md-primary);
-}
-
 /* Counter */
 .comment-navigator__counter {
   font-size: 11px;
@@ -1231,12 +1210,6 @@ body {
 
 .comment-navigator__item-carried {
   color: var(--md-primary);
-}
-
-.comment-navigator__item-resolved {
-  font-size: 11px;
-  color: var(--vscode-testing-iconPassed, #34d399);
-  flex-shrink: 0;
 }
 
 /* Section tab items */

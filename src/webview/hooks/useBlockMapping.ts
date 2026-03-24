@@ -1,14 +1,14 @@
-import { useEffect, useState, type RefObject } from 'react';
+import { useLayoutEffect, useState, type RefObject } from 'react';
 
 /**
  * Builds a Map from source line number → DOM element for all .annotatable-block elements
- * inside the given container ref. Rebuilds whenever the container's innerHTML changes
- * (i.e., when new HTML is rendered).
+ * inside the given container ref. Rebuilds whenever html changes (i.e., when new HTML is rendered).
+ * Uses useLayoutEffect to run after the DOM is committed but before paint.
  */
-export function useBlockMapping(bodyRef: RefObject<HTMLDivElement | null>): Map<number, HTMLElement> {
+export function useBlockMapping(bodyRef: RefObject<HTMLDivElement | null>, html: string): Map<number, HTMLElement> {
   const [blockMap, setBlockMap] = useState<Map<number, HTMLElement>>(new Map());
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (bodyRef.current === null) return;
     const map = new Map<number, HTMLElement>();
     const blocks = bodyRef.current.querySelectorAll<HTMLElement>('.annotatable-block[data-line]');
@@ -19,8 +19,7 @@ export function useBlockMapping(bodyRef: RefObject<HTMLDivElement | null>): Map<
       }
     });
     setBlockMap(map);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bodyRef.current?.innerHTML]);
+  }, [html]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return blockMap;
 }

@@ -31,9 +31,9 @@ export const RangeHighlighter: React.FC<RangeHighlighterProps> = ({
       parent.removeChild(mark);
     });
 
-    // Apply new marks for unresolved range/line comments with selectedText
+    // Apply new marks for range/line comments with selectedText
     const rangeComments = comments.filter(
-      (c) => !c.resolved && c.selectedText !== null && c.selectedText.length > 0
+      (c) => c.selectedText !== null && c.selectedText.length > 0
     );
 
     for (const comment of rangeComments) {

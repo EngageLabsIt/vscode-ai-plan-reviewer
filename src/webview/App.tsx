@@ -8,7 +8,7 @@ import { SearchBar } from './features/search/SearchBar';
 import { PromptPreview } from './features/prompt/PromptPreview';
 import { CommentContext } from './features/comments/CommentContext';
 import { PlanReviewView } from './components/PlanReviewView';
-import type { Comment } from '../../shared/models';
+import type { Comment } from '../shared/models';
 import type { CommentFormState } from './features/comments/CommentContext';
 import './styles/annotations.css';
 
@@ -107,10 +107,6 @@ export const App: React.FC = () => {
     vscode.postMessage({ type: 'deleteComment', payload: { id } });
   }, [vscode]);
 
-  const handleResolveComment = useCallback((id: string): void => {
-    vscode.postMessage({ type: 'resolveComment', payload: { id } });
-  }, [vscode]);
-
   const handleCommentFormSubmit = useCallback((body: string): void => {
     if (commentFormState === null || loadedPlan === null) return;
     const category: Comment['category'] = 'suggestion';
@@ -118,11 +114,11 @@ export const App: React.FC = () => {
     if (commentFormState.type === 'section') {
       const section = loadedPlan.sections.find((s) => s.id === commentFormState.sectionId);
       if (section === undefined) return;
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'section', sectionId: section.id, targetStart: section.startLine, targetEnd: section.endLine, body, category, resolved: false, carriedFromId: null, targetStartChar: null, targetEndChar: null, selectedText: null } });
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'section', sectionId: section.id, targetStart: section.startLine, targetEnd: section.endLine, body, category, carriedFromId: null, targetStartChar: null, targetEndChar: null, selectedText: null } });
     } else if (commentFormState.type === 'line') {
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'line', sectionId: null, targetStart: commentFormState.lineNumber, targetEnd: commentFormState.lineNumber, body, category, resolved: false, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'line', sectionId: null, targetStart: commentFormState.lineNumber, targetEnd: commentFormState.lineNumber, body, category, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
     } else if (commentFormState.type === 'range') {
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'range', sectionId: null, targetStart: commentFormState.startLine, targetEnd: commentFormState.endLine, body, category, resolved: false, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
+      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'range', sectionId: null, targetStart: commentFormState.startLine, targetEnd: commentFormState.endLine, body, category, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
     } else if (commentFormState.type === 'global') {
       vscode.postMessage({
         type: 'addComment',
@@ -134,7 +130,6 @@ export const App: React.FC = () => {
           targetEnd: 0,
           body,
           category: 'suggestion' as const,
-          resolved: false,
           carriedFromId: null,
           targetStartChar: null,
           targetEndChar: null,
@@ -154,7 +149,7 @@ export const App: React.FC = () => {
 
   const handleGlobalComment = useCallback((): void => {
     if (loadedPlan === null) return;
-    const existingGlobal = loadedPlan.comments.find((c) => c.type === 'global' && !c.resolved);
+    const existingGlobal = loadedPlan.comments.find((c) => c.type === 'global');
     if (existingGlobal !== undefined) {
       setGlobalCommentEditCount((n) => n + 1);
     } else {
@@ -167,7 +162,6 @@ export const App: React.FC = () => {
     comments: loadedPlan?.comments ?? [],
     onEdit: handleEditComment,
     onDelete: handleDeleteComment,
-    onResolve: handleResolveComment,
     commentFormState,
     activeCommentLine,
     openCommentForm: setCommentFormState,
@@ -177,7 +171,6 @@ export const App: React.FC = () => {
     loadedPlan,
     handleEditComment,
     handleDeleteComment,
-    handleResolveComment,
     commentFormState,
     activeCommentLine,
     handleCommentFormCancel,
@@ -202,15 +195,8 @@ export const App: React.FC = () => {
               onApprove={handleApprove}
               onSelectVersion={handleSelectVersion}
               onGlobalComment={handleGlobalComment}
-              hasGlobalComment={loadedPlan.comments.some((c) => c.type === 'global' && !c.resolved)}
+              hasGlobalComment={loadedPlan.comments.some((c) => c.type === 'global')}
             />
-            {/* <PlanTimeline
-              versions={loadedPlan.versions}
-              currentVersionNumber={loadedPlan.versionNumber}
-              onSelectVersion={handleSelectVersion}
-              collapsed={timelineCollapsed}
-              onToggleCollapse={handleTimelineToggle}
-            /> */}
             <div className="plan-content-area">
               {searchOpen && (
                 <SearchBar
@@ -228,7 +214,6 @@ export const App: React.FC = () => {
                 comments={loadedPlan.comments}
                 onUpdateComment={handleEditComment}
                 onDeleteComment={handleDeleteComment}
-                onResolveComment={handleResolveComment}
                 globalCommentEditRequested={globalCommentEditCount}
               />
               <CommentNavigator

@@ -1,16 +1,16 @@
 /* ── Plan Review View Layout ─────────────────────────────────────────────── */
 .plan-review-view {
   position: relative;
-  padding-left: 40px;
-  padding-right: 48px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
 .markdown-body {
-  padding: 16px;
-  padding-left: 0;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 16px 48px 16px 40px;
   line-height: 1.6;
 }
 
@@ -37,9 +37,9 @@
 .markdown-body ol ol          { list-style-type: lower-alpha; }
 .markdown-body ol ol ol       { list-style-type: lower-roman; }
 
-/* Colore marker con accent primario */
+/* Marker eredita il colore del testo padre */
 .markdown-body li::marker {
-  color: var(--md-primary, #6366f1);
+  color: inherit;
 }
 
 /* Sub-liste: margini più stretti */
@@ -109,10 +109,6 @@
   font-size: 13px;
 }
 
-.comment-thread--resolved {
-  opacity: 0.55;
-}
-
 .comment-thread__header {
   display: flex;
   justify-content: space-between;
@@ -175,10 +171,6 @@
 }
 .comment-thread__btn:hover {
   background: var(--vscode-button-secondaryHoverBackground);
-}
-.comment-thread__btn--resolve {
-  background: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
 }
 .comment-thread__btn--delete {
   margin-left: auto;

@@ -166,7 +166,7 @@ export function registerNewReviewCommand(
         );
 
         if (prevVersion !== undefined) {
-          const prevComments = commentRepo.findUnresolvedByVersionId(prevVersion.id);
+          const prevComments = commentRepo.findByVersionId(prevVersion.id);
 
           if (prevComments.length > 0) {
             const diffLines = new DiffEngine().compute(prevVersion.content, version.content);
@@ -188,7 +188,6 @@ export function registerNewReviewCommand(
                   sectionId: mc.comment.sectionId,
                   body: mc.comment.body,
                   category: mc.comment.category,
-                  resolved: false,
                   createdAt: now,
                   carriedFromId: mc.comment.id,
                   targetStartChar: null,
@@ -196,8 +195,6 @@ export function registerNewReviewCommand(
                   selectedText: null,
                 };
                 commentRepo.insert(carriedComment);
-              } else if (mc.status === 'probably_resolved') {
-                commentRepo.update(mc.comment.id, { resolved: true });
               }
               // orphaned: do nothing — comment stays in old version, not copied
             }

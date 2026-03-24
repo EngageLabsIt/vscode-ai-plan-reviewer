@@ -17,7 +17,7 @@ interface CommentCardProps {
 }
 
 const CommentCardComponent: React.FC<CommentCardProps> = ({ comment }) => {
-  const { onEdit, onDelete, onResolve } = useComments();
+  const { onEdit, onDelete } = useComments();
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(comment.body);
 
@@ -37,19 +37,9 @@ const CommentCardComponent: React.FC<CommentCardProps> = ({ comment }) => {
       <div className="comment-card">
         <div className="comment-card-header">
           <span className="comment-card-ref">{refLabel(comment)}</span>
-          {comment.resolved && <span className="comment-card-resolved-badge">✓ resolved</span>}
           {comment.carriedFromId !== null && <span className="comment-card-carried-badge">↩ carried</span>}
           {!isEditing && (
             <div className="comment-card-actions">
-              {!comment.resolved && (
-                <button
-                  className="resolve-btn"
-                  title="Mark as resolved"
-                  onClick={() => { onResolve(comment.id); }}
-                >
-                  ✓
-                </button>
-              )}
               <button
                 className="edit-btn"
                 title="Edit comment"
