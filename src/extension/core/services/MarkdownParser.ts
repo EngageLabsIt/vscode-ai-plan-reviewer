@@ -1,8 +1,8 @@
 export interface ParsedSection {
   heading: string;
-  startLine: number;  // 1-based
-  endLine: number;    // 1-based, inclusive
-  level: number;      // 1-6 for markdown headings, 0 for bold/numbered
+  startLine: number; // 1-based
+  endLine: number; // 1-based, inclusive
+  level: number; // 1-6 for markdown headings, 0 for bold/numbered
   orderIndex: number;
 }
 
@@ -89,9 +89,12 @@ type MatchFn = (line: string) => StarterInfo | null;
 
 function matcherForStrategy(strategy: Strategy): MatchFn {
   switch (strategy) {
-    case 'heading':  return matchHeading;
-    case 'bold':     return matchBold;
-    case 'numbered': return matchNumbered;
+    case 'heading':
+      return matchHeading;
+    case 'bold':
+      return matchBold;
+    case 'numbered':
+      return matchNumbered;
   }
 }
 
@@ -170,9 +173,7 @@ export class MarkdownParser {
     for (let s = 0; s < starters.length; s++) {
       const current = starters[s]!;
       const nextStarterLineIndex =
-        s + 1 < starters.length
-          ? starters[s + 1]!.lineIndex
-          : totalLines; // one past the last line
+        s + 1 < starters.length ? starters[s + 1]!.lineIndex : totalLines; // one past the last line
 
       // endLine is the last line of this section (1-based, inclusive).
       // The section runs up to (but not including) the next starter.

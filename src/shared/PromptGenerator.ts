@@ -11,7 +11,12 @@ export interface GenerateOptions {
   mode: PromptMode;
 }
 
-function extractLines(content: string, start: number, end: number, maxLines = 8): string {
+function extractLines(
+  content: string,
+  start: number,
+  end: number,
+  maxLines = 8,
+): string {
   const lines = content.split('\n');
   const slice = lines.slice(start - 1, end); // 1-based → 0-based
   const truncated = slice.length > maxLines;
@@ -22,7 +27,14 @@ function extractLines(content: string, start: number, end: number, maxLines = 8)
 
 export class PromptGenerator {
   generate(opts: GenerateOptions): string {
-    const { planTitle, versionNumber, versionContent, comments, sections, mode } = opts;
+    const {
+      planTitle,
+      versionNumber,
+      versionContent,
+      comments,
+      sections,
+      mode,
+    } = opts;
 
     const formatRef = (comment: Comment): string => {
       if (comment.sectionId !== null) {
@@ -68,9 +80,10 @@ export class PromptGenerator {
       return parts.join('\n\n');
     };
 
-    const feedbackBody = comments.length > 0
-      ? `### Suggestions\n\n${comments.map(formatEntry).join('\n\n')}`
-      : '';
+    const feedbackBody =
+      comments.length > 0
+        ? `### Suggestions\n\n${comments.map(formatEntry).join('\n\n')}`
+        : '';
 
     const closingInstructions = [
       'Please generate an updated version of the plan that:',
@@ -79,13 +92,23 @@ export class PromptGenerator {
 
     if (mode === 'same_session') {
       const heading = `## Plan Review — Iteration ${versionNumber}`;
-      const intro = 'The plan has been reviewed. Here is the feedback to apply to the next version:';
+      const intro =
+        'The plan has been reviewed. Here is the feedback to apply to the next version:';
 
-      return [heading, '', intro, '', feedbackBody, '', closingInstructions].join('\n');
+      return [
+        heading,
+        '',
+        intro,
+        '',
+        feedbackBody,
+        '',
+        closingInstructions,
+      ].join('\n');
     }
 
     const heading = `## Review Feedback — Iteration ${versionNumber}`;
-    const intro = 'The plan has been reviewed. Here is the feedback to apply to the next version:';
+    const intro =
+      'The plan has been reviewed. Here is the feedback to apply to the next version:';
 
     return [
       `## Plan to Review`,

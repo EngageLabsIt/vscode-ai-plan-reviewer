@@ -10,7 +10,7 @@
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
-  padding: 16px 48px 16px 40px;
+  padding: 16px 68px 16px 40px;
   line-height: 1.6;
 }
 
@@ -20,22 +20,36 @@
 .markdown-body ol {
   padding-left: 2em;
   margin: 0.25em 0 0.8em;
+  overflow: visible;
 }
 
 .markdown-body li {
   margin: 0.3em 0;
   line-height: 1.6;
+  overflow: visible;
 }
 
 /* Unordered: disc → circle → square per depth */
-.markdown-body ul             { list-style-type: disc;   }
-.markdown-body ul ul          { list-style-type: circle; }
-.markdown-body ul ul ul       { list-style-type: square; }
+.markdown-body ul {
+  list-style-type: disc;
+}
+.markdown-body ul ul {
+  list-style-type: circle;
+}
+.markdown-body ul ul ul {
+  list-style-type: square;
+}
 
 /* Ordered: decimal → lower-alpha → lower-roman per depth */
-.markdown-body ol             { list-style-type: decimal;     }
-.markdown-body ol ol          { list-style-type: lower-alpha; }
-.markdown-body ol ol ol       { list-style-type: lower-roman; }
+.markdown-body ol {
+  list-style-type: decimal;
+}
+.markdown-body ol ol {
+  list-style-type: lower-alpha;
+}
+.markdown-body ol ol ol {
+  list-style-type: lower-roman;
+}
 
 /* Marker eredita il colore del testo padre */
 .markdown-body li::marker {
@@ -55,7 +69,31 @@
   border-radius: 3px;
 }
 .annotatable-block:hover {
-  background-color: var(--vscode-editor-hoverHighlightBackground, rgba(128, 128, 128, 0.07));
+  background-color: var(
+    --vscode-editor-hoverHighlightBackground,
+    rgba(128, 128, 128, 0.07)
+  );
+}
+
+/* For <li> items: override the full-element background and restrict the
+   hover highlight to just the item's own text line via ::before. This prevents
+   the highlight from visually bleeding into nested sub-lists. */
+li.annotatable-block:hover {
+  background-color: transparent;
+}
+li.annotatable-block:hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.9em;
+  background: var(
+    --vscode-editor-hoverHighlightBackground,
+    rgba(128, 128, 128, 0.07)
+  );
+  border-radius: 3px;
+  pointer-events: none;
 }
 
 /* ── Block Comment Button ───────────────────────────────────────────────── */
@@ -79,9 +117,13 @@
   z-index: 1;
 }
 
-.annotatable-block:hover .block-comment-btn,
-.block-comment-btn--active {
+.block-comment-btn--visible {
   opacity: 1;
+}
+
+.plan-review-view:has(.range-toolbar) .block-comment-btn {
+  opacity: 0 !important;
+  pointer-events: none;
 }
 
 .block-comment-btn:hover {
@@ -178,6 +220,21 @@
   color: white;
 }
 
+/* ── Portals inside lists ───────────────────────────────────────────────── */
+/* comment-thread-portal and comment-form-portal are plain <div>s inserted via
+   insertAdjacentElement('afterend') on <li> elements. When the <li> is inside a
+   <ul> or <ol> the portal div ends up as a sibling of <li>. Browsers render it
+   fine (no bullet marker), but we need to reset any list-inherited spacing. */
+.markdown-body ul > .comment-thread-portal,
+.markdown-body ol > .comment-thread-portal,
+.markdown-body ul > .comment-form-portal,
+.markdown-body ol > .comment-form-portal {
+  display: block;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
 /* ── Annotation Comment Form ─────────────────────────────────────────────── */
 .annotation-comment-form {
   margin: 6px 0 12px 0;
@@ -230,10 +287,15 @@
 
 /* ── Range Highlight ─────────────────────────────────────────────────────── */
 mark.range-hl {
-  background: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 197, 0, 0.3));
+  background: var(--md-primary-dim);
   border-radius: 2px;
   color: inherit;
   cursor: pointer;
+}
+code:has(> mark.range-hl) {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
 }
 
 /* ── Range Toolbar ───────────────────────────────────────────────────────── */

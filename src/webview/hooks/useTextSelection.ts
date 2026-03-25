@@ -29,24 +29,44 @@ export function useTextSelection(bodyRef: RefObject<HTMLDivElement | null>): {
 
       const range = sel.getRangeAt(0);
 
-      // Find the annotatable-block containing the selection start
-      const startNode = range.startContainer.nodeType === Node.TEXT_NODE
-        ? range.startContainer.parentElement
-        : range.startContainer as Element;
-      const endNode = range.endContainer.nodeType === Node.TEXT_NODE
-        ? range.endContainer.parentElement
-        : range.endContainer as Element;
+      // Find the annotatable-block containing the selection start/end.
+      // Use parentNode (never null) instead of parentElement (can be null for
+      // direct children of <li> in VS Code's Chromium webview).
+      const startNode = (
+        range.startContainer.nodeType === Node.TEXT_NODE
+          ? range.startContainer.parentNode
+          : range.startContainer
+      ) as Element | null;
+      const endNode = (
+        range.endContainer.nodeType === Node.TEXT_NODE
+          ? range.endContainer.parentNode
+          : range.endContainer
+      ) as Element | null;
 
-      const startBlock = startNode?.closest<HTMLElement>('.annotatable-block');
-      const endBlock = endNode?.closest<HTMLElement>('.annotatable-block');
-
-      if (startBlock === null || startBlock === undefined || endBlock === null || endBlock === undefined) {
+      if (
+        startNode === null ||
+        endNode === null ||
+        bodyRef.current === null ||
+        !bodyRef.current.contains(startNode) ||
+        !bodyRef.current.contains(endNode)
+      ) {
         setSelection(null);
         return;
       }
 
-      const targetStart = parseInt(startBlock.getAttribute('data-line') ?? '', 10);
-      const targetEndAttr = endBlock.getAttribute('data-line-end') ?? endBlock.getAttribute('data-line') ?? '';
+      const startBlock = startNode.closest<HTMLElement>('.annotatable-block');
+      const endBlock = endNode.closest<HTMLElement>('.annotatable-block');
+
+      if (startBlock === null || endBlock === null) {
+        setSelection(null);
+        return;
+      }
+
+      const targetStart = parseInt(
+        startBlock.getAttribute('data-line') ?? '',
+        10,
+      );
+      const targetEndAttr = endBlock.getAttribute('data-line') ?? '';
       const targetEnd = parseInt(targetEndAttr, 10);
 
       if (isNaN(targetStart) || isNaN(targetEnd)) {
@@ -54,11 +74,16 @@ export function useTextSelection(bodyRef: RefObject<HTMLDivElement | null>): {
         return;
       }
 
+      // Get the rect of the collapsed end of the range (position of the last selected character)
+      const endRange = range.cloneRange();
+      endRange.collapse(false);
+      const endRect = endRange.getBoundingClientRect();
+
       setSelection({
         text: selectedText,
         targetStart,
         targetEnd: Math.max(targetStart, targetEnd),
-        rect: range.getBoundingClientRect(),
+        rect: endRect,
       });
     };
 

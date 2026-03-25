@@ -70,3 +70,4 @@ Client → GET /auth/oauth/google → OAuthAdapter → AuthService → emit JWT
 2. `POST /auth/refresh`
 3. `POST /auth/logout`
 4. `GET /auth/me` (endpoint protetto di test)
+5. `DELETE /auth/<id>`

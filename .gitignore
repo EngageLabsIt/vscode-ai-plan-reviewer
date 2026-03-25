@@ -152,6 +152,6 @@ test-results/
 # Capture videos (large files, not versioned)
 docs/screenshots/*.webm
 docs/plans
-/.claude/skills/grill-me/SKILL.md
+/.claude
 /test-fixtures
 /docs

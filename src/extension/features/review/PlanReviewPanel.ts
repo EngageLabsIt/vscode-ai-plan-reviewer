@@ -11,7 +11,7 @@ export class PlanReviewPanel {
   private readonly extensionUri: vscode.Uri;
   private readonly messageHandler: MessageHandler;
   private disposables: vscode.Disposable[] = [];
-  private pendingMessage: HostMessage | null = null;
+  private pendingMessages: HostMessage[] = [];
   private isReady = false;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
@@ -26,7 +26,7 @@ export class PlanReviewPanel {
     this.panel.webview.onDidReceiveMessage(
       (message: WebViewMessage) => this.handleMessage(message),
       null,
-      this.disposables
+      this.disposables,
     );
   }
 
@@ -40,8 +40,12 @@ export class PlanReviewPanel {
       return PlanReviewPanel.instance;
     }
 
-    const mdExt = vscode.extensions.getExtension('vscode.markdown-language-features');
-    const mdMediaUri = mdExt ? vscode.Uri.joinPath(mdExt.extensionUri, 'media') : undefined;
+    const mdExt = vscode.extensions.getExtension(
+      'vscode.markdown-language-features',
+    );
+    const mdMediaUri = mdExt
+      ? vscode.Uri.joinPath(mdExt.extensionUri, 'media')
+      : undefined;
 
     const panel = vscode.window.createWebviewPanel(
       PlanReviewPanel.viewType,
@@ -54,7 +58,7 @@ export class PlanReviewPanel {
           vscode.Uri.joinPath(extensionUri, 'dist'),
           ...(mdMediaUri ? [mdMediaUri] : []),
         ],
-      }
+      },
     );
 
     PlanReviewPanel.instance = new PlanReviewPanel(panel, extensionUri);
@@ -65,17 +69,17 @@ export class PlanReviewPanel {
     if (this.isReady) {
       void this.panel.webview.postMessage(message);
     } else {
-      this.pendingMessage = message;
+      this.pendingMessages.push(message);
     }
   }
 
   private handleMessage(message: WebViewMessage): void {
     if (message.type === 'ready') {
       this.isReady = true;
-      if (this.pendingMessage !== null) {
-        void this.panel.webview.postMessage(this.pendingMessage);
-        this.pendingMessage = null;
+      for (const msg of this.pendingMessages) {
+        void this.panel.webview.postMessage(msg);
       }
+      this.pendingMessages = [];
       return;
     }
     this.messageHandler.handle(message);
@@ -83,21 +87,27 @@ export class PlanReviewPanel {
 
   private getHtmlContent(webview: vscode.Webview): string {
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview.js')
+      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview.js'),
     );
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview.css')
+      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview.css'),
     );
 
     const nonce = getNonce();
 
-    const mdExt = vscode.extensions.getExtension('vscode.markdown-language-features');
+    const mdExt = vscode.extensions.getExtension(
+      'vscode.markdown-language-features',
+    );
     const mdCssLinks = mdExt
       ? [
-          webview.asWebviewUri(vscode.Uri.joinPath(mdExt.extensionUri, 'media', 'markdown.css')),
-          webview.asWebviewUri(vscode.Uri.joinPath(mdExt.extensionUri, 'media', 'highlight.css')),
+          webview.asWebviewUri(
+            vscode.Uri.joinPath(mdExt.extensionUri, 'media', 'markdown.css'),
+          ),
+          webview.asWebviewUri(
+            vscode.Uri.joinPath(mdExt.extensionUri, 'media', 'highlight.css'),
+          ),
         ]
-          .map(uri => `  <link rel="stylesheet" href="${uri}">`)
+          .map((uri) => `  <link rel="stylesheet" href="${uri}">`)
           .join('\n')
       : '';
 
@@ -120,6 +130,9 @@ ${mdCssLinks}
   }
 
   public dispose(): void {
+    if (PlanReviewPanel.instance === undefined) {
+      return;
+    }
     PlanReviewPanel.instance = undefined;
     this.panel.dispose();
     for (const d of this.disposables) {
@@ -131,7 +144,8 @@ ${mdCssLinks}
 
 function getNonce(): string {
   let text = '';
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const possible =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   for (let i = 0; i < 32; i++) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }

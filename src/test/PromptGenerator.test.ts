@@ -46,16 +46,16 @@ const baseOpts = {
 
 // Multi-line content for citation tests (lines 1-10)
 const multiLineContent = [
-  '# Architecture',          // line 1
-  '',                         // line 2
-  'Layer one details here.',  // line 3
-  'Layer two details here.',  // line 4
-  'Consider refactoring.',    // line 5
-  'Line six content.',        // line 6
-  'Line seven content.',      // line 7
-  'Line eight content.',      // line 8
-  'Line nine content.',       // line 9
-  'Line ten content.',        // line 10
+  '# Architecture', // line 1
+  '', // line 2
+  'Layer one details here.', // line 3
+  'Layer two details here.', // line 4
+  'Consider refactoring.', // line 5
+  'Line six content.', // line 6
+  'Line seven content.', // line 7
+  'Line eight content.', // line 8
+  'Line nine content.', // line 9
+  'Line ten content.', // line 10
 ].join('\n');
 
 describe('PromptGenerator', () => {
@@ -73,7 +73,9 @@ describe('PromptGenerator', () => {
 
     it('contains closing instructions', () => {
       const result = generator.generate({ ...baseOpts, mode: 'same_session' });
-      expect(result).toContain('Please generate an updated version of the plan');
+      expect(result).toContain(
+        'Please generate an updated version of the plan',
+      );
       expect(result).toContain('Applies the suggested improvements');
     });
   });
@@ -93,7 +95,11 @@ describe('PromptGenerator', () => {
 
     it('plan content appears before feedback section', () => {
       const comment = makeComment({ body: 'Fix this' });
-      const result = generator.generate({ ...baseOpts, comments: [comment], mode: 'new_session' });
+      const result = generator.generate({
+        ...baseOpts,
+        comments: [comment],
+        mode: 'new_session',
+      });
 
       const planIdx = result.indexOf('## Plan to Review');
       const feedbackIdx = result.indexOf('## Review Feedback');
@@ -104,22 +110,37 @@ describe('PromptGenerator', () => {
   describe('suggestions list', () => {
     it('suggestions appear under Suggestions section', () => {
       const comment = makeComment({ body: 'Consider refactoring' });
-      const result = generator.generate({ ...baseOpts, comments: [comment], mode: 'same_session' });
+      const result = generator.generate({
+        ...baseOpts,
+        comments: [comment],
+        mode: 'same_session',
+      });
 
       expect(result).toContain('### Suggestions');
       expect(result).toContain('Consider refactoring');
     });
 
     it('no comments → no Suggestions section present', () => {
-      const result = generator.generate({ ...baseOpts, comments: [], mode: 'same_session' });
+      const result = generator.generate({
+        ...baseOpts,
+        comments: [],
+        mode: 'same_session',
+      });
       expect(result).not.toContain('### Suggestions');
     });
   });
 
   describe('formatRef — reference formatting', () => {
     it('comment with matching sectionId shows section heading', () => {
-      const section = makeSection({ id: 's-overview', heading: 'Architecture' });
-      const comment = makeComment({ sectionId: 's-overview', targetStart: 5, targetEnd: 5 });
+      const section = makeSection({
+        id: 's-overview',
+        heading: 'Architecture',
+      });
+      const comment = makeComment({
+        sectionId: 's-overview',
+        targetStart: 5,
+        targetEnd: 5,
+      });
       const result = generator.generate({
         ...baseOpts,
         comments: [comment],
@@ -131,21 +152,42 @@ describe('PromptGenerator', () => {
     });
 
     it('single-line comment with no section shows [Line N]', () => {
-      const comment = makeComment({ sectionId: null, targetStart: 7, targetEnd: 7 });
-      const result = generator.generate({ ...baseOpts, comments: [comment], mode: 'same_session' });
+      const comment = makeComment({
+        sectionId: null,
+        targetStart: 7,
+        targetEnd: 7,
+      });
+      const result = generator.generate({
+        ...baseOpts,
+        comments: [comment],
+        mode: 'same_session',
+      });
 
       expect(result).toContain('[Line 7]');
     });
 
     it('range comment with no section shows [Lines N–M]', () => {
-      const comment = makeComment({ type: 'range', sectionId: null, targetStart: 3, targetEnd: 8 });
-      const result = generator.generate({ ...baseOpts, comments: [comment], mode: 'same_session' });
+      const comment = makeComment({
+        type: 'range',
+        sectionId: null,
+        targetStart: 3,
+        targetEnd: 8,
+      });
+      const result = generator.generate({
+        ...baseOpts,
+        comments: [comment],
+        mode: 'same_session',
+      });
 
       expect(result).toContain('[Lines 3–8]');
     });
 
     it('comment with sectionId that does not match any section falls back to line ref', () => {
-      const comment = makeComment({ sectionId: 'non-existent', targetStart: 4, targetEnd: 4 });
+      const comment = makeComment({
+        sectionId: 'non-existent',
+        targetStart: 4,
+        targetEnd: 4,
+      });
       const result = generator.generate({
         ...baseOpts,
         comments: [comment],
@@ -160,7 +202,11 @@ describe('PromptGenerator', () => {
 
   describe('citation — blockquote of plan text', () => {
     it('reference appears in bold on its own line', () => {
-      const comment = makeComment({ sectionId: null, targetStart: 5, targetEnd: 5 });
+      const comment = makeComment({
+        sectionId: null,
+        targetStart: 5,
+        targetEnd: 5,
+      });
       const result = generator.generate({
         ...baseOpts,
         versionContent: multiLineContent,
@@ -172,7 +218,11 @@ describe('PromptGenerator', () => {
     });
 
     it('line comment cites the exact line as blockquote', () => {
-      const comment = makeComment({ sectionId: null, targetStart: 5, targetEnd: 5 });
+      const comment = makeComment({
+        sectionId: null,
+        targetStart: 5,
+        targetEnd: 5,
+      });
       const result = generator.generate({
         ...baseOpts,
         versionContent: multiLineContent,
@@ -184,7 +234,12 @@ describe('PromptGenerator', () => {
     });
 
     it('range comment cites all lines in range as blockquote', () => {
-      const comment = makeComment({ type: 'range', sectionId: null, targetStart: 3, targetEnd: 5 });
+      const comment = makeComment({
+        type: 'range',
+        sectionId: null,
+        targetStart: 3,
+        targetEnd: 5,
+      });
       const result = generator.generate({
         ...baseOpts,
         versionContent: multiLineContent,
@@ -198,8 +253,17 @@ describe('PromptGenerator', () => {
     });
 
     it('section comment cites section startLine..endLine', () => {
-      const section = makeSection({ id: 's1', heading: 'Architecture', startLine: 1, endLine: 3 });
-      const comment = makeComment({ sectionId: 's1', targetStart: 1, targetEnd: 1 });
+      const section = makeSection({
+        id: 's1',
+        heading: 'Architecture',
+        startLine: 1,
+        endLine: 3,
+      });
+      const comment = makeComment({
+        sectionId: 's1',
+        targetStart: 1,
+        targetEnd: 1,
+      });
       const result = generator.generate({
         ...baseOpts,
         versionContent: multiLineContent,
@@ -214,8 +278,16 @@ describe('PromptGenerator', () => {
     });
 
     it('range exceeding 8 lines is truncated with > ...', () => {
-      const longContent = Array.from({ length: 12 }, (_, i) => `Line ${i + 1}`).join('\n');
-      const comment = makeComment({ type: 'range', sectionId: null, targetStart: 1, targetEnd: 12 });
+      const longContent = Array.from(
+        { length: 12 },
+        (_, i) => `Line ${i + 1}`,
+      ).join('\n');
+      const comment = makeComment({
+        type: 'range',
+        sectionId: null,
+        targetStart: 1,
+        targetEnd: 12,
+      });
       const result = generator.generate({
         ...baseOpts,
         versionContent: longContent,
@@ -229,7 +301,12 @@ describe('PromptGenerator', () => {
     });
 
     it('comment on out-of-range line has no citation', () => {
-      const comment = makeComment({ sectionId: null, targetStart: 99, targetEnd: 99, body: 'out of range' });
+      const comment = makeComment({
+        sectionId: null,
+        targetStart: 99,
+        targetEnd: 99,
+        body: 'out of range',
+      });
       const result = generator.generate({
         ...baseOpts,
         versionContent: multiLineContent,
@@ -247,8 +324,18 @@ describe('PromptGenerator', () => {
     });
 
     it('multiple comments are separated by blank lines', () => {
-      const c1 = makeComment({ id: 'c1', targetStart: 3, targetEnd: 3, body: 'First comment' });
-      const c2 = makeComment({ id: 'c2', targetStart: 5, targetEnd: 5, body: 'Second comment' });
+      const c1 = makeComment({
+        id: 'c1',
+        targetStart: 3,
+        targetEnd: 3,
+        body: 'First comment',
+      });
+      const c2 = makeComment({
+        id: 'c2',
+        targetStart: 5,
+        targetEnd: 5,
+        body: 'Second comment',
+      });
       const result = generator.generate({
         ...baseOpts,
         versionContent: multiLineContent,
@@ -258,28 +345,51 @@ describe('PromptGenerator', () => {
 
       const firstIdx = result.indexOf('First comment');
       const secondIdx = result.indexOf('Second comment');
-      const between = result.slice(firstIdx + 'First comment'.length, secondIdx);
+      const between = result.slice(
+        firstIdx + 'First comment'.length,
+        secondIdx,
+      );
       expect(between).toContain('\n\n');
     });
 
     it('uses selectedText for citation when present', () => {
       const comment = makeComment({
-        targetStart: 3, targetEnd: 5,
+        targetStart: 3,
+        targetEnd: 5,
         selectedText: 'frammento selezionato',
       });
-      const result = generator.generate({ ...baseOpts, versionContent: multiLineContent, comments: [comment], mode: 'same_session' });
+      const result = generator.generate({
+        ...baseOpts,
+        versionContent: multiLineContent,
+        comments: [comment],
+        mode: 'same_session',
+      });
       expect(result).toContain('> frammento selezionato');
       expect(result).not.toContain('> Layer one details here.');
     });
 
     it('falls back to full line when selectedText is null', () => {
-      const comment = makeComment({ targetStart: 3, targetEnd: 3, selectedText: null });
-      const result = generator.generate({ ...baseOpts, versionContent: multiLineContent, comments: [comment], mode: 'same_session' });
+      const comment = makeComment({
+        targetStart: 3,
+        targetEnd: 3,
+        selectedText: null,
+      });
+      const result = generator.generate({
+        ...baseOpts,
+        versionContent: multiLineContent,
+        comments: [comment],
+        mode: 'same_session',
+      });
       expect(result).toContain('> Layer one details here.');
     });
 
     it('no category label appears in output', () => {
-      const comment = makeComment({ category: 'suggestion', targetStart: 3, targetEnd: 3, body: 'Some feedback' });
+      const comment = makeComment({
+        category: 'suggestion',
+        targetStart: 3,
+        targetEnd: 3,
+        body: 'Some feedback',
+      });
       const result = generator.generate({
         ...baseOpts,
         versionContent: multiLineContent,

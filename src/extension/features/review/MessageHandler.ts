@@ -19,23 +19,42 @@ import { PlanExplorerProvider } from '../explorer/PlanExplorerProvider';
  * while business logic lives here.
  */
 export class MessageHandler {
-  constructor(
-    private readonly postMessage: (message: HostMessage) => void,
-  ) {}
+  constructor(private readonly postMessage: (message: HostMessage) => void) {}
 
   handle(message: Exclude<WebViewMessage, { type: 'ready' }>): void {
     switch (message.type) {
-      case 'requestPlan':       this.handleRequestPlan(message.payload);       break;
-      case 'updatePlanStatus':  this.handleUpdatePlanStatus(message.payload);  break;
-      case 'addComment':        this.handleAddComment(message.payload);        break;
-      case 'updateComment':     this.handleUpdateComment(message.payload);     break;
-      case 'deleteComment':     this.handleDeleteComment(message.payload);     break;
-      case 'requestDiff':       this.handleRequestDiff(message.payload);       break;
-      case 'saveReviewPrompt':  this.handleSaveReviewPrompt(message.payload);  break;
+      case 'requestPlan':
+        this.handleRequestPlan(message.payload);
+        break;
+      case 'updatePlanStatus':
+        this.handleUpdatePlanStatus(message.payload);
+        break;
+      case 'addComment':
+        this.handleAddComment(message.payload);
+        break;
+      case 'updateComment':
+        this.handleUpdateComment(message.payload);
+        break;
+      case 'deleteComment':
+        this.handleDeleteComment(message.payload);
+        break;
+      case 'requestDiff':
+        this.handleRequestDiff(message.payload);
+        break;
+      case 'saveReviewPrompt':
+        this.handleSaveReviewPrompt(message.payload);
+        break;
+      default: {
+        const _exhaustive: never = message;
+        void _exhaustive;
+      }
     }
   }
 
-  private handleRequestPlan(payload: { planId: string; versionNumber?: number }): void {
+  private handleRequestPlan(payload: {
+    planId: string;
+    versionNumber?: number;
+  }): void {
     const rawDb = Database.getInstance().getDb();
     const planRepo = new PlanRepository(rawDb);
     const sectionRepo = new SectionRepository(rawDb);
@@ -43,18 +62,25 @@ export class MessageHandler {
 
     const plan = planRepo.findById(payload.planId);
     if (plan === null) {
-      this.postMessage({ type: 'error', payload: { message: `Plan not found: ${payload.planId}` } });
+      this.postMessage({
+        type: 'error',
+        payload: { message: `Plan not found: ${payload.planId}` },
+      });
       return;
     }
 
     const allVersions = planRepo.findVersionsByPlanId(payload.planId);
     const version =
       payload.versionNumber !== undefined
-        ? allVersions.find((v) => v.versionNumber === payload.versionNumber) ?? null
+        ? (allVersions.find((v) => v.versionNumber === payload.versionNumber) ??
+          null)
         : planRepo.findLatestVersion(payload.planId);
 
     if (version === null) {
-      this.postMessage({ type: 'error', payload: { message: `Version not found for plan: ${payload.planId}` } });
+      this.postMessage({
+        type: 'error',
+        payload: { message: `Version not found for plan: ${payload.planId}` },
+      });
       return;
     }
 
@@ -63,11 +89,22 @@ export class MessageHandler {
 
     this.postMessage({
       type: 'planLoaded',
-      payload: { plan, version, versions: allVersions, sections, comments, html: new PlanMarkdownEngine().render(version.content, sections).html },
+      payload: {
+        plan,
+        version,
+        versions: allVersions,
+        sections,
+        comments,
+        html: new PlanMarkdownEngine().render(version.content, sections).html,
+      },
     });
   }
 
-  private handleUpdatePlanStatus(payload: { planId: string; status: Plan['status']; note?: string }): void {
+  private handleUpdatePlanStatus(payload: {
+    planId: string;
+    status: Plan['status'];
+    note?: string;
+  }): void {
     const planRepo = new PlanRepository(Database.getInstance().getDb());
 
     planRepo.update(payload.planId, {
@@ -112,35 +149,53 @@ export class MessageHandler {
     const commentRepo = new CommentRepository(Database.getInstance().getDb());
 
     commentRepo.delete(payload.id);
-    this.postMessage({ type: 'commentDeleted', payload: { commentId: payload.id } });
+    this.postMessage({
+      type: 'commentDeleted',
+      payload: { commentId: payload.id },
+    });
   }
 
-  private handleRequestDiff(payload: { planId: string; versionNumberOld: number; versionNumberNew: number }): void {
+  private handleRequestDiff(payload: {
+    planId: string;
+    versionNumberOld: number;
+    versionNumberNew: number;
+  }): void {
     const rawDb = Database.getInstance().getDb();
     const planRepo = new PlanRepository(rawDb);
     const commentRepo = new CommentRepository(rawDb);
 
     const allVersions = planRepo.findVersionsByPlanId(payload.planId);
 
-    const versionOld = allVersions.find((v) => v.versionNumber === payload.versionNumberOld) ?? null;
+    const versionOld =
+      allVersions.find((v) => v.versionNumber === payload.versionNumberOld) ??
+      null;
     if (versionOld === null) {
       this.postMessage({
         type: 'error',
-        payload: { message: `Version ${payload.versionNumberOld} not found for plan: ${payload.planId}` },
+        payload: {
+          message: `Version ${payload.versionNumberOld} not found for plan: ${payload.planId}`,
+        },
       });
       return;
     }
 
-    const versionNew = allVersions.find((v) => v.versionNumber === payload.versionNumberNew) ?? null;
+    const versionNew =
+      allVersions.find((v) => v.versionNumber === payload.versionNumberNew) ??
+      null;
     if (versionNew === null) {
       this.postMessage({
         type: 'error',
-        payload: { message: `Version ${payload.versionNumberNew} not found for plan: ${payload.planId}` },
+        payload: {
+          message: `Version ${payload.versionNumberNew} not found for plan: ${payload.planId}`,
+        },
       });
       return;
     }
 
-    const diffLines = new DiffEngine().compute(versionOld.content, versionNew.content);
+    const diffLines = new DiffEngine().compute(
+      versionOld.content,
+      versionNew.content,
+    );
     const oldComments = commentRepo.findByVersionId(versionOld.id);
     const mappedComments = new CommentMapper().map(oldComments, diffLines);
 
@@ -155,7 +210,10 @@ export class MessageHandler {
     });
   }
 
-  private handleSaveReviewPrompt(payload: { versionId: string; prompt: string }): void {
+  private handleSaveReviewPrompt(payload: {
+    versionId: string;
+    prompt: string;
+  }): void {
     const planRepo = new PlanRepository(Database.getInstance().getDb());
     planRepo.updateVersionReviewPrompt(payload.versionId, payload.prompt);
   }

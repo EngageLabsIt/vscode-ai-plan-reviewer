@@ -28,7 +28,9 @@ declare module 'sql.js' {
   interface Statement {
     bind(params?: BindParams): boolean;
     step(): boolean;
-    getAsObject(params?: BindParams): Record<string, number | string | Uint8Array | null>;
+    getAsObject(
+      params?: BindParams,
+    ): Record<string, number | string | Uint8Array | null>;
     run(params?: BindParams): void;
     reset(): void;
     free(): boolean;

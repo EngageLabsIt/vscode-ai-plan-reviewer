@@ -53,15 +53,15 @@ export type RenderedLine =
 
 export interface DiffLine {
   type: 'added' | 'removed' | 'unchanged' | 'modified';
-  lineNumberOld: number | null;   // null for 'added' lines
-  lineNumberNew: number | null;   // null for 'removed' lines
-  content: string;                // new content (or unchanged content)
-  oldContent?: string;            // only for type 'modified'
+  lineNumberOld: number | null; // null for 'added' lines
+  lineNumberNew: number | null; // null for 'removed' lines
+  content: string; // new content (or unchanged content)
+  oldContent?: string; // only for type 'modified'
 }
 
 export interface MappedComment {
   comment: Comment;
-  newTargetStart: number | null;  // null = orphaned
+  newTargetStart: number | null; // null = orphaned
   newTargetEnd: number | null;
   status: 'probably_resolved' | 'probably_unresolved' | 'orphaned';
 }

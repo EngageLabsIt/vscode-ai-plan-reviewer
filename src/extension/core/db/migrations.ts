@@ -114,7 +114,6 @@ ALTER TABLE comments_new RENAME TO comments;
 CREATE INDEX IF NOT EXISTS idx_comments_version ON comments(version_id);
 `;
 
-
 function getColumnNames(db: Database, table: string): string[] {
   const results = db.exec(`PRAGMA table_info(${table})`);
   if (results.length === 0) return [];
@@ -125,7 +124,7 @@ function getCurrentVersion(db: Database): number {
   // schema_version table might not exist yet; guard with exec
   try {
     const results = db.exec(
-      'SELECT version FROM schema_version ORDER BY version DESC LIMIT 1'
+      'SELECT version FROM schema_version ORDER BY version DESC LIMIT 1',
     );
     if (results.length === 0 || results[0].values.length === 0) {
       return 0;
@@ -140,21 +139,25 @@ function getCurrentVersion(db: Database): number {
 export function runMigrations(db: Database): void {
   // Ensure schema_version table exists before querying it
   db.exec(
-    'CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)'
+    'CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)',
   );
 
   const currentVersion = getCurrentVersion(db);
 
   if (currentVersion < 1) {
     db.exec(SCHEMA_V1);
-    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    const stmt = db.prepare(
+      'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
+    );
     stmt.run([1]);
     stmt.free();
   }
 
   if (currentVersion < 2) {
     db.exec(SCHEMA_V2);
-    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    const stmt = db.prepare(
+      'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
+    );
     stmt.run([2]);
     stmt.free();
   }
@@ -162,20 +165,30 @@ export function runMigrations(db: Database): void {
   if (currentVersion < 3) {
     const cols = getColumnNames(db, 'comments');
     if (!cols.includes('target_start_char')) {
-      db.exec('ALTER TABLE comments ADD COLUMN target_start_char INTEGER DEFAULT NULL');
+      db.exec(
+        'ALTER TABLE comments ADD COLUMN target_start_char INTEGER DEFAULT NULL',
+      );
     }
     if (!cols.includes('target_end_char')) {
-      db.exec('ALTER TABLE comments ADD COLUMN target_end_char INTEGER DEFAULT NULL');
+      db.exec(
+        'ALTER TABLE comments ADD COLUMN target_end_char INTEGER DEFAULT NULL',
+      );
     }
-    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    const stmt = db.prepare(
+      'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
+    );
     stmt.run([3]);
     stmt.free();
   }
 
   if (currentVersion < 4) {
     // Normalize all existing comments to 'suggestion' category
-    db.exec("UPDATE comments SET category = 'suggestion' WHERE category != 'suggestion'");
-    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    db.exec(
+      "UPDATE comments SET category = 'suggestion' WHERE category != 'suggestion'",
+    );
+    const stmt = db.prepare(
+      'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
+    );
     stmt.run([4]);
     stmt.free();
   }
@@ -183,9 +196,13 @@ export function runMigrations(db: Database): void {
   if (currentVersion < 5) {
     const cols = getColumnNames(db, 'comments');
     if (!cols.includes('selected_text')) {
-      db.exec('ALTER TABLE comments ADD COLUMN selected_text TEXT DEFAULT NULL');
+      db.exec(
+        'ALTER TABLE comments ADD COLUMN selected_text TEXT DEFAULT NULL',
+      );
     }
-    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    const stmt = db.prepare(
+      'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
+    );
     stmt.run([5]);
     stmt.free();
   }
@@ -193,14 +210,18 @@ export function runMigrations(db: Database): void {
   // Depends on V4 having normalized all category values to 'suggestion'.
   if (currentVersion < 6) {
     db.exec(SCHEMA_V6);
-    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    const stmt = db.prepare(
+      'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
+    );
     stmt.run([6]);
     stmt.free();
   }
 
   if (currentVersion < 7) {
     db.exec(SCHEMA_V7);
-    const stmt = db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)');
+    const stmt = db.prepare(
+      'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
+    );
     stmt.run([7]);
     stmt.free();
   }
@@ -209,10 +230,14 @@ export function runMigrations(db: Database): void {
   // (caused by the old try/catch swallowing ALTER TABLE errors)
   const repairCols = getColumnNames(db, 'comments');
   if (!repairCols.includes('target_start_char')) {
-    db.exec('ALTER TABLE comments ADD COLUMN target_start_char INTEGER DEFAULT NULL');
+    db.exec(
+      'ALTER TABLE comments ADD COLUMN target_start_char INTEGER DEFAULT NULL',
+    );
   }
   if (!repairCols.includes('target_end_char')) {
-    db.exec('ALTER TABLE comments ADD COLUMN target_end_char INTEGER DEFAULT NULL');
+    db.exec(
+      'ALTER TABLE comments ADD COLUMN target_end_char INTEGER DEFAULT NULL',
+    );
   }
   if (!repairCols.includes('selected_text')) {
     db.exec('ALTER TABLE comments ADD COLUMN selected_text TEXT DEFAULT NULL');

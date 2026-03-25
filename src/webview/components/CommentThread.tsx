@@ -20,7 +20,9 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
   const [collapsed, setCollapsed] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editBody, setEditBody] = useState(comment.body);
-  const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(
+    null,
+  );
 
   useEffect(() => {
     if (editRequested === 0) return;
@@ -30,7 +32,9 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
     const timerId = setTimeout(() => {
       portalContainer?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 50);
-    return () => { clearTimeout(timerId); };
+    return () => {
+      clearTimeout(timerId);
+    };
   }, [editRequested, comment.body, portalContainer]);
 
   useEffect(() => {
@@ -51,7 +55,7 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
 
   const lineLabel =
     comment.type === 'global'
-      ? 'Piano intero'
+      ? 'Whole plan'
       : comment.targetStart === comment.targetEnd
         ? `Line ${comment.targetStart}`
         : `Lines ${comment.targetStart}–${comment.targetEnd}`;
@@ -64,54 +68,80 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
   };
 
   const threadEl = (
-    <div className="comment-thread">
+    <div className='comment-thread'>
       <div
-        className="comment-thread__header"
-        onClick={() => { setCollapsed(c => !c); }}
-        role="button"
+        className='comment-thread__header'
+        onClick={() => {
+          setCollapsed((c) => !c);
+        }}
+        role='button'
         tabIndex={0}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setCollapsed(c => !c); }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') setCollapsed((c) => !c);
+        }}
         aria-expanded={!collapsed}
       >
-        <span className="comment-thread__location">📝 {lineLabel}</span>
-        <span className="comment-thread__toggle">{collapsed ? '▸' : '▾'}</span>
+        <span className='comment-thread__location'>📝 {lineLabel}</span>
+        <span className='comment-thread__toggle'>{collapsed ? '▸' : '▾'}</span>
       </div>
 
       {!collapsed && (
         <>
-          <div className="comment-thread__body">
+          <div className='comment-thread__body'>
             {editing ? (
               <textarea
-                className="comment-thread__edit-input"
+                className='comment-thread__edit-input'
                 value={editBody}
-                onChange={e => { setEditBody(e.target.value); }}
-                onKeyDown={e => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleSaveEdit();
+                onChange={(e) => {
+                  setEditBody(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter')
+                    handleSaveEdit();
                   if (e.key === 'Escape') setEditing(false);
                 }}
                 autoFocus
               />
             ) : (
-              <p className="comment-thread__text">{comment.body}</p>
+              <p className='comment-thread__text'>{comment.body}</p>
             )}
           </div>
-          <div className="comment-thread__actions">
+          <div className='comment-thread__actions'>
             {!editing && (
-              <button className="comment-thread__btn comment-thread__btn--edit" onClick={() => { setEditing(true); setEditBody(comment.body); }}>
+              <button
+                className='comment-thread__btn comment-thread__btn--edit'
+                onClick={() => {
+                  setEditing(true);
+                  setEditBody(comment.body);
+                }}
+              >
                 Edit
               </button>
             )}
             {editing && (
               <>
-                <button className="comment-thread__btn comment-thread__btn--save" onClick={handleSaveEdit}>
+                <button
+                  className='comment-thread__btn comment-thread__btn--save'
+                  onClick={handleSaveEdit}
+                >
                   Save
                 </button>
-                <button className="comment-thread__btn comment-thread__btn--cancel" onClick={() => { setEditing(false); }}>
+                <button
+                  className='comment-thread__btn comment-thread__btn--cancel'
+                  onClick={() => {
+                    setEditing(false);
+                  }}
+                >
                   Cancel
                 </button>
               </>
             )}
-            <button className="comment-thread__btn comment-thread__btn--delete" onClick={() => { onDelete(comment.id); }}>
+            <button
+              className='comment-thread__btn comment-thread__btn--delete'
+              onClick={() => {
+                onDelete(comment.id);
+              }}
+            >
               Delete
             </button>
           </div>

@@ -73,7 +73,10 @@ export class CommentMapper {
         pendingRemovedLines.length = 0;
 
         // lineNumberOld and lineNumberNew are both non-null for unchanged lines.
-        oldLineToNewLine.set(dl.lineNumberOld as number, dl.lineNumberNew as number);
+        oldLineToNewLine.set(
+          dl.lineNumberOld as number,
+          dl.lineNumberNew as number,
+        );
       }
     }
 
@@ -87,7 +90,12 @@ export class CommentMapper {
     return comments.map((comment): MappedComment => {
       // Global comments are not line-anchored — pass through unchanged
       if (comment.type === 'global') {
-        return { comment, newTargetStart: 0, newTargetEnd: 0, status: 'probably_unresolved' };
+        return {
+          comment,
+          newTargetStart: 0,
+          newTargetEnd: 0,
+          status: 'probably_unresolved',
+        };
       }
 
       const { targetStart, targetEnd } = comment;

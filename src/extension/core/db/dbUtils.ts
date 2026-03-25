@@ -24,7 +24,7 @@ export function collectRows(stmt: Statement): Row[] {
  * db.prepare(`UPDATE plans SET ${setClause} WHERE id = ?`).run(params);
  */
 export function buildUpdateClause(
-  pairs: Array<[column: string, value: string | number | null]>
+  pairs: Array<[column: string, value: string | number | null]>,
 ): { setClause: string; params: Array<string | number | null> } {
   return {
     setClause: pairs.map(([col]) => `${col} = ?`).join(', '),

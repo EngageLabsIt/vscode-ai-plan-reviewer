@@ -1,4 +1,10 @@
-import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react';
 import { createPortal } from 'react-dom';
 import type { Comment } from '../../shared/models';
 import { MarkdownBody } from './MarkdownBody';
@@ -26,42 +32,96 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
   const bodyRef = useRef<HTMLDivElement>(null);
   const globalAnchorRef = useRef<HTMLDivElement>(null);
   const blockMap = useBlockMapping(bodyRef, html);
+  const [hoveredLine, setHoveredLine] = useState<number | null>(null);
 
   const { openCommentForm, commentFormState } = useComments();
 
   // Lines already commented (line/range) → hide the + button
   // Excludes 'section' and 'global' because they have different anchors
   const commentedLines = useMemo(
-    () => new Set(
-      comments
-        .filter((c) => c.type !== 'global' && c.type !== 'section')
-        .map((c) => c.targetStart)
-    ),
-    [comments]
+    () =>
+      new Set(
+        comments
+          .filter((c) => c.type !== 'global' && c.type !== 'section')
+          .flatMap((c) => {
+            const lines: number[] = [];
+            for (let i = c.targetStart; i <= c.targetEnd; i++) lines.push(i);
+            return lines;
+          }),
+      ),
+    [comments],
   );
 
   // Anchor line for the form: derived from commentFormState (no local state)
   const pendingLine: number | null = useMemo(() => {
-    if (commentFormState === null || commentFormState.type === 'global' || commentFormState.type === 'section') {
+    if (
+      commentFormState === null ||
+      commentFormState.type === 'global' ||
+      commentFormState.type === 'section'
+    ) {
       return null;
     }
     if (commentFormState.type === 'line') return commentFormState.lineNumber;
-    return commentFormState.startLine; // range
+    return commentFormState.endLine; // range — anchor below last line
   }, [commentFormState]);
 
+  // Hover tracking via event delegation — resolves CSS :hover unreliability for li elements
+  const handleMouseOver = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>): void => {
+      const block = (e.target as Element).closest<HTMLElement>(
+        '.annotatable-block[data-line]',
+      );
+      if (block === null) return;
+      const line = parseInt(block.getAttribute('data-line')!, 10);
+      if (!isNaN(line)) {
+        setHoveredLine((prev) => (prev === line ? prev : line));
+      }
+    },
+    [],
+  );
+
+  const handleMouseLeave = useCallback((): void => {
+    setHoveredLine(null);
+  }, []);
+
   // Handler for per-block + button
-  const handleBlockAdd = useCallback((lineNumber: number): void => {
-    openCommentForm({ type: 'line', lineNumber, startCharOffset: null, endCharOffset: null, selectedText: null });
-  }, [openCommentForm]);
+  const handleBlockAdd = useCallback(
+    (lineNumber: number): void => {
+      openCommentForm({
+        type: 'line',
+        lineNumber,
+        startCharOffset: null,
+        endCharOffset: null,
+        selectedText: null,
+      });
+    },
+    [openCommentForm],
+  );
 
   // Handler for text selection (range)
-  const handleRangeAdd = useCallback((targetStart: number, targetEnd: number, selectedText: string): void => {
-    if (targetStart === targetEnd) {
-      openCommentForm({ type: 'line', lineNumber: targetStart, startCharOffset: null, endCharOffset: null, selectedText });
-    } else {
-      openCommentForm({ type: 'range', startLine: targetStart, endLine: targetEnd, startCharOffset: null, endCharOffset: null, selectedText });
-    }
-  }, [openCommentForm]);
+  const handleRangeAdd = useCallback(
+    (targetStart: number, targetEnd: number, selectedText: string): void => {
+      if (targetStart === targetEnd) {
+        openCommentForm({
+          type: 'line',
+          lineNumber: targetStart,
+          startCharOffset: null,
+          endCharOffset: null,
+          selectedText,
+        });
+      } else {
+        openCommentForm({
+          type: 'range',
+          startLine: targetStart,
+          endLine: targetEnd,
+          startCharOffset: null,
+          endCharOffset: null,
+          selectedText,
+        });
+      }
+    },
+    [openCommentForm],
+  );
 
   // Portal container for inline form (line/range)
   const [formContainer, setFormContainer] = useState<HTMLElement | null>(null);
@@ -85,7 +145,8 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
   }, [pendingLine, blockMap]);
 
   // Portal container for global comment form
-  const [globalFormContainer, setGlobalFormContainer] = useState<HTMLElement | null>(null);
+  const [globalFormContainer, setGlobalFormContainer] =
+    useState<HTMLElement | null>(null);
 
   useEffect(() => {
     setGlobalFormContainer(null);
@@ -106,13 +167,17 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
   // Existing global comment
   const globalComment = useMemo(
     () => comments.find((c) => c.type === 'global') ?? null,
-    [comments]
+    [comments],
   );
 
   return (
-    <div className="plan-review-view">
+    <div
+      className='plan-review-view'
+      onMouseOver={handleMouseOver}
+      onMouseLeave={handleMouseLeave}
+    >
       {/* Anchor for global comment (top of page) */}
-      <div ref={globalAnchorRef} className="global-comment-anchor" />
+      <div ref={globalAnchorRef} className='global-comment-anchor' />
 
       {/* Global comment thread */}
       {globalComment !== null && (
@@ -126,27 +191,29 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
       )}
 
       {/* Global comment form */}
-      {globalFormContainer !== null && createPortal(<CommentForm />, globalFormContainer)}
+      {globalFormContainer !== null &&
+        createPortal(<CommentForm />, globalFormContainer)}
 
       <MarkdownBody ref={bodyRef} html={html} />
 
       {/* + buttons per-block (portaled inside each .annotatable-block) */}
       {Array.from(blockMap.entries()).map(([lineNumber, el]) => {
         if (commentedLines.has(lineNumber)) return null;
+        const isVisible = hoveredLine === lineNumber;
         return createPortal(
           <button
-            key={lineNumber}
-            className="block-comment-btn"
-            title="Aggiungi commento"
-            aria-label={`Aggiungi commento alla riga ${lineNumber}`}
+            className={`block-comment-btn${isVisible ? ' block-comment-btn--visible' : ''}`}
+            title='Add comment'
+            aria-label={`Add comment to line ${lineNumber}`}
             onMouseDown={(e) => {
               e.preventDefault(); // prevent deselecting text
               handleBlockAdd(lineNumber);
             }}
           >
-            +
+            <span className='material-symbols-outlined'>add_comment</span>
           </button>,
-          el
+          el,
+          String(lineNumber),
         );
       })}
 
@@ -157,7 +224,13 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
           <CommentThread
             key={comment.id}
             comment={comment}
-            anchorElement={blockMap.get(comment.targetStart)}
+            anchorElement={blockMap.get(
+              comment.type === 'range'
+                ? blockMap.has(comment.targetEnd)
+                  ? comment.targetEnd
+                  : comment.targetStart
+                : comment.targetStart,
+            )}
             onUpdate={onUpdateComment}
             onDelete={onDeleteComment}
           />

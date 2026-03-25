@@ -40,14 +40,13 @@ src/extension/          VS Code host (Node.js) — vertical slice structure
 src/webview/            React UI (runs in webview iframe) — vertical slice structure
   App.tsx               Root component, state management
   hooks/                useVsCodeApi.ts, usePlanMessages.ts
+  components/           PlanReviewView, MarkdownBody, CommentThread, RangeHighlighter
   features/
     comments/           CommentCard, CommentForm, CommentNavigator, CommentContext
-    plan-viewer/        PlanViewer, LineGutter, CodeBlock
-    diff/               DiffViewer
     prompt/             PromptPreview
     search/             SearchBar, useSearch.ts
-    toolbar/            ReviewToolbar, PlanTimeline
-  styles/planViewer.css All styling (BEM naming)
+    toolbar/            ReviewToolbar
+  styles/               planViewer.css, annotations.css — all styling (BEM naming)
 
 src/shared/             Code shared between host and webview
   models.ts             Core types: Plan, Version, Section, Comment, DiffLine, MappedComment
@@ -62,7 +61,7 @@ src/shared/             Code shared between host and webview
 1. User copies markdown to clipboard, runs "New Review" command
 2. `features/review/newReview.ts` parses sections (MarkdownParser), creates Plan+Version in SQLite, opens webview
 3. `features/review/PlanReviewPanel.ts` manages the webview lifecycle; `MessageHandler.ts` handles all incoming messages
-4. Webview receives `planLoaded` message, `usePlanMessages` hook dispatches state updates, React renders with react-markdown
+4. Webview receives `planLoaded` message, `usePlanMessages` hook dispatches state updates, React renders HTML pre-built by `PlanMarkdownEngine` (markdown-it)
 5. User adds comments targeting lines/ranges/sections; `CommentContext` provides callbacks to all comment components
 6. On new version: `CommentMapper` uses `DiffEngine` to remap unresolved comments
 

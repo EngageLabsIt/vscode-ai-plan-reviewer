@@ -1,4 +1,3 @@
 export const NAVIGATOR_MIN_WIDTH = 200;
 export const NAVIGATOR_MAX_WIDTH = 400;
 export const NAVIGATOR_DEFAULT_WIDTH = 280;
-export const HIGHLIGHT_DURATION_MS = 1000;

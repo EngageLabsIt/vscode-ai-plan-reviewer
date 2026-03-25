@@ -5,7 +5,11 @@ import { useTextSelection } from '../hooks/useTextSelection';
 interface RangeHighlighterProps {
   bodyRef: RefObject<HTMLDivElement | null>;
   comments: Comment[];
-  onAddRangeComment: (targetStart: number, targetEnd: number, selectedText: string) => void;
+  onAddRangeComment: (
+    targetStart: number,
+    targetEnd: number,
+    selectedText: string,
+  ) => void;
 }
 
 export const RangeHighlighter: React.FC<RangeHighlighterProps> = ({
@@ -33,14 +37,14 @@ export const RangeHighlighter: React.FC<RangeHighlighterProps> = ({
 
     // Apply new marks for range/line comments with selectedText
     const rangeComments = comments.filter(
-      (c) => c.selectedText !== null && c.selectedText.length > 0
+      (c) => c.selectedText !== null && c.selectedText.length > 0,
     );
 
     for (const comment of rangeComments) {
       if (comment.selectedText === null) continue;
       // Find text node containing the selected text within the target block
       const startEl = container.querySelector<HTMLElement>(
-        `[data-line="${comment.targetStart}"]`
+        `[data-line="${comment.targetStart}"]`,
       );
       if (startEl === null) continue;
 
@@ -67,24 +71,24 @@ export const RangeHighlighter: React.FC<RangeHighlighterProps> = ({
         found = true;
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comments, bodyRef.current?.innerHTML]);
 
   if (selection === null) return null;
 
   return (
     <div
-      className="range-toolbar"
+      className='range-toolbar'
       style={{
         position: 'fixed',
         left: selection.rect.left,
-        top: selection.rect.top - 44,
+        top: selection.rect.top + 10,
         zIndex: 1000,
       }}
     >
       <button
-        className="range-toolbar__btn"
-        title="Aggiungi commento al testo selezionato"
+        className='range-toolbar__btn'
+        title='Add comment to selected text'
         onMouseDown={(e) => {
           // Use mousedown to fire before selection is cleared
           e.preventDefault();
@@ -93,7 +97,7 @@ export const RangeHighlighter: React.FC<RangeHighlighterProps> = ({
           onAddRangeComment(targetStart, targetEnd, text);
         }}
       >
-        +
+        <span className='material-symbols-outlined'>add_comment</span>
       </button>
     </div>
   );
