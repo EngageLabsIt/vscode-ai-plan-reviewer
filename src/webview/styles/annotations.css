@@ -220,6 +220,21 @@ li.annotatable-block:hover::before {
   color: white;
 }
 
+/* ── Portals inside lists ───────────────────────────────────────────────── */
+/* comment-thread-portal and comment-form-portal are plain <div>s inserted via
+   insertAdjacentElement('afterend') on <li> elements. When the <li> is inside a
+   <ul> or <ol> the portal div ends up as a sibling of <li>. Browsers render it
+   fine (no bullet marker), but we need to reset any list-inherited spacing. */
+.markdown-body ul > .comment-thread-portal,
+.markdown-body ol > .comment-thread-portal,
+.markdown-body ul > .comment-form-portal,
+.markdown-body ol > .comment-form-portal {
+  display: block;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
 /* ── Annotation Comment Form ─────────────────────────────────────────────── */
 .annotation-comment-form {
   margin: 6px 0 12px 0;

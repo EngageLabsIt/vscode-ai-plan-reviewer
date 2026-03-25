@@ -40,9 +40,8 @@ export class PlanMarkdownEngine {
   }
 
   private _addBlockIdRenderer(): void {
-    // Target token types that represent block-level elements
+    // paragraph_open is handled separately below (needs to skip <p> inside <li>).
     const blockTokens = [
-      'paragraph_open',
       'heading_open',
       'blockquote_open',
       'code_block',
@@ -65,11 +64,33 @@ export class PlanMarkdownEngine {
       };
     }
 
-    // list_item_open needs special handling:
-    // - Loose lists (blank lines between items): markdown-it wraps content in <p>, which already
-    //   gets annotatable-block above. Skip the <li> to avoid duplicate/oversized annotation blocks.
-    // - Tight lists (no blank lines): no inner <p>, so annotate the <li> itself.
-    //   Clamp data-line-end = data-line (single line) so nested sub-lists don't inflate the range.
+    // paragraph_open: skip annotation when the paragraph is the immediate child of a list_item_open
+    // (loose lists). In that case the <li> itself is the canonical anchor (see list_item_open below).
+    const originalParagraph = this.md.renderer.rules['paragraph_open'];
+    this.md.renderer.rules['paragraph_open'] = (
+      tokens,
+      idx,
+      options,
+      env,
+      self,
+    ) => {
+      const token = tokens[idx];
+      const prevToken = tokens[idx - 1];
+      const isInsideListItem = prevToken?.type === 'list_item_open';
+      if (!isInsideListItem && token.map && token.map.length >= 2) {
+        token.attrSet('data-line', String(token.map[0] + 1));
+        token.attrSet('data-line-end', String(token.map[1]));
+        token.attrJoin('class', 'annotatable-block');
+      }
+      if (originalParagraph) {
+        return originalParagraph(tokens, idx, options, env, self);
+      }
+      return self.renderToken(tokens, idx, options);
+    };
+
+    // list_item_open: annotate ALL <li> elements (tight and loose lists).
+    // data-line-end is clamped to the same line as data-line so that nested sub-lists
+    // don't inflate the hover/comment range of the parent item.
     const originalListItem = this.md.renderer.rules['list_item_open'];
     this.md.renderer.rules['list_item_open'] = (
       tokens,
@@ -79,9 +100,7 @@ export class PlanMarkdownEngine {
       self,
     ) => {
       const token = tokens[idx];
-      const nextToken = tokens[idx + 1];
-      const isTight = nextToken?.type !== 'paragraph_open';
-      if (isTight && token.map && token.map.length >= 2) {
+      if (token.map && token.map.length >= 2) {
         const line = token.map[0] + 1;
         token.attrSet('data-line', String(line));
         token.attrSet('data-line-end', String(line));
