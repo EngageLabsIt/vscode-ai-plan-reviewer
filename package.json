@@ -38,10 +38,6 @@
     },
     "commands": [
       {
-        "command": "planReviewer.helloWorld",
-        "title": "Hello World"
-      },
-      {
         "command": "planReviewer.openPanel",
         "title": "Plan Reviewer: Open Panel",
         "category": "Plan Reviewer"
@@ -49,11 +45,6 @@
       {
         "command": "planReviewer.newReview",
         "title": "New Review",
-        "category": "Plan Reviewer"
-      },
-      {
-        "command": "planReviewer.loadTestPlan",
-        "title": "Load Test Plan (Dev)",
         "category": "Plan Reviewer"
       },
       {
@@ -132,14 +123,7 @@
         }
       ]
     },
-    "keybindings": [
-      {
-        "command": "planReviewer.generatePrompt",
-        "key": "ctrl+shift+g",
-        "mac": "cmd+shift+g",
-        "when": "planReviewer.panelVisible"
-      }
-    ],
+    "keybindings": [],
     "configuration": {
       "title": "Plan Reviewer",
       "properties": {
@@ -159,11 +143,16 @@
     "lint": "eslint src",
     "test": "vitest run",
     "test:e2e": "playwright test --project=chromium",
-    "capture": "npm run build && playwright test --project=capture --grep @capture && node scripts/copy-captures.mjs"
+    "capture": "npm run build && playwright test --project=capture --grep @capture && node scripts/copy-captures.mjs",
+    "prettier:fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css}\"",
+    "prettier:ci": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css}\"",
+    "code:fix": "npm run prettier:fix",
+    "code:ci": "npm run prettier:ci"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@types/diff": "^7.0.2",
+    "@types/markdown-it": "^14.1.2",
     "@types/node": "^20.0.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -176,10 +165,10 @@
     "vitest": "^2.1.0"
   },
   "dependencies": {
-    "@types/markdown-it": "^14.1.2",
     "diff": "^8.0.3",
     "highlight.js": "^11.11.1",
     "markdown-it": "^14.1.1",
+    "prettier": "^3.8.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "sql.js": "^1.14.1",

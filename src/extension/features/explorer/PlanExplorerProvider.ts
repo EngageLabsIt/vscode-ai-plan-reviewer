@@ -37,8 +37,9 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     return PlanExplorerProvider._instance;
   }
 
-  private readonly _onDidChangeTreeData =
-    new vscode.EventEmitter<PlanTreeItem | undefined | null | void>();
+  private readonly _onDidChangeTreeData = new vscode.EventEmitter<
+    PlanTreeItem | undefined | null | void
+  >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   private _filterTerm = '';
@@ -72,9 +73,10 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     // Open the latest version, or the specific version if clicked on a version node
     const versionNumber = item.versionNumber;
     const allVersions = planRepo.findVersionsByPlanId(item.planId);
-    const version = versionNumber !== undefined
-      ? allVersions.find((v) => v.versionNumber === versionNumber)
-      : allVersions[allVersions.length - 1];
+    const version =
+      versionNumber !== undefined
+        ? allVersions.find((v) => v.versionNumber === versionNumber)
+        : allVersions[allVersions.length - 1];
 
     if (version === undefined) {
       void vscode.window.showErrorMessage('No version found.');
@@ -89,7 +91,14 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     const panel = PlanReviewPanel.createOrShow(context.extensionUri);
     panel.postMessage({
       type: 'planLoaded',
-      payload: { plan, version, versions: allVersions, sections, comments, html: new PlanMarkdownEngine().render(version.content, sections).html },
+      payload: {
+        plan,
+        version,
+        versions: allVersions,
+        sections,
+        comments,
+        html: new PlanMarkdownEngine().render(version.content, sections).html,
+      },
     });
   }
 
@@ -97,7 +106,10 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
     if (item.planId === undefined) return;
     const db = Database.getInstance().getDb();
     const planRepo = new PlanRepository(db);
-    planRepo.update(item.planId, { status: 'archived', updatedAt: new Date().toISOString() });
+    planRepo.update(item.planId, {
+      status: 'archived',
+      updatedAt: new Date().toISOString(),
+    });
     this.refresh();
   }
 
@@ -139,7 +151,10 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
 
   handleSearch(): void {
     void vscode.window
-      .showInputBox({ prompt: 'Search plans by title', placeHolder: 'e.g. authentication' })
+      .showInputBox({
+        prompt: 'Search plans by title',
+        placeHolder: 'e.g. authentication',
+      })
       .then((term) => {
         this.setFilter(term ?? '');
       });
@@ -167,10 +182,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
   // ── Private builders ───────────────────────────────────────────────────────
 
   private _buildRootGroups(): PlanTreeItem[] {
-    return [
-      this._makeGroupItem('In Review'),
-      this._makeGroupItem('Archived'),
-    ];
+    return [this._makeGroupItem('In Review'), this._makeGroupItem('Archived')];
   }
 
   private _makeGroupItem(label: string): PlanTreeItem {
@@ -200,7 +212,7 @@ export class PlanExplorerProvider implements vscode.TreeDataProvider<PlanTreeIte
 
     return plans.map((plan): PlanTreeItem => {
       const openCount = commentRepo.countByPlanId(plan.id);
-      const date = new Date(plan.updatedAt).toLocaleDateString('it-IT', {
+      const date = new Date(plan.updatedAt).toLocaleDateString('en-US', {
         day: 'numeric',
         month: 'short',
       });

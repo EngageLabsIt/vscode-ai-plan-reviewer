@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { Comment, Section } from '../../../shared/models';
 import { PromptGenerator } from '../../../shared/PromptGenerator';
 import type { PromptMode } from '../../../shared/PromptGenerator';
@@ -134,37 +140,42 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
 
   return (
     <div
-      className="prompt-preview__backdrop"
+      className='prompt-preview__backdrop'
       onClick={handleBackdropClick}
-      role="presentation"
+      role='presentation'
     >
       <div
-        className="prompt-preview"
-        role="dialog"
+        className='prompt-preview'
+        role='dialog'
         aria-modal={true}
-        aria-labelledby="prompt-preview-title"
+        aria-labelledby='prompt-preview-title'
       >
-        <div className="prompt-preview__header">
-          <h3 id="prompt-preview-title" className="prompt-preview__title">
+        <div className='prompt-preview__header'>
+          <h3 id='prompt-preview-title' className='prompt-preview__title'>
             Generate Review Prompt — v{versionNumber}
           </h3>
           <button
             ref={closeBtnRef}
-            className="prompt-preview__close"
+            className='prompt-preview__close'
             onClick={onClose}
-            aria-label="Close"
+            aria-label='Close'
           >
             ✕
           </button>
         </div>
 
         {showWarning && (
-          <div className="prompt-preview__old-plan-warning" role="alert">
-            This plan was created {ageHours} hours ago. Copilot might not remember it. Use &lsquo;Full context&rsquo; mode?
+          <div className='prompt-preview__old-plan-warning' role='alert'>
+            This plan was created {ageHours} hours ago. Copilot might not
+            remember it. Use &lsquo;Full context&rsquo; mode?
           </div>
         )}
 
-        <div className="prompt-preview__mode-bar" role="group" aria-label="Prompt mode">
+        <div
+          className='prompt-preview__mode-bar'
+          role='group'
+          aria-label='Prompt mode'
+        >
           <button
             ref={sameSessionBtnRef}
             className={
@@ -172,7 +183,9 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
                 ? 'prompt-preview__mode-btn prompt-preview__mode-btn--active'
                 : 'prompt-preview__mode-btn'
             }
-            onClick={() => { setMode('same_session'); }}
+            onClick={() => {
+              setMode('same_session');
+            }}
             aria-pressed={mode === 'same_session'}
           >
             Same session
@@ -184,33 +197,38 @@ export const PromptPreview: React.FC<PromptPreviewProps> = ({
                 ? 'prompt-preview__mode-btn prompt-preview__mode-btn--active'
                 : 'prompt-preview__mode-btn'
             }
-            onClick={() => { setMode('new_session'); }}
+            onClick={() => {
+              setMode('new_session');
+            }}
             aria-pressed={mode === 'new_session'}
           >
             Full context
           </button>
         </div>
 
-        <div className="prompt-preview__body">
-          <div className="prompt-preview__content" aria-label="Generated review prompt">
+        <div className='prompt-preview__body'>
+          <div
+            className='prompt-preview__content'
+            aria-label='Generated review prompt'
+          >
             {prompt}
           </div>
         </div>
 
-        <div className="prompt-preview__footer">
-          <span className="prompt-preview__footer-feedback">
+        <div className='prompt-preview__footer'>
+          <span className='prompt-preview__footer-feedback'>
             {copied ? '✓ Copied to clipboard! Paste in Copilot Chat.' : ''}
           </span>
           <button
             ref={copyBtnRef}
-            className="prompt-preview__btn prompt-preview__btn--primary"
+            className='prompt-preview__btn prompt-preview__btn--primary'
             onClick={handleCopy}
           >
             Copy to Clipboard
           </button>
           <button
             ref={closeBtnBottomRef}
-            className="prompt-preview__btn prompt-preview__btn--secondary"
+            className='prompt-preview__btn prompt-preview__btn--secondary'
             onClick={onClose}
           >
             Close

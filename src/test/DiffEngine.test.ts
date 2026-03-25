@@ -52,15 +52,27 @@ describe('DiffEngine', () => {
 
     // 'a' unchanged at old=1, new=1
     const aLine = result.find((dl) => dl.content === 'a');
-    expect(aLine).toMatchObject({ type: 'unchanged', lineNumberOld: 1, lineNumberNew: 1 });
+    expect(aLine).toMatchObject({
+      type: 'unchanged',
+      lineNumberOld: 1,
+      lineNumberNew: 1,
+    });
 
     // INSERTED is added at new=2
     const inserted = result.find((dl) => dl.content === 'INSERTED');
-    expect(inserted).toMatchObject({ type: 'added', lineNumberOld: null, lineNumberNew: 2 });
+    expect(inserted).toMatchObject({
+      type: 'added',
+      lineNumberOld: null,
+      lineNumberNew: 2,
+    });
 
     // 'b' is now at new=3 (was old=2)
     const bLine = result.find((dl) => dl.content === 'b');
-    expect(bLine).toMatchObject({ type: 'unchanged', lineNumberOld: 2, lineNumberNew: 3 });
+    expect(bLine).toMatchObject({
+      type: 'unchanged',
+      lineNumberOld: 2,
+      lineNumberNew: 3,
+    });
   });
 
   it('completely different texts produce only removed + added lines', () => {
@@ -100,12 +112,28 @@ describe('DiffEngine', () => {
 
     const added = result.filter((dl) => dl.type === 'added');
     expect(added).toHaveLength(3);
-    expect(added[0]).toMatchObject({ content: 'X', lineNumberOld: null, lineNumberNew: 2 });
-    expect(added[1]).toMatchObject({ content: 'Y', lineNumberOld: null, lineNumberNew: 3 });
-    expect(added[2]).toMatchObject({ content: 'Z', lineNumberOld: null, lineNumberNew: 4 });
+    expect(added[0]).toMatchObject({
+      content: 'X',
+      lineNumberOld: null,
+      lineNumberNew: 2,
+    });
+    expect(added[1]).toMatchObject({
+      content: 'Y',
+      lineNumberOld: null,
+      lineNumberNew: 3,
+    });
+    expect(added[2]).toMatchObject({
+      content: 'Z',
+      lineNumberOld: null,
+      lineNumberNew: 4,
+    });
 
     const bLine = result.find((dl) => dl.content === 'b');
-    expect(bLine).toMatchObject({ type: 'unchanged', lineNumberOld: 2, lineNumberNew: 5 });
+    expect(bLine).toMatchObject({
+      type: 'unchanged',
+      lineNumberOld: 2,
+      lineNumberNew: 5,
+    });
   });
 
   it('blank lines in the middle of text are preserved as unchanged lines', () => {

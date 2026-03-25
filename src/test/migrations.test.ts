@@ -4,7 +4,7 @@ import type { SqlJsStatic, Database as SqlDatabase } from 'sql.js';
 import * as path from 'path';
 import { runMigrations } from '../extension/core/db/migrations';
 
-// sql.js inizializzato una volta (WASM costoso); ogni test crea new SQL.Database()
+// sql.js initialized once (WASM is expensive); each test creates a new SQL.Database()
 let SQL: SqlJsStatic;
 
 beforeAll(async () => {
@@ -23,40 +23,40 @@ function getColumns(db: SqlDatabase, table: string): string[] {
 
 function getSchemaVersion(db: SqlDatabase): number {
   const result = db.exec(
-    'SELECT version FROM schema_version ORDER BY version DESC LIMIT 1'
+    'SELECT version FROM schema_version ORDER BY version DESC LIMIT 1',
   );
   if (result.length === 0 || result[0].values.length === 0) return 0;
   return result[0].values[0][0] as number;
 }
 
 describe('runMigrations', () => {
-  it('fresh DB (V0→latest): crea tutte le colonne incluse target_start_char e target_end_char', () => {
+  it('fresh DB (V0→latest): creates all columns including target_start_char and target_end_char', () => {
     const db = new SQL.Database();
     runMigrations(db);
 
     const cols = getColumns(db, 'comments');
     expect(cols).toContain('id');
     expect(cols).toContain('body');
-    expect(cols).toContain('carried_from_id');   // V2
+    expect(cols).toContain('carried_from_id'); // V2
     expect(cols).toContain('target_start_char'); // V3
-    expect(cols).toContain('target_end_char');   // V3
-    expect(cols).toContain('selected_text');     // V5
+    expect(cols).toContain('target_end_char'); // V3
+    expect(cols).toContain('selected_text'); // V5
 
     db.close();
   });
 
-  it('schema version tracking: versione corrente dopo migrazione fresh', () => {
+  it('schema version tracking: current version after fresh migration', () => {
     const db = new SQL.Database();
     runMigrations(db);
     expect(getSchemaVersion(db)).toBe(7);
     db.close();
   });
 
-  it('V2→latest upgrade: aggiunge le colonne V3 su un DB già a versione 2', () => {
+  it('V2→latest upgrade: adds V3 columns on a DB already at version 2', () => {
     const db = new SQL.Database();
 
-    // Costruisce fixture V2 manualmente (DDL V1 + ALTER V2 + version=2)
-    // senza chiamare runMigrations, per testare davvero il path di upgrade
+    // Manually build a V2 fixture (DDL V1 + ALTER V2 + version=2)
+    // without calling runMigrations, to truly test the upgrade path
     db.exec(`
       CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);
       CREATE TABLE IF NOT EXISTS plans (
@@ -84,10 +84,12 @@ describe('runMigrations', () => {
         resolved INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
       );
     `);
-    db.exec('ALTER TABLE comments ADD COLUMN carried_from_id TEXT REFERENCES comments(id)');
+    db.exec(
+      'ALTER TABLE comments ADD COLUMN carried_from_id TEXT REFERENCES comments(id)',
+    );
     db.exec('INSERT OR REPLACE INTO schema_version (version) VALUES (2)');
 
-    // Precondizione: colonne V3 assenti
+    // Precondition: V3 columns absent
     const colsBefore = getColumns(db, 'comments');
     expect(colsBefore).not.toContain('target_start_char');
     expect(colsBefore).not.toContain('target_end_char');
@@ -154,7 +156,7 @@ describe('runMigrations', () => {
     db.close();
   });
 
-  it('V5: aggiunge colonna selected_text su DB già a versione 4', () => {
+  it('V5: adds selected_text column on a DB already at version 4', () => {
     const db = new SQL.Database();
 
     // Build a V4 fixture manually
@@ -185,9 +187,15 @@ describe('runMigrations', () => {
         resolved INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
       );
     `);
-    db.exec('ALTER TABLE comments ADD COLUMN carried_from_id TEXT REFERENCES comments(id)');
-    db.exec('ALTER TABLE comments ADD COLUMN target_start_char INTEGER DEFAULT NULL');
-    db.exec('ALTER TABLE comments ADD COLUMN target_end_char INTEGER DEFAULT NULL');
+    db.exec(
+      'ALTER TABLE comments ADD COLUMN carried_from_id TEXT REFERENCES comments(id)',
+    );
+    db.exec(
+      'ALTER TABLE comments ADD COLUMN target_start_char INTEGER DEFAULT NULL',
+    );
+    db.exec(
+      'ALTER TABLE comments ADD COLUMN target_end_char INTEGER DEFAULT NULL',
+    );
     db.exec('INSERT OR REPLACE INTO schema_version (version) VALUES (4)');
 
     const colsBefore = getColumns(db, 'comments');
@@ -258,7 +266,9 @@ describe('runMigrations', () => {
     expect(getSchemaVersion(db)).toBe(7);
 
     // 2. Pre-existing comment survives
-    const existingRows = db.exec("SELECT id, body FROM comments WHERE id = 'cmt-1'");
+    const existingRows = db.exec(
+      "SELECT id, body FROM comments WHERE id = 'cmt-1'",
+    );
     expect(existingRows.length).toBe(1);
     expect(existingRows[0].values[0][1]).toBe('Pre-existing comment');
 
@@ -271,7 +281,9 @@ describe('runMigrations', () => {
       `);
     }).not.toThrow();
 
-    const globalRows = db.exec("SELECT type FROM comments WHERE id = 'cmt-global'");
+    const globalRows = db.exec(
+      "SELECT type FROM comments WHERE id = 'cmt-global'",
+    );
     expect(globalRows[0].values[0][0]).toBe('global');
 
     // Verify that an invalid type is still rejected by the CHECK constraint
@@ -279,14 +291,14 @@ describe('runMigrations', () => {
       db.run(
         `INSERT INTO comments (id, version_id, type, target_start, target_end, section_id, body, category, created_at)
          VALUES ('cmt-invalid', ?, 'invalid', 1, 1, NULL, 'Bad type', 'suggestion', '2025-01-01T00:00:00.000Z')`,
-        ['ver-1']
+        ['ver-1'],
       );
     }).toThrow();
 
     db.close();
   });
 
-  it('V7: rimuove colonna resolved dalla tabella comments', () => {
+  it('V7: removes resolved column from comments table', () => {
     const db = new SQL.Database();
 
     // Build a V6 fixture (has resolved column)
@@ -334,25 +346,27 @@ describe('runMigrations', () => {
     `);
     db.exec('INSERT OR REPLACE INTO schema_version (version) VALUES (6)');
 
-    // Precondizione: resolved presente
+    // Precondition: resolved column is present
     const colsBefore = getColumns(db, 'comments');
     expect(colsBefore).toContain('resolved');
 
     runMigrations(db);
 
-    // Dopo V7: resolved rimossa, comment sopravvive
+    // After V7: resolved removed, comment survives
     const colsAfter = getColumns(db, 'comments');
     expect(colsAfter).not.toContain('resolved');
     expect(getSchemaVersion(db)).toBe(7);
 
-    const survivingRows = db.exec("SELECT id, body FROM comments WHERE id = 'cmt-v7'");
+    const survivingRows = db.exec(
+      "SELECT id, body FROM comments WHERE id = 'cmt-v7'",
+    );
     expect(survivingRows.length).toBe(1);
     expect(survivingRows[0].values[0][1]).toBe('Survive V7');
 
     db.close();
   });
 
-  it('idempotency: seconda chiamata su DB già migrato non lancia e version rimane stabile', () => {
+  it('idempotency: second call on already-migrated DB does not throw and version stays stable', () => {
     const db = new SQL.Database();
     runMigrations(db);
     const versionAfterFirst = getSchemaVersion(db);

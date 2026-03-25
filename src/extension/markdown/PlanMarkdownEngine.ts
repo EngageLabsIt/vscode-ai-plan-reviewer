@@ -17,11 +17,17 @@ export class PlanMarkdownEngine {
       highlight: (str, lang) => {
         if (lang && hljs.getLanguage(lang)) {
           try {
-            return hljs.highlight(str, { language: lang, ignoreIllegals: true }).value;
-          } catch { /* fall through */ }
+            return hljs.highlight(str, { language: lang, ignoreIllegals: true })
+              .value;
+          } catch {
+            /* fall through */
+          }
         }
-        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      }
+        return str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      },
     });
 
     this._addBlockIdRenderer();
@@ -39,7 +45,6 @@ export class PlanMarkdownEngine {
       'paragraph_open',
       'heading_open',
       'blockquote_open',
-      'list_item_open',
       'code_block',
       'fence',
     ];
@@ -59,6 +64,34 @@ export class PlanMarkdownEngine {
         return self.renderToken(tokens, idx, options);
       };
     }
+
+    // list_item_open needs special handling:
+    // - Loose lists (blank lines between items): markdown-it wraps content in <p>, which already
+    //   gets annotatable-block above. Skip the <li> to avoid duplicate/oversized annotation blocks.
+    // - Tight lists (no blank lines): no inner <p>, so annotate the <li> itself.
+    //   Clamp data-line-end = data-line (single line) so nested sub-lists don't inflate the range.
+    const originalListItem = this.md.renderer.rules['list_item_open'];
+    this.md.renderer.rules['list_item_open'] = (
+      tokens,
+      idx,
+      options,
+      env,
+      self,
+    ) => {
+      const token = tokens[idx];
+      const nextToken = tokens[idx + 1];
+      const isTight = nextToken?.type !== 'paragraph_open';
+      if (isTight && token.map && token.map.length >= 2) {
+        const line = token.map[0] + 1;
+        token.attrSet('data-line', String(line));
+        token.attrSet('data-line-end', String(line));
+        token.attrJoin('class', 'annotatable-block');
+      }
+      if (originalListItem) {
+        return originalListItem(tokens, idx, options, env, self);
+      }
+      return self.renderToken(tokens, idx, options);
+    };
   }
 
   private _applySectionWrappers(html: string, sections: Section[]): string {
@@ -72,10 +105,15 @@ export class PlanMarkdownEngine {
 
     for (const sec of sorted) {
       // Match <h1, <h2, etc. with data-line="N"
-      const re = new RegExp(`<h${sec.level}[^>]*data-line="${sec.startLine}"[^>]*>`);
+      const re = new RegExp(
+        `<h${sec.level}[^>]*data-line="${sec.startLine}"[^>]*>`,
+      );
       const m = re.exec(html);
       if (m === null) continue;
-      markers.push({ pos: m.index, tag: `<section data-section-id="${sec.id}" data-level="${sec.level}">` });
+      markers.push({
+        pos: m.index,
+        tag: `<section data-section-id="${sec.id}" data-level="${sec.level}">`,
+      });
     }
 
     // Sort markers by position

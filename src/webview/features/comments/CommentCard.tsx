@@ -33,26 +33,32 @@ const CommentCardComponent: React.FC<CommentCardProps> = ({ comment }) => {
   }, [comment.body]);
 
   return (
-    <div className="comment-card-wrap">
-      <div className="comment-card">
-        <div className="comment-card-header">
-          <span className="comment-card-ref">{refLabel(comment)}</span>
-          {comment.carriedFromId !== null && <span className="comment-card-carried-badge">↩ carried</span>}
+    <div className='comment-card-wrap'>
+      <div className='comment-card'>
+        <div className='comment-card-header'>
+          <span className='comment-card-ref'>{refLabel(comment)}</span>
+          {comment.carriedFromId !== null && (
+            <span className='comment-card-carried-badge'>↩ carried</span>
+          )}
           {!isEditing && (
-            <div className="comment-card-actions">
+            <div className='comment-card-actions'>
               <button
-                className="edit-btn"
-                title="Edit comment"
-                onClick={() => { setIsEditing(true); }}
+                className='edit-btn'
+                title='Edit comment'
+                onClick={() => {
+                  setIsEditing(true);
+                }}
               >
-                Edit
+                <span className='material-symbols-outlined'>edit</span>
               </button>
               <button
-                className="delete-btn"
-                title="Delete comment"
-                onClick={() => { onDelete(comment.id); }}
+                className='delete-btn'
+                title='Delete comment'
+                onClick={() => {
+                  onDelete(comment.id);
+                }}
               >
-                Delete
+                <span className='material-symbols-outlined'>delete</span>
               </button>
             </div>
           )}
@@ -61,19 +67,31 @@ const CommentCardComponent: React.FC<CommentCardProps> = ({ comment }) => {
         {isEditing ? (
           <>
             <textarea
-              className="comment-card-edit-textarea"
+              className='comment-card-edit-textarea'
               value={editBody}
-              onChange={(e) => { setEditBody(e.target.value); }}
+              onChange={(e) => {
+                setEditBody(e.target.value);
+              }}
               rows={3}
               autoFocus
             />
-            <div className="comment-card-edit-actions">
-              <button className="comment-form__btn comment-form__btn--cancel" onClick={handleCancelEdit}>Cancel</button>
-              <button className="comment-form__btn comment-form__btn--submit" onClick={handleSave}>Save</button>
+            <div className='comment-card-edit-actions'>
+              <button
+                className='comment-form__btn comment-form__btn--cancel'
+                onClick={handleCancelEdit}
+              >
+                Cancel
+              </button>
+              <button
+                className='comment-form__btn comment-form__btn--submit'
+                onClick={handleSave}
+              >
+                Save
+              </button>
             </div>
           </>
         ) : (
-          <div className="comment-card-body">{comment.body}</div>
+          <div className='comment-card-body'>{comment.body}</div>
         )}
       </div>
     </div>

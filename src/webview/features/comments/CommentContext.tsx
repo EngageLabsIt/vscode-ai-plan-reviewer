@@ -7,14 +7,27 @@ import type { Comment } from '../../../shared/models';
 
 export type CommentFormState =
   | { type: 'section'; sectionId: string; heading: string }
-  | { type: 'line';    lineNumber: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null }
-  | { type: 'range';   startLine: number; endLine: number; startCharOffset: number | null; endCharOffset: number | null; selectedText: string | null }
+  | {
+      type: 'line';
+      lineNumber: number;
+      startCharOffset: number | null;
+      endCharOffset: number | null;
+      selectedText: string | null;
+    }
+  | {
+      type: 'range';
+      startLine: number;
+      endLine: number;
+      startCharOffset: number | null;
+      endCharOffset: number | null;
+      selectedText: string | null;
+    }
   | { type: 'global' };
 
 export interface CommentContextValue {
   comments: Comment[];
-  onEdit:    (id: string, body: string) => void;
-  onDelete:  (id: string) => void;
+  onEdit: (id: string, body: string) => void;
+  onDelete: (id: string) => void;
   commentFormState: CommentFormState | null;
   activeCommentLine: number | null;
   openCommentForm: (state: CommentFormState) => void;
@@ -31,7 +44,9 @@ const CommentContext = createContext<CommentContextValue | null>(null);
 export function useComments(): CommentContextValue {
   const ctx = useContext(CommentContext);
   if (ctx === null) {
-    throw new Error('useComments must be used within a CommentContext.Provider');
+    throw new Error(
+      'useComments must be used within a CommentContext.Provider',
+    );
   }
   return ctx;
 }

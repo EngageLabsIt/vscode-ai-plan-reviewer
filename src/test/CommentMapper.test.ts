@@ -87,7 +87,11 @@ describe('CommentMapper', () => {
 
   it('range comment spanning unchanged lines → probably_unresolved with both ends mapped', () => {
     const diff = engine.compute('a\nb\nc\nd\n', 'a\nb\nc\nd\n');
-    const comment = makeComment({ type: 'range', targetStart: 2, targetEnd: 4 });
+    const comment = makeComment({
+      type: 'range',
+      targetStart: 2,
+      targetEnd: 4,
+    });
 
     const [result] = mapper.map([comment], diff);
     expect(result.status).toBe('probably_unresolved');
@@ -99,9 +103,9 @@ describe('CommentMapper', () => {
     // old: a, b, c, d  →  new: a, NEW, c, d  (b removed + NEW added, c and d shift)
     const diff = engine.compute('a\nb\nc\nd\n', 'a\nNEW\nc\nd\n');
 
-    const commentOnB = makeComment({ id: 'c-b', targetStart: 2, targetEnd: 2 });   // removed → resolved
-    const commentOnC = makeComment({ id: 'c-c', targetStart: 3, targetEnd: 3 });   // unchanged at 3→3
-    const commentOnD = makeComment({ id: 'c-d', targetStart: 4, targetEnd: 4 });   // unchanged at 4→4
+    const commentOnB = makeComment({ id: 'c-b', targetStart: 2, targetEnd: 2 }); // removed → resolved
+    const commentOnC = makeComment({ id: 'c-c', targetStart: 3, targetEnd: 3 }); // unchanged at 3→3
+    const commentOnD = makeComment({ id: 'c-d', targetStart: 4, targetEnd: 4 }); // unchanged at 4→4
 
     const results = mapper.map([commentOnB, commentOnC, commentOnD], diff);
     expect(results[0].status).toBe('probably_resolved');
@@ -123,7 +127,11 @@ describe('CommentMapper', () => {
     // old: a, b, c, d  →  new: INSERTED, a, b, c, d
     // range comment spanning lines 2–3 (b–c) should shift to 3–4
     const diff = engine.compute('a\nb\nc\nd\n', 'INSERTED\na\nb\nc\nd\n');
-    const comment = makeComment({ type: 'range', targetStart: 2, targetEnd: 3 });
+    const comment = makeComment({
+      type: 'range',
+      targetStart: 2,
+      targetEnd: 3,
+    });
 
     const [result] = mapper.map([comment], diff);
     expect(result.status).toBe('probably_unresolved');

@@ -55,7 +55,7 @@ export class PlanRepository {
   insert(plan: Plan): void {
     const stmt = this.db.prepare(
       `INSERT INTO plans (id, title, source, created_at, updated_at, status, tags)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
     );
     stmt.run([
       plan.id,
@@ -83,7 +83,7 @@ export class PlanRepository {
 
   findAll(): Plan[] {
     const stmt = this.db.prepare(
-      'SELECT * FROM plans ORDER BY created_at DESC'
+      'SELECT * FROM plans ORDER BY created_at DESC',
     );
     const rows = collectRows(stmt);
     return rows.map(rowToPlan);
@@ -91,13 +91,15 @@ export class PlanRepository {
 
   update(
     id: string,
-    updates: Partial<Pick<Plan, 'title' | 'status' | 'tags' | 'updatedAt'>>
+    updates: Partial<Pick<Plan, 'title' | 'status' | 'tags' | 'updatedAt'>>,
   ): void {
     const pairs: Array<[string, string | number | null]> = [];
-    if (updates.title !== undefined)     pairs.push(['title',      updates.title]);
-    if (updates.status !== undefined)    pairs.push(['status',     updates.status]);
-    if (updates.tags !== undefined)      pairs.push(['tags',       JSON.stringify(updates.tags)]);
-    if (updates.updatedAt !== undefined) pairs.push(['updated_at', updates.updatedAt]);
+    if (updates.title !== undefined) pairs.push(['title', updates.title]);
+    if (updates.status !== undefined) pairs.push(['status', updates.status]);
+    if (updates.tags !== undefined)
+      pairs.push(['tags', JSON.stringify(updates.tags)]);
+    if (updates.updatedAt !== undefined)
+      pairs.push(['updated_at', updates.updatedAt]);
 
     if (pairs.length === 0) return;
 
@@ -117,7 +119,7 @@ export class PlanRepository {
   search(term: string): Plan[] {
     const escaped = term.replace(/%/g, '\\%').replace(/_/g, '\\_');
     const stmt = this.db.prepare(
-      "SELECT * FROM plans WHERE title LIKE ? ESCAPE '\\' ORDER BY created_at DESC"
+      "SELECT * FROM plans WHERE title LIKE ? ESCAPE '\\' ORDER BY created_at DESC",
     );
     stmt.bind([`%${escaped}%`]);
     const rows = collectRows(stmt);
@@ -129,7 +131,7 @@ export class PlanRepository {
   insertVersion(version: Version): void {
     const stmt = this.db.prepare(
       `INSERT INTO versions (id, plan_id, version_number, content, review_prompt, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?)`,
     );
     stmt.run([
       version.id,
@@ -156,7 +158,7 @@ export class PlanRepository {
 
   findVersionsByPlanId(planId: string): Version[] {
     const stmt = this.db.prepare(
-      'SELECT * FROM versions WHERE plan_id = ? ORDER BY version_number ASC'
+      'SELECT * FROM versions WHERE plan_id = ? ORDER BY version_number ASC',
     );
     stmt.bind([planId]);
     const rows = collectRows(stmt);
@@ -165,7 +167,7 @@ export class PlanRepository {
 
   findLatestVersion(planId: string): Version | null {
     const stmt = this.db.prepare(
-      'SELECT * FROM versions WHERE plan_id = ? ORDER BY version_number DESC LIMIT 1'
+      'SELECT * FROM versions WHERE plan_id = ? ORDER BY version_number DESC LIMIT 1',
     );
     stmt.bind([planId]);
     if (!stmt.step()) {
@@ -178,7 +180,9 @@ export class PlanRepository {
   }
 
   updateVersionReviewPrompt(versionId: string, prompt: string): void {
-    const stmt = this.db.prepare('UPDATE versions SET review_prompt = ? WHERE id = ?');
+    const stmt = this.db.prepare(
+      'UPDATE versions SET review_prompt = ? WHERE id = ?',
+    );
     stmt.run([prompt, versionId]);
     stmt.free();
   }

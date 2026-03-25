@@ -28,7 +28,7 @@ export class SectionRepository {
   insert(section: Section): void {
     const stmt = this.db.prepare(
       `INSERT INTO sections (id, version_id, heading, start_line, end_line, level, order_index)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
     );
     stmt.run([
       section.id,
@@ -45,7 +45,7 @@ export class SectionRepository {
   insertMany(sections: Section[]): void {
     const stmt = this.db.prepare(
       `INSERT INTO sections (id, version_id, heading, start_line, end_line, level, order_index)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const section of sections) {
       stmt.run([
@@ -63,7 +63,7 @@ export class SectionRepository {
 
   findByVersionId(versionId: string): Section[] {
     const stmt = this.db.prepare(
-      'SELECT * FROM sections WHERE version_id = ? ORDER BY order_index ASC'
+      'SELECT * FROM sections WHERE version_id = ? ORDER BY order_index ASC',
     );
     stmt.bind([versionId]);
     return collectRows(stmt).map(rowToSection);
@@ -88,9 +88,7 @@ export class SectionRepository {
   }
 
   deleteByVersionId(versionId: string): void {
-    const stmt = this.db.prepare(
-      'DELETE FROM sections WHERE version_id = ?'
-    );
+    const stmt = this.db.prepare('DELETE FROM sections WHERE version_id = ?');
     stmt.run([versionId]);
     stmt.free();
   }

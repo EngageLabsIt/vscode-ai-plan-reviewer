@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useVsCodeApi } from './hooks/useVsCodeApi';
 import { usePlanMessages } from './hooks/usePlanMessages';
 import { useSearch } from './features/search/useSearch';
@@ -18,10 +24,13 @@ import './styles/annotations.css';
 
 export const App: React.FC = () => {
   const vscode = useVsCodeApi();
-  const { loadedPlan, setLoadedPlan, loadedPlanRef } = usePlanMessages(vscode);
+  const { loadedPlan, loadedPlanRef } = usePlanMessages(vscode);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
-  const [commentFormState, setCommentFormState] = useState<CommentFormState | null>(null);
-  const [activeCommentLine, setActiveCommentLine] = useState<number | null>(null);
+  const [commentFormState, setCommentFormState] =
+    useState<CommentFormState | null>(null);
+  const [activeCommentLine, setActiveCommentLine] = useState<number | null>(
+    null,
+  );
   const activeCommentLineRef = useRef<number | null>(null);
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
   const [globalCommentEditCount, setGlobalCommentEditCount] = useState(0);
@@ -40,7 +49,6 @@ export const App: React.FC = () => {
     handleSearchNext,
     handleSearchPrev,
     handleSearchClose,
-    searchCurrentLine,
   } = useSearch(loadedPlan?.content);
 
   // ── Active comment line setter ─────────────────────────────────────────────
@@ -67,18 +75,24 @@ export const App: React.FC = () => {
   // ── Approve ────────────────────────────────────────────────────────────────
   const handleApprove = useCallback((): void => {
     if (loadedPlan === null) return;
-    vscode.postMessage({ type: 'approvePlan', payload: { planId: loadedPlan.plan.id } });
+    vscode.postMessage({
+      type: 'approvePlan',
+      payload: { planId: loadedPlan.plan.id },
+    });
   }, [loadedPlan, vscode]);
 
   // ── Select version ─────────────────────────────────────────────────────────
-  const handleSelectVersion = useCallback((versionNumber: number): void => {
-    const current = loadedPlanRef.current;
-    if (current === null) return;
-    vscode.postMessage({
-      type: 'requestPlan',
-      payload: { planId: current.plan.id, versionNumber },
-    });
-  }, [vscode]);
+  const handleSelectVersion = useCallback(
+    (versionNumber: number): void => {
+      const current = loadedPlanRef.current;
+      if (current === null) return;
+      vscode.postMessage({
+        type: 'requestPlan',
+        payload: { planId: current.plan.id, versionNumber },
+      });
+    },
+    [vscode],
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -99,48 +113,104 @@ export const App: React.FC = () => {
     };
   }, [handleToggleSearch]);
 
-  const handleEditComment = useCallback((id: string, body: string): void => {
-    vscode.postMessage({ type: 'updateComment', payload: { id, body } });
-  }, [vscode]);
+  const handleEditComment = useCallback(
+    (id: string, body: string): void => {
+      vscode.postMessage({ type: 'updateComment', payload: { id, body } });
+    },
+    [vscode],
+  );
 
-  const handleDeleteComment = useCallback((id: string): void => {
-    vscode.postMessage({ type: 'deleteComment', payload: { id } });
-  }, [vscode]);
+  const handleDeleteComment = useCallback(
+    (id: string): void => {
+      vscode.postMessage({ type: 'deleteComment', payload: { id } });
+    },
+    [vscode],
+  );
 
-  const handleCommentFormSubmit = useCallback((body: string): void => {
-    if (commentFormState === null || loadedPlan === null) return;
-    const category: Comment['category'] = 'suggestion';
+  const handleCommentFormSubmit = useCallback(
+    (body: string): void => {
+      if (commentFormState === null || loadedPlan === null) return;
+      const category: Comment['category'] = 'suggestion';
 
-    if (commentFormState.type === 'section') {
-      const section = loadedPlan.sections.find((s) => s.id === commentFormState.sectionId);
-      if (section === undefined) return;
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'section', sectionId: section.id, targetStart: section.startLine, targetEnd: section.endLine, body, category, carriedFromId: null, targetStartChar: null, targetEndChar: null, selectedText: null } });
-    } else if (commentFormState.type === 'line') {
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'line', sectionId: null, targetStart: commentFormState.lineNumber, targetEnd: commentFormState.lineNumber, body, category, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
-    } else if (commentFormState.type === 'range') {
-      vscode.postMessage({ type: 'addComment', payload: { versionId: loadedPlan.versionId, type: 'range', sectionId: null, targetStart: commentFormState.startLine, targetEnd: commentFormState.endLine, body, category, carriedFromId: null, targetStartChar: commentFormState.startCharOffset ?? null, targetEndChar: commentFormState.endCharOffset ?? null, selectedText: commentFormState.selectedText ?? null } });
-    } else if (commentFormState.type === 'global') {
-      vscode.postMessage({
-        type: 'addComment',
-        payload: {
-          versionId: loadedPlan.versionId,
-          type: 'global',
-          sectionId: null,
-          targetStart: 0,
-          targetEnd: 0,
-          body,
-          category: 'suggestion' as const,
-          carriedFromId: null,
-          targetStartChar: null,
-          targetEndChar: null,
-          selectedText: null,
-        },
-      });
-    }
+      if (commentFormState.type === 'section') {
+        const section = loadedPlan.sections.find(
+          (s) => s.id === commentFormState.sectionId,
+        );
+        if (section === undefined) return;
+        vscode.postMessage({
+          type: 'addComment',
+          payload: {
+            versionId: loadedPlan.versionId,
+            type: 'section',
+            sectionId: section.id,
+            targetStart: section.startLine,
+            targetEnd: section.endLine,
+            body,
+            category,
+            carriedFromId: null,
+            targetStartChar: null,
+            targetEndChar: null,
+            selectedText: null,
+          },
+        });
+      } else if (commentFormState.type === 'line') {
+        vscode.postMessage({
+          type: 'addComment',
+          payload: {
+            versionId: loadedPlan.versionId,
+            type: 'line',
+            sectionId: null,
+            targetStart: commentFormState.lineNumber,
+            targetEnd: commentFormState.lineNumber,
+            body,
+            category,
+            carriedFromId: null,
+            targetStartChar: commentFormState.startCharOffset ?? null,
+            targetEndChar: commentFormState.endCharOffset ?? null,
+            selectedText: commentFormState.selectedText ?? null,
+          },
+        });
+      } else if (commentFormState.type === 'range') {
+        vscode.postMessage({
+          type: 'addComment',
+          payload: {
+            versionId: loadedPlan.versionId,
+            type: 'range',
+            sectionId: null,
+            targetStart: commentFormState.startLine,
+            targetEnd: commentFormState.endLine,
+            body,
+            category,
+            carriedFromId: null,
+            targetStartChar: commentFormState.startCharOffset ?? null,
+            targetEndChar: commentFormState.endCharOffset ?? null,
+            selectedText: commentFormState.selectedText ?? null,
+          },
+        });
+      } else if (commentFormState.type === 'global') {
+        vscode.postMessage({
+          type: 'addComment',
+          payload: {
+            versionId: loadedPlan.versionId,
+            type: 'global',
+            sectionId: null,
+            targetStart: 0,
+            targetEnd: 0,
+            body,
+            category: 'suggestion' as const,
+            carriedFromId: null,
+            targetStartChar: null,
+            targetEndChar: null,
+            selectedText: null,
+          },
+        });
+      }
 
-    setCommentFormState(null);
-    setActiveLine(null);
-  }, [commentFormState, loadedPlan, vscode, setActiveLine]);
+      setCommentFormState(null);
+      setActiveLine(null);
+    },
+    [commentFormState, loadedPlan, vscode, setActiveLine],
+  );
 
   const handleCommentFormCancel = useCallback((): void => {
     setCommentFormState(null);
@@ -158,28 +228,31 @@ export const App: React.FC = () => {
   }, [loadedPlan]);
 
   // ── Render ────────────────────────────────────────────────────────────────
-  const commentContextValue = useMemo(() => ({
-    comments: loadedPlan?.comments ?? [],
-    onEdit: handleEditComment,
-    onDelete: handleDeleteComment,
-    commentFormState,
-    activeCommentLine,
-    openCommentForm: setCommentFormState,
-    closeCommentForm: handleCommentFormCancel,
-    onCommentSubmit: handleCommentFormSubmit,
-  }), [
-    loadedPlan,
-    handleEditComment,
-    handleDeleteComment,
-    commentFormState,
-    activeCommentLine,
-    handleCommentFormCancel,
-    handleCommentFormSubmit,
-  ]);
+  const commentContextValue = useMemo(
+    () => ({
+      comments: loadedPlan?.comments ?? [],
+      onEdit: handleEditComment,
+      onDelete: handleDeleteComment,
+      commentFormState,
+      activeCommentLine,
+      openCommentForm: setCommentFormState,
+      closeCommentForm: handleCommentFormCancel,
+      onCommentSubmit: handleCommentFormSubmit,
+    }),
+    [
+      loadedPlan,
+      handleEditComment,
+      handleDeleteComment,
+      commentFormState,
+      activeCommentLine,
+      handleCommentFormCancel,
+      handleCommentFormSubmit,
+    ],
+  );
 
   return (
     <CommentContext.Provider value={commentContextValue}>
-      <div className="plan-reviewer-app">
+      <div className='plan-reviewer-app'>
         {loadedPlan !== null ? (
           <>
             <ReviewToolbar
@@ -195,9 +268,11 @@ export const App: React.FC = () => {
               onApprove={handleApprove}
               onSelectVersion={handleSelectVersion}
               onGlobalComment={handleGlobalComment}
-              hasGlobalComment={loadedPlan.comments.some((c) => c.type === 'global')}
+              hasGlobalComment={loadedPlan.comments.some(
+                (c) => c.type === 'global',
+              )}
             />
-            <div className="plan-content-area">
+            <div className='plan-content-area'>
               {searchOpen && (
                 <SearchBar
                   query={searchQuery}
@@ -216,9 +291,7 @@ export const App: React.FC = () => {
                 onDeleteComment={handleDeleteComment}
                 globalCommentEditRequested={globalCommentEditCount}
               />
-              <CommentNavigator
-                isOpen={navigatorOpen}
-              />
+              <CommentNavigator isOpen={navigatorOpen} />
             </div>
 
             {promptPreviewOpen && (
@@ -235,8 +308,9 @@ export const App: React.FC = () => {
             )}
           </>
         ) : (
-          <p className="plan-reviewer-placeholder">
-            Plan Reviewer — Ready. Use &ldquo;Plan Reviewer: New Review&rdquo; to start.
+          <p className='plan-reviewer-placeholder'>
+            Plan Reviewer — Ready. Use &ldquo;Plan Reviewer: New Review&rdquo;
+            to start.
           </p>
         )}
       </div>

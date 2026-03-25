@@ -34,18 +34,24 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
   const panelRef = useRef<HTMLElement>(null);
 
   // ── Resize logic ──────────────────────────────────────────────────────────
-  const handleResizeMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>): void => {
-    e.preventDefault();
-    isDragging.current = true;
-    dragStartX.current = e.clientX;
-    dragStartWidth.current = panelWidth;
-  }, [panelWidth]);
+  const handleResizeMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>): void => {
+      e.preventDefault();
+      isDragging.current = true;
+      dragStartX.current = e.clientX;
+      dragStartWidth.current = panelWidth;
+    },
+    [panelWidth],
+  );
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent): void => {
       if (!isDragging.current) return;
       const delta = dragStartX.current - e.clientX;
-      const newWidth = Math.min(NAVIGATOR_MAX_WIDTH, Math.max(NAVIGATOR_MIN_WIDTH, dragStartWidth.current + delta));
+      const newWidth = Math.min(
+        NAVIGATOR_MAX_WIDTH,
+        Math.max(NAVIGATOR_MIN_WIDTH, dragStartWidth.current + delta),
+      );
       setPanelWidth(newWidth);
     };
 
@@ -75,31 +81,35 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
       ref={panelRef}
       className={navigatorClass}
       style={panelStyle}
-      aria-label="Comment navigator"
+      aria-label='Comment navigator'
       aria-hidden={!isOpen}
     >
       {/* Drag handle — left border */}
       <div
-        className="comment-navigator__resize-handle"
+        className='comment-navigator__resize-handle'
         onMouseDown={handleResizeMouseDown}
-        role="separator"
-        aria-label="Resize comment navigator"
-        aria-orientation="vertical"
+        role='separator'
+        aria-label='Resize comment navigator'
+        aria-orientation='vertical'
       />
 
       {/* Panel header */}
-      <div className="comment-navigator__header">
-        <span className="comment-navigator__header-title">Comments</span>
+      <div className='comment-navigator__header'>
+        <span className='comment-navigator__header-title'>Comments</span>
       </div>
 
       {/* Tab bar */}
-      <div className="comment-navigator__tabs" role="tablist" aria-label="Navigator tabs">
+      <div
+        className='comment-navigator__tabs'
+        role='tablist'
+        aria-label='Navigator tabs'
+      >
         <button
-          role="tab"
-          id="tab-comments"
+          role='tab'
+          id='tab-comments'
           aria-selected={true}
-          aria-controls="tabpanel-comments"
-          className="comment-navigator__tab comment-navigator__tab--active"
+          aria-controls='tabpanel-comments'
+          className='comment-navigator__tab comment-navigator__tab--active'
         >
           Comments
         </button>
@@ -107,18 +117,18 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
 
       {/* Comments tab panel */}
       <div
-        role="tabpanel"
-        id="tabpanel-comments"
-        aria-labelledby="tab-comments"
-        className="comment-navigator__tabpanel"
+        role='tabpanel'
+        id='tabpanel-comments'
+        aria-labelledby='tab-comments'
+        className='comment-navigator__tabpanel'
       >
-        <div className="comment-navigator__body">
+        <div className='comment-navigator__body'>
           {comments.length === 0 ? (
-            <p className="comment-navigator__empty">No comments yet.</p>
+            <p className='comment-navigator__empty'>No comments yet.</p>
           ) : (
-            <ul className="comment-navigator__group-list" role="list">
+            <ul className='comment-navigator__group-list' role='list'>
               {comments.map((c: Comment) => (
-                <li key={c.id} role="listitem">
+                <li key={c.id} role='listitem'>
                   <CommentCard comment={c} />
                 </li>
               ))}
@@ -126,7 +136,6 @@ export const CommentNavigator: React.FC<CommentNavigatorProps> = ({
           )}
         </div>
       </div>
-
     </aside>
   );
 };

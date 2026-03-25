@@ -15,7 +15,6 @@ export interface UseSearchReturn {
   handleSearchNext: () => void;
   handleSearchPrev: () => void;
   handleSearchClose: () => void;
-  searchCurrentLine: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -74,9 +73,6 @@ export function useSearch(content: string | undefined): UseSearchReturn {
     setSearchIndex(0);
   }, []);
 
-  const searchCurrentLine =
-    searchMatches.length > 0 && searchIndex > 0 ? searchMatches[searchIndex - 1] : null;
-
   return {
     searchOpen,
     searchQuery,
@@ -87,6 +83,5 @@ export function useSearch(content: string | undefined): UseSearchReturn {
     handleSearchNext,
     handleSearchPrev,
     handleSearchClose,
-    searchCurrentLine,
   };
 }

@@ -6,11 +6,12 @@ import { runMigrations } from './core/db/migrations';
 import { PlanReviewPanel } from './features/review/PlanReviewPanel';
 import { PlanExplorerProvider } from './features/explorer/PlanExplorerProvider';
 import { registerNewReviewCommand } from './features/review/newReview';
-import { registerLoadTestPlanCommand } from './features/review/loadTestPlan';
 import { registerExportPlanCommand } from './features/import-export/exportPlan';
 import { registerImportPlanCommand } from './features/import-export/importPlan';
 
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
+export async function activate(
+  context: vscode.ExtensionContext,
+): Promise<void> {
   console.log('Plan Reviewer is now active!');
 
   // Ensure the global storage directory exists
@@ -43,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     'planReviewer.openPanel',
     () => {
       PlanReviewPanel.createOrShow(context.extensionUri);
-    }
+    },
   );
 
   // Explorer context-menu commands
@@ -82,10 +83,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     explorerSearchCommand,
     explorerRefreshCommand,
     registerNewReviewCommand(context),
-    registerLoadTestPlanCommand(context),
     registerExportPlanCommand(context),
     registerImportPlanCommand(context),
-    { dispose: () => { void Database.getInstance().close(); } }
+    {
+      dispose: () => {
+        void Database.getInstance().close();
+      },
+    },
   );
 }
 

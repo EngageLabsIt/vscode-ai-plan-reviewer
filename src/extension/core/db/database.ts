@@ -30,12 +30,14 @@ export class Database {
     } else {
       this.db = new SQL.Database();
     }
+
+    this.db.run('PRAGMA foreign_keys = ON');
   }
 
   getDb(): SqlDatabase {
     if (this.db === null) {
       throw new Error(
-        'Database has not been initialized. Call init() before using getDb().'
+        'Database has not been initialized. Call init() before using getDb().',
       );
     }
     return this.db;

@@ -100,25 +100,29 @@ function makeDemoComment(overrides: Partial<Comment>): Comment {
 // The demo comments — all suggestions now
 const C1 = makeDemoComment({
   id: 'c1',
-  targetStart: 4, targetEnd: 4,
+  targetStart: 4,
+  targetEnd: 4,
   type: 'line',
   body: "The database setup doesn't handle rollback on error. Add a transaction wrapper with try/catch and proper rollback mechanism.",
 });
 const C2 = makeDemoComment({
   id: 'c2',
-  targetStart: 25, targetEnd: 28,
+  targetStart: 25,
+  targetEnd: 28,
   type: 'range',
   body: 'Consider using CQRS pattern instead of pure REST for write operations. This would separate command and query responsibilities.',
 });
 const C3 = makeDemoComment({
   id: 'c3',
-  targetStart: 31, targetEnd: 31,
+  targetStart: 31,
+  targetEnd: 31,
   type: 'line',
   body: 'Why RS256 instead of HS256? RS256 adds complexity with key rotation. Is this justified for the scale of this project?',
 });
 const C4 = makeDemoComment({
   id: 'c4',
-  targetStart: 1, targetEnd: 1,
+  targetStart: 1,
+  targetEnd: 1,
   type: 'line',
   body: 'Good overall structure. The plan covers all the essential aspects of auth implementation.',
 });
@@ -298,8 +302,14 @@ describe('DiffEngine — realistic plan content (demo plan v1 → v2)', () => {
 
   it('v1 → v2: plan title (line 1) is unchanged at old=1, new=1', () => {
     const result = engine.compute(DEMO_PLAN_V1, DEMO_PLAN_V2);
-    const title = result.find((dl) => dl.content.startsWith('# Implementation'));
-    expect(title).toMatchObject({ type: 'unchanged', lineNumberOld: 1, lineNumberNew: 1 });
+    const title = result.find((dl) =>
+      dl.content.startsWith('# Implementation'),
+    );
+    expect(title).toMatchObject({
+      type: 'unchanged',
+      lineNumberOld: 1,
+      lineNumberNew: 1,
+    });
   });
 
   it('v1 → v2: SQL line at old line 11 shifts to new line 12', () => {
@@ -387,8 +397,10 @@ describe('CommentMapper — demo plan v1 → v2 revision', () => {
   });
 
   it('comment on replaced content → probably_resolved', () => {
-    const v1 = '## JWT\nUse RS256 algorithm with rotating key pairs.\nMore content\n';
-    const v2 = '## JWT\nUse HS256 for simplicity — RS256 is overkill here.\nMore content\n';
+    const v1 =
+      '## JWT\nUse RS256 algorithm with rotating key pairs.\nMore content\n';
+    const v2 =
+      '## JWT\nUse HS256 for simplicity — RS256 is overkill here.\nMore content\n';
     const localDiff = engine.compute(v1, v2);
     const commentOnLine = makeDemoComment({ targetStart: 2, targetEnd: 2 });
     const [result] = mapper.map([commentOnLine], localDiff);
@@ -409,13 +421,21 @@ describe('PromptGenerator — edge cases (demo interactions)', () => {
   };
 
   it('version number in heading updates correctly for v2', () => {
-    const result = generator.generate({ ...baseOpts, comments: [], mode: 'same_session' });
+    const result = generator.generate({
+      ...baseOpts,
+      comments: [],
+      mode: 'same_session',
+    });
     expect(result).toContain('Iteration 2');
     expect(result).not.toContain('Iteration 1');
   });
 
   it('no comments → no Suggestions section, only heading + closing', () => {
-    const result = generator.generate({ ...baseOpts, comments: [], mode: 'same_session' });
+    const result = generator.generate({
+      ...baseOpts,
+      comments: [],
+      mode: 'same_session',
+    });
     expect(result).not.toContain('### Suggestions');
     expect(result).toContain('Please generate an updated version');
   });
@@ -436,8 +456,18 @@ describe('PromptGenerator — edge cases (demo interactions)', () => {
   });
 
   it('multiple suggestions are all listed under the same Suggestions section', () => {
-    const s1 = makeDemoComment({ id: 's1', body: 'First suggestion', targetStart: 3, targetEnd: 3 });
-    const s2 = makeDemoComment({ id: 's2', body: 'Second suggestion', targetStart: 7, targetEnd: 7 });
+    const s1 = makeDemoComment({
+      id: 's1',
+      body: 'First suggestion',
+      targetStart: 3,
+      targetEnd: 3,
+    });
+    const s2 = makeDemoComment({
+      id: 's2',
+      body: 'Second suggestion',
+      targetStart: 7,
+      targetEnd: 7,
+    });
     const result = generator.generate({
       ...baseOpts,
       comments: [s1, s2],

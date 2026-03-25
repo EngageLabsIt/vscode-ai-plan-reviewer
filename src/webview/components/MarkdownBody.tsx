@@ -6,15 +6,13 @@ import React, { forwardRef, memo } from 'react';
  * that the annotation layer hooks into.
  */
 export const MarkdownBody = memo(
-  forwardRef<HTMLDivElement, { html: string }>(
-    ({ html }, ref) => (
-      <div
-        ref={ref}
-        className="markdown-body"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-    )
-  )
+  forwardRef<HTMLDivElement, { html: string }>(({ html }, ref) => (
+    <div
+      ref={ref}
+      className='markdown-body'
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  )),
 );
 
 MarkdownBody.displayName = 'MarkdownBody';

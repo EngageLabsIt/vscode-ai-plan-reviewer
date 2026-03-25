@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Dispatch, RefObject, SetStateAction } from 'react';
+import type { RefObject } from 'react';
 import type { HostMessage } from '../../shared/messages';
 import type { Comment, Plan, Section, Version } from '../../shared/models';
 import type { VsCodeApi } from './useVsCodeApi';
@@ -21,7 +21,6 @@ export interface LoadedPlan {
 
 export interface UsePlanMessagesReturn {
   loadedPlan: LoadedPlan | null;
-  setLoadedPlan: Dispatch<SetStateAction<LoadedPlan | null>>;
   loadedPlanRef: RefObject<LoadedPlan | null>;
 }
 
@@ -49,7 +48,8 @@ export function usePlanMessages(vscodeApi: VsCodeApi): UsePlanMessagesReturn {
       const message = event.data;
 
       if (message.type === 'planLoaded') {
-        const { plan, version, versions, sections, comments, html } = message.payload;
+        const { plan, version, versions, sections, comments, html } =
+          message.payload;
         const next: LoadedPlan = {
           plan,
           versionId: version.id,
@@ -66,7 +66,9 @@ export function usePlanMessages(vscodeApi: VsCodeApi): UsePlanMessagesReturn {
 
       if (message.type === 'commentAdded') {
         setLoadedPlan((prev) =>
-          prev !== null ? { ...prev, comments: [...prev.comments, message.payload] } : prev,
+          prev !== null
+            ? { ...prev, comments: [...prev.comments, message.payload] }
+            : prev,
         );
         return;
       }
@@ -77,7 +79,9 @@ export function usePlanMessages(vscodeApi: VsCodeApi): UsePlanMessagesReturn {
           prev !== null
             ? {
                 ...prev,
-                comments: prev.comments.map((c) => (c.id === updated.id ? updated : c)),
+                comments: prev.comments.map((c) =>
+                  c.id === updated.id ? updated : c,
+                ),
               }
             : prev,
         );
@@ -88,7 +92,10 @@ export function usePlanMessages(vscodeApi: VsCodeApi): UsePlanMessagesReturn {
         const { commentId } = message.payload;
         setLoadedPlan((prev) =>
           prev !== null
-            ? { ...prev, comments: prev.comments.filter((c) => c.id !== commentId) }
+            ? {
+                ...prev,
+                comments: prev.comments.filter((c) => c.id !== commentId),
+              }
             : prev,
         );
         return;
@@ -121,5 +128,5 @@ export function usePlanMessages(vscodeApi: VsCodeApi): UsePlanMessagesReturn {
     };
   }, []);
 
-  return { loadedPlan, setLoadedPlan, loadedPlanRef };
+  return { loadedPlan, loadedPlanRef };
 }

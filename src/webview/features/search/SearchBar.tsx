@@ -40,28 +40,45 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   return (
-    <div className="search-bar">
-      <span className="material-symbols-outlined search-bar__icon">search</span>
+    <div className='search-bar'>
+      <span className='material-symbols-outlined search-bar__icon'>search</span>
       <input
         ref={inputRef}
-        className="search-bar__input"
-        type="text"
+        className='search-bar__input'
+        type='text'
         value={query}
-        onChange={(e) => { onQueryChange(e.target.value); }}
+        onChange={(e) => {
+          onQueryChange(e.target.value);
+        }}
         onKeyDown={handleKeyDown}
-        placeholder="Search..."
+        placeholder='Search...'
       />
-      <span className="search-bar__count">
+      <span className='search-bar__count'>
         {totalMatches > 0 ? `${currentIndex} / ${totalMatches}` : '0 / 0'}
       </span>
-      <button className="search-bar__btn" onClick={onPrev} aria-label="Previous match" title="Previous match (Shift+Enter)">
-        <span className="material-symbols-outlined">arrow_upward</span>
+      <button
+        className='search-bar__btn'
+        onClick={onPrev}
+        aria-label='Previous match'
+        title='Previous match (Shift+Enter)'
+      >
+        <span className='material-symbols-outlined'>arrow_upward</span>
       </button>
-      <button className="search-bar__btn" onClick={onNext} aria-label="Next match" title="Next match (Enter)">
-        <span className="material-symbols-outlined">arrow_downward</span>
+      <button
+        className='search-bar__btn'
+        onClick={onNext}
+        aria-label='Next match'
+        title='Next match (Enter)'
+      >
+        <span className='material-symbols-outlined'>arrow_downward</span>
       </button>
-      <button className="search-bar__btn" onClick={onClose} aria-label="Close search" title="Close search (Escape)">
-        <span className="material-symbols-outlined">close</span>
+      <button
+        className='search-bar__btn'
+        onClick={onClose}
+        aria-label='Close search'
+        title='Close search (Escape)'
+      >
+        <span className='material-symbols-outlined'>close</span>
       </button>
     </div>
   );
