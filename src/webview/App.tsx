@@ -290,6 +290,8 @@ export const App: React.FC = () => {
                 onUpdateComment={handleEditComment}
                 onDeleteComment={handleDeleteComment}
                 globalCommentEditRequested={globalCommentEditCount}
+                searchMatches={searchMatches}
+                searchIndex={searchIndex}
               />
               <CommentNavigator isOpen={navigatorOpen} />
             </div>

@@ -20,6 +20,8 @@ interface PlanReviewViewProps {
   onUpdateComment: (id: string, body: string) => void;
   onDeleteComment: (id: string) => void;
   globalCommentEditRequested?: number;
+  searchMatches?: number[];
+  searchIndex?: number;
 }
 
 export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
@@ -28,11 +30,17 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
   onUpdateComment,
   onDeleteComment,
   globalCommentEditRequested = 0,
+  searchMatches = [],
+  searchIndex = 0,
 }) => {
   const bodyRef = useRef<HTMLDivElement>(null);
   const globalAnchorRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<HTMLDivElement>(null);
   const blockMap = useBlockMapping(bodyRef, html);
   const [hoveredLine, setHoveredLine] = useState<number | null>(null);
+  const [markerPositions, setMarkerPositions] = useState<
+    { top: number; isCurrent: boolean }[]
+  >([]);
 
   const { openCommentForm, commentFormState } = useComments();
 
@@ -170,8 +178,89 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
     [comments],
   );
 
+  // PBI-004: recalculate scrollbar marker positions
+  const recalcMarkers = useCallback(() => {
+    const view = viewRef.current;
+    const body = bodyRef.current;
+    if (view === null || body === null || searchMatches.length === 0) {
+      setMarkerPositions([]);
+      return;
+    }
+    const { scrollHeight } = view;
+    const viewTop = view.getBoundingClientRect().top;
+    const currentLine = searchMatches[searchIndex - 1];
+    setMarkerPositions(
+      searchMatches.map((line) => {
+        const el = body.querySelector<HTMLElement>(
+          `.annotatable-block[data-line="${line}"]`,
+        );
+        const elTop =
+          el !== null
+            ? el.getBoundingClientRect().top - viewTop + view.scrollTop
+            : 0;
+        return {
+          top: (elTop / scrollHeight) * 100,
+          isCurrent: line === currentLine,
+        };
+      }),
+    );
+  }, [searchMatches, searchIndex]);
+
+  // PBI-002: apply/remove search highlight classes from annotatable blocks
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (body === null) return;
+    const matchSet = new Set(searchMatches);
+    const currentLine =
+      searchMatches.length > 0 ? searchMatches[searchIndex - 1] : undefined;
+    body
+      .querySelectorAll<HTMLElement>('.annotatable-block[data-line]')
+      .forEach((el) => {
+        el.classList.remove(
+          'line-row--search-match',
+          'line-row--search-current',
+        );
+        const line = parseInt(el.getAttribute('data-line')!, 10);
+        if (matchSet.has(line)) {
+          el.classList.add(
+            line === currentLine
+              ? 'line-row--search-current'
+              : 'line-row--search-match',
+          );
+        }
+      });
+  }, [searchMatches, searchIndex, html]);
+
+  // PBI-003: scroll smooth to current match
+  useEffect(() => {
+    if (searchMatches.length === 0) return;
+    const currentLine = searchMatches[searchIndex - 1];
+    if (currentLine === undefined) return;
+    const el = bodyRef.current?.querySelector<HTMLElement>(
+      `.annotatable-block[data-line="${currentLine}"]`,
+    );
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [searchMatches, searchIndex, html]);
+
+  // PBI-004: recalc markers when search state or content changes
+  useEffect(() => {
+    recalcMarkers();
+  }, [recalcMarkers, html]);
+
+  // PBI-004: recalc markers on container resize
+  useEffect(() => {
+    const view = viewRef.current;
+    if (view === null) return;
+    const observer = new ResizeObserver(recalcMarkers);
+    observer.observe(view);
+    return () => {
+      observer.disconnect();
+    };
+  }, [recalcMarkers]);
+
   return (
     <div
+      ref={viewRef}
       className='plan-review-view'
       onMouseOver={handleMouseOver}
       onMouseLeave={handleMouseLeave}
@@ -244,6 +333,21 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
         comments={comments}
         onAddRangeComment={handleRangeAdd}
       />
+
+      {/* PBI-004: scrollbar search markers overlay */}
+      {markerPositions.length > 0 && (
+        <div className='search-scrollbar-overlay' aria-hidden='true'>
+          {markerPositions.map(({ top, isCurrent }, i) => (
+            <div
+              key={i}
+              className={`search-scrollbar-marker${
+                isCurrent ? ' search-scrollbar-marker--current' : ''
+              }`}
+              style={{ top: `${top}%` }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

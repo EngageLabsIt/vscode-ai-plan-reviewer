@@ -1012,6 +1012,37 @@ body {
     var(--vscode-editor-findMatchBorder, rgba(255, 213, 0, 0.5));
 }
 
+/* ── Search scrollbar markers overlay ────────────────────── */
+
+.search-scrollbar-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.search-scrollbar-marker {
+  position: absolute;
+  right: 0;
+  width: 6px;
+  height: 3px;
+  background: var(
+    --vscode-editor-findMatchHighlightBackground,
+    rgba(255, 213, 0, 0.5)
+  );
+  border-radius: 1px;
+  opacity: 0.55;
+  transform: translateY(-50%);
+}
+
+.search-scrollbar-marker--current {
+  background: var(--vscode-editor-findMatchBackground, rgba(255, 213, 0, 0.9));
+  opacity: 1;
+}
+
 /* ── Keyframes ────────────────────────────────────────────── */
 
 @keyframes md-fade-in {

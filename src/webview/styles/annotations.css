@@ -77,9 +77,12 @@
 
 /* For <li> items: override the full-element background and restrict the
    hover highlight to just the item's own text line via ::before. This prevents
-   the highlight from visually bleeding into nested sub-lists. */
+   the highlight from visually bleeding into nested sub-lists.
+   z-index: 0 creates a stacking context so that ::before with z-index: -1
+   renders behind the text but above the parent's background. */
 li.annotatable-block:hover {
   background-color: transparent;
+  z-index: 0;
 }
 li.annotatable-block:hover::before {
   content: '';
@@ -94,6 +97,7 @@ li.annotatable-block:hover::before {
   );
   border-radius: 3px;
   pointer-events: none;
+  z-index: -1;
 }
 
 /* ── Block Comment Button ───────────────────────────────────────────────── */
