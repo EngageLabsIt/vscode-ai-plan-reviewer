@@ -1009,7 +1009,7 @@ body {
 .line-row--search-current {
   background: var(--vscode-editor-findMatchBackground, rgba(255, 213, 0, 0.22));
   outline: 1px solid
-    var(--vscode-editor-findMatchBorder, rgba(255, 213, 0, 0.5));
+    var(--vscode-editor-findMatchBorder);
 }
 
 /* ── Search scrollbar markers overlay ────────────────────── */
@@ -1025,8 +1025,6 @@ body {
 }
 
 .search-scrollbar-marker {
-  position: absolute;
-  right: 0;
   width: 6px;
   height: 3px;
   background: var(

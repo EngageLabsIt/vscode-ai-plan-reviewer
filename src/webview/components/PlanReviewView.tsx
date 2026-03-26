@@ -39,7 +39,7 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
   const blockMap = useBlockMapping(bodyRef, html);
   const [hoveredLine, setHoveredLine] = useState<number | null>(null);
   const [markerPositions, setMarkerPositions] = useState<
-    { top: number; isCurrent: boolean }[]
+    { fixedTop: number; fixedRight: number; isCurrent: boolean }[]
   >([]);
 
   const { openCommentForm, commentFormState } = useComments();
@@ -178,7 +178,9 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
     [comments],
   );
 
-  // PBI-004: recalculate scrollbar marker positions
+  // PBI-004: recalculate scrollbar marker positions using fixed coordinates.
+  // position: absolute inside overflow-y: auto scrolls away with content —
+  // use position: fixed with getBoundingClientRect() instead.
   const recalcMarkers = useCallback(() => {
     const view = viewRef.current;
     const body = bodyRef.current;
@@ -186,22 +188,23 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
       setMarkerPositions([]);
       return;
     }
-    const { scrollHeight } = view;
-    const viewTop = view.getBoundingClientRect().top;
+    const viewRect = view.getBoundingClientRect();
+    const { scrollHeight, scrollTop } = view;
+    const fixedRight = window.innerWidth - viewRect.right;
     const currentLine = searchMatches[searchIndex - 1];
     setMarkerPositions(
       searchMatches.map((line) => {
         const el = body.querySelector<HTMLElement>(
           `.annotatable-block[data-line="${line}"]`,
         );
-        const elTop =
+        // Absolute offset from the top of the scrollable content (scroll-invariant)
+        const elOffsetFromTop =
           el !== null
-            ? el.getBoundingClientRect().top - viewTop + view.scrollTop
+            ? el.getBoundingClientRect().top - viewRect.top + scrollTop
             : 0;
-        return {
-          top: (elTop / scrollHeight) * 100,
-          isCurrent: line === currentLine,
-        };
+        const fixedTop =
+          viewRect.top + (elOffsetFromTop / scrollHeight) * viewRect.height;
+        return { fixedTop, fixedRight, isCurrent: line === currentLine };
       }),
     );
   }, [searchMatches, searchIndex]);
@@ -334,20 +337,16 @@ export const PlanReviewView: React.FC<PlanReviewViewProps> = ({
         onAddRangeComment={handleRangeAdd}
       />
 
-      {/* PBI-004: scrollbar search markers overlay */}
-      {markerPositions.length > 0 && (
-        <div className='search-scrollbar-overlay' aria-hidden='true'>
-          {markerPositions.map(({ top, isCurrent }, i) => (
-            <div
-              key={i}
-              className={`search-scrollbar-marker${
-                isCurrent ? ' search-scrollbar-marker--current' : ''
-              }`}
-              style={{ top: `${top}%` }}
-            />
-          ))}
-        </div>
-      )}
+      {markerPositions.map(({ fixedTop, fixedRight, isCurrent }, i) => (
+        <div
+          key={i}
+          aria-hidden='true'
+          className={`search-scrollbar-marker${
+            isCurrent ? ' search-scrollbar-marker--current' : ''
+          }`}
+          style={{ position: 'fixed', top: `${fixedTop}px`, right: `${fixedRight}px` }}
+        />
+      ))}
     </div>
   );
 };
