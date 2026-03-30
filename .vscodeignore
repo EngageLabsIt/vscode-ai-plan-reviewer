@@ -12,6 +12,7 @@ playwright-report/
 test-results/
 
 # Dev config
+.github/
 .claude/
 .vscode/
 .eslintrc*
