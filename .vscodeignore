@@ -20,9 +20,6 @@ test-results/
 .gitignore
 *.log
 
-# Source maps (non necessari per distribuzione)
-dist/**/*.map
-
 # Docs non necessari
 docs/
 README.md

@@ -11,7 +11,7 @@ const extensionConfig = {
   platform: 'node',
   external: ['vscode'],
   bundle: true,
-  sourcemap: true,
+  sourcemap: isWatch,
   logLevel: 'info',
 };
 
@@ -21,7 +21,7 @@ const webviewConfig = {
   format: 'iife',
   platform: 'browser',
   bundle: true,
-  sourcemap: true,
+  sourcemap: isWatch,
   logLevel: 'info',
   plugins: [
     {
